@@ -12,6 +12,7 @@ if (!devices){
 	ExitApp
 }
 
+clipboard := devices
 MsgBox % devices
 
 ; Param 1: Scan Code for key
