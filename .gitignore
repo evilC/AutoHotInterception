@@ -5,6 +5,7 @@
 
 C#/dependencies
 *.dll
+*.zip
 
 # User-specific files
 *.suo
