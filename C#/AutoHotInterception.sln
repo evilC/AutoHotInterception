@@ -5,7 +5,7 @@ VisualStudioVersion = 15.0.27130.2027
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AutoHotInterception", "AutoHotInterception\AutoHotInterception.csproj", "{68FA4BC3-C277-44D0-8333-18D51DC3CA19}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestApp", "C#TestApp\TestApp.csproj", "{02CBCBB9-C17F-4C6A-8F93-D7EAF038CAED}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestApp", "TestApp\TestApp.csproj", "{02CBCBB9-C17F-4C6A-8F93-D7EAF038CAED}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
