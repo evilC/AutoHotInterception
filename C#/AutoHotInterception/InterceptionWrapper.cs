@@ -11,11 +11,21 @@ using System.Threading.Tasks;
 public class InterceptionWrapper
 {
     private readonly IntPtr _deviceContext;
-    private Thread _watcherThread;
-    private bool _watcherThreadRunning = false;
+    private Thread _subscriptionThread;
+    private bool _subscriptionThreadRunning = false;
+    private bool _subscriptionsEnabled = false;
+
+    private Thread _contextSwitcherThread;
+    private bool _contextSwitcherThreadRunning = false;
+    private bool _contextSwitchingEnabled = false;
+
     private readonly bool _filterState = false;
 
     private readonly Dictionary<int, List<Mapping>> _mappings = new Dictionary<int, List<Mapping>>();
+    private readonly Dictionary<int, dynamic> _contextCallbacks = new Dictionary<int, dynamic>();
+    // If a the ID of a device exists as a key in this Dictionary, then that device is filtered.
+    // Used by IsMonitoredKeyboard
+    private readonly Dictionary<int, bool> _filteredDevices = new Dictionary<int, bool>();
 
     public InterceptionWrapper()
     {
@@ -47,6 +57,10 @@ public class InterceptionWrapper
 
     public bool SubscribeKey(uint code, bool block, dynamic callback, int vid = 0, int pid = 0)
     {
+        if (_contextSwitchingEnabled)
+        {
+            throw new Exception("Cannot enable Subscription mode once Context mode has been enabled");
+        }
         SetFilterState(false);
         var id = 0;
         if (vid != 0 && pid != 0)
@@ -59,14 +73,48 @@ public class InterceptionWrapper
         {
             _mappings.Add(id, new List<Mapping>());
         }
+
         _mappings[id].Add(new Mapping() { code = Convert.ToUInt16(code), block = block, callback = callback });
+        _filteredDevices[id] = true;
+
         SetFilterState(true);
-        if (!_watcherThreadRunning)
+        if (!_subscriptionThreadRunning)
         {
-            _watcherThreadRunning = true;
-            _watcherThread = new Thread(WatcherThread);
-            _watcherThread.Start();
+            _subscriptionThreadRunning = true;
+            _subscriptionThread = new Thread(SubscriptionThread);
+            _subscriptionThread.Start();
         }
+
+        _subscriptionsEnabled = true;
+        return true;
+    }
+
+    public bool SetContextCallback(int vid, int pid, dynamic callback)
+    {
+        if (_subscriptionsEnabled)
+        {
+            throw new Exception("Cannot enable Context mode once Subscription mode has been enabled");
+        }
+        SetFilterState(false);
+        var id = 0;
+        if (vid != 0 && pid != 0)
+        {
+            id = GetDeviceId(vid, pid);
+        }
+        if (id == 0) return false;
+
+        _contextCallbacks[id] = callback;
+        _filteredDevices[id] = true;
+
+        SetFilterState(true);
+        if (!_contextSwitcherThreadRunning)
+        {
+            _contextSwitcherThreadRunning = true;
+            _contextSwitcherThread = new Thread(ContextSwitcherThread);
+            _contextSwitcherThread.Start();
+        }
+
+        _contextSwitchingEnabled = true;
         return true;
     }
 
@@ -103,7 +151,8 @@ public class InterceptionWrapper
 
     private int IsMonitoredKeyboard(int device)
     {
-        return Convert.ToInt32(_mappings.ContainsKey(device));
+        //return Convert.ToInt32(_mappings.ContainsKey(device));
+        return Convert.ToInt32(_filteredDevices.ContainsKey(device));
     }
 
     private void SetFilterState(bool state)
@@ -118,10 +167,37 @@ public class InterceptionWrapper
         }
     }
 
-    private void WatcherThread()
+    private void ContextSwitcherThread()
     {
         Stroke stroke = new Stroke();
-        //int device = Wait(deviceContext);
+
+        while (true)
+        {
+            for (var i = 1; i < 11; i++)
+            {
+                var isMonitoredKeyboard = _contextCallbacks.ContainsKey(i);
+
+                while (Receive(_deviceContext, i, ref stroke, 1) > 0)
+                {
+                    if (isMonitoredKeyboard)
+                    {
+                        _contextCallbacks[i](1);
+                    }
+                    Send(_deviceContext, i, ref stroke, 1);
+                    if (isMonitoredKeyboard)
+                    {
+                        _contextCallbacks[i](0);
+                    }
+                }
+            }
+            Thread.Sleep(10);
+        }
+
+    }
+
+    private void SubscriptionThread()
+    {
+        Stroke stroke = new Stroke();
 
         while (true)
         {
