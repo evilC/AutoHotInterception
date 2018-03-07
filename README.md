@@ -12,3 +12,28 @@ AHI uses the Interception driver by Francisco Lopez
 (You can optionally place the contents of the `lib` folder in `My Documents\AutoHotkey\lib`
 4. Edit the example script, enter the VID and PID of your keyboard
 5. Run the example script
+
+# Usage
+Include the library
+```
+#Persistent ; (Interception hotkeys do not stop AHK from exiting, so use this)
+#include Lib\AutoHotInterception.ahk
+```
+
+Initialize the library
+```
+Interception := AutoHotInterception_Init()
+```
+
+Subscribe to a key on a specific keyboard
+```
+Interception.SubscribeKey(GetKeySC("1"), true, Func("KeyEvent"), VID, PID)
+return
+```
+
+Callback function is passed state `0 (released) ` or `1` (pressed)
+```
+KeyEvent(state){
+	ToolTip % "State: " state
+}
+```
