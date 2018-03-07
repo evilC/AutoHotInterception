@@ -24,7 +24,7 @@ return
 
 SetKb1Context(state){
 	global isKeyboard1Active
-	Sleep 0
+	Sleep 0		; We seem to need this for hotstrings to work, not sure why
 	isKeyboard1Active := state
 }
 #if isKeyboard1Active
