@@ -70,7 +70,7 @@ Create your hotkeys, wrapped in an `#if` block for that context variable
 ```
 
 ## Subscription mode
-In Subscription mode, you bypass AHK's hotkey system completely, and Interception notifies you og key events via callbacks.  
+In Subscription mode, you bypass AHK's hotkey system completely, and Interception notifies you of key events via callbacks.  
 
 Subscribe to a key on a specific keyboard
 `SubscribeKey(<scanCode>, <block>, <callback>, <VID>, <PID>`
