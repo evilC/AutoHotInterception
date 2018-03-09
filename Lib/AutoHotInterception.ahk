@@ -1,7 +1,7 @@
 #include %A_LineFile%\..\CLR.ahk
 
 AutoHotInterception_Init(){
-	dllFile := A_LineFile "\..\" "AutoHotInterception.dll"
+	dllFile := A_LineFile "\..\" "interception.dll"
 	if (!FileExist(dllFile)){
 		MsgBox % "Unable to find " dllFile ", exiting..."
 		ExitApp
