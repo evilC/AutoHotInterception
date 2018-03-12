@@ -13,11 +13,18 @@ class TestApp
     {
         var iw = new InterceptionWrapper();
         var str = iw.GetDeviceList();
-        iw.SubscribeKey(0x2D, true, new Action<int>((value) => {
-            Console.WriteLine("Value: " + value);
-            //}), 0x413C, 0x2107);
+        // 0x2D = X key
+        iw.SubscribeKey(0x2D, true, new Action<int>((value) =>
+        {
+            Console.WriteLine("Subscription Value: " + value);
+        //}), 0x413C, 0x2107);
         }), 0x04F2, 0x0112);
         //}), 0x046D, 0xC531);
+
+        iw.SetContextCallback(0x04F2, 0x0112, new Action<int>((value) =>
+        {
+            Console.WriteLine("Context Value: " + value);
+        }));
         while (true)
         {
             Thread.Sleep(100);

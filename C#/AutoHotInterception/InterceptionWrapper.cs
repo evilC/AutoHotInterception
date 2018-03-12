@@ -11,13 +11,8 @@ using System.Threading.Tasks;
 public class InterceptionWrapper
 {
     private readonly IntPtr _deviceContext;
-    private Thread _subscriptionThread;
-    private bool _subscriptionThreadRunning = false;
-    private bool _subscriptionsEnabled = false;
-
-    private Thread _contextSwitcherThread;
-    private bool _contextSwitcherThreadRunning = false;
-    private bool _contextSwitchingEnabled = false;
+    private Thread _pollThread;
+    private bool _pollThreadRunning = false;
 
     private readonly bool _filterState = false;
 
@@ -57,10 +52,6 @@ public class InterceptionWrapper
 
     public bool SubscribeKey(uint code, bool block, dynamic callback, int vid = 0, int pid = 0)
     {
-        if (_contextSwitchingEnabled)
-        {
-            throw new Exception("Cannot enable Subscription mode once Context mode has been enabled");
-        }
         SetFilterState(false);
         var id = 0;
         if (vid != 0 && pid != 0)
@@ -78,23 +69,29 @@ public class InterceptionWrapper
         _filteredDevices[id] = true;
 
         SetFilterState(true);
-        if (!_subscriptionThreadRunning)
-        {
-            _subscriptionThreadRunning = true;
-            _subscriptionThread = new Thread(SubscriptionThread);
-            _subscriptionThread.Start();
-        }
-
-        _subscriptionsEnabled = true;
+        SetThreadState(true);
         return true;
+    }
+
+    private void SetThreadState(bool state)
+    {
+        if (state)
+        {
+            if (!_pollThreadRunning)
+            {
+                _pollThreadRunning = true;
+                _pollThread = new Thread(PollThread);
+                _pollThread.Start();
+            }
+        }
+        else
+        {
+            throw new NotImplementedException();
+        }
     }
 
     public bool SetContextCallback(int vid, int pid, dynamic callback)
     {
-        if (_subscriptionsEnabled)
-        {
-            throw new Exception("Cannot enable Context mode once Subscription mode has been enabled");
-        }
         SetFilterState(false);
         var id = 0;
         if (vid != 0 && pid != 0)
@@ -107,14 +104,7 @@ public class InterceptionWrapper
         _filteredDevices[id] = true;
 
         SetFilterState(true);
-        if (!_contextSwitcherThreadRunning)
-        {
-            _contextSwitcherThreadRunning = true;
-            _contextSwitcherThread = new Thread(ContextSwitcherThread);
-            _contextSwitcherThread.Start();
-        }
-
-        _contextSwitchingEnabled = true;
+        SetThreadState(true);
         return true;
     }
 
@@ -151,7 +141,6 @@ public class InterceptionWrapper
 
     private int IsMonitoredKeyboard(int device)
     {
-        //return Convert.ToInt32(_mappings.ContainsKey(device));
         return Convert.ToInt32(_filteredDevices.ContainsKey(device));
     }
 
@@ -167,7 +156,7 @@ public class InterceptionWrapper
         }
     }
 
-    private void ContextSwitcherThread()
+    private void PollThread()
     {
         Stroke stroke = new Stroke();
 
@@ -175,44 +164,20 @@ public class InterceptionWrapper
         {
             for (var i = 1; i < 11; i++)
             {
-                var isMonitoredKeyboard = _contextCallbacks.ContainsKey(i);
-
-                while (Receive(_deviceContext, i, ref stroke, 1) > 0)
-                {
-                    if (isMonitoredKeyboard)
-                    {
-                        _contextCallbacks[i](1);
-                    }
-                    Send(_deviceContext, i, ref stroke, 1);
-                    if (isMonitoredKeyboard)
-                    {
-                        _contextCallbacks[i](0);
-                    }
-                }
-            }
-            Thread.Sleep(10);
-        }
-
-    }
-
-    private void SubscriptionThread()
-    {
-        Stroke stroke = new Stroke();
-
-        while (true)
-        {
-            for (var i = 1; i < 11; i++)
-            {
-                var isMonitoredKeyboard = _mappings.ContainsKey(i);
+                var isMonitoredKeyboard = IsMonitoredKeyboard(i) == 1;
+                var hasSubscription = false;
+                var hasContext = _contextCallbacks.ContainsKey(i);
 
                 while (Receive(_deviceContext, i, ref stroke, 1) > 0)
                 {
                     var block = false;
                     if (isMonitoredKeyboard)
                     {
+                        // Process Subscription Mode
                         foreach (var mapping in _mappings[i])
                         {
                             if (stroke.key.code != mapping.code) continue;
+                            hasSubscription = true;
                             if (mapping.block)
                             {
                                 block = true;
@@ -220,10 +185,24 @@ public class InterceptionWrapper
                             mapping.callback(1 - stroke.key.state);
                             break;
                         }
+                        // If this key had no subscriptions, but Context Mode is set for this keyboard...
+                        // ... then set the Context before sending the key
+                        if (!hasSubscription && hasContext)
+                        {
+                            // Set Context
+                            _contextCallbacks[i](1);
+                        }
                     }
+                    // If the key was not blocked by Subscription Mode, then send it now
                     if (!block)
                     {
                         Send(_deviceContext, i, ref stroke, 1);
+                    }
+                    // If we are processing Context Mode, then Unset the context variable after sending the key
+                    if (!hasSubscription && hasContext)
+                    {
+                        // Unset Context
+                        _contextCallbacks[i](0);
                     }
                 }
             }
