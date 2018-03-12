@@ -27,7 +27,7 @@ Interception := AutoHotInterception_Init()
 ``` 
 
 ## Modes
-There are two modes of operation for AHI, currently each script can only use one of them.
+There are two modes of operation for AHI, and both can be used simultaneously.  
 
 ### Context mode
 Context mode is so named as it takes advantage of AutoHotkey's [Context Sensitive Hotkeys](https://autohotkey.com/docs/Hotkeys.htm#Context).  
@@ -74,6 +74,7 @@ Create your hotkeys, wrapped in an `#if` block for that context variable
 
 ### Subscription mode
 In Subscription mode, you bypass AHK's hotkey system completely, and Interception notifies you of key events via callbacks.  
+Subscription Mode overrides Context Mode - that is, if a key on a keyboard has been subscribed to with Subscription Mode, then Context Mode will not fire for that key on that keyboard.  
 
 Subscribe to a key on a specific keyboard
 `SubscribeKey(<scanCode>, <block>, <callback>, <VID>, <PID>`
@@ -88,4 +89,21 @@ Callback function is passed state `0` (released) or `1` (pressed)
 KeyEvent(state){
 	ToolTip % "State: " state
 }
+```
+
+## Sending Keys
+You can send keys as a specific keyboard using the `SendKeyEvent` method.  
+`Interception.SendKeyEvent(<scanCode>, <state> [, <keyboardId = 1>])`  
+scanCode = the Scan Code of the key  
+state = 1 for press, 0 for release  
+keyboardId = The Interception ID of the keyboard (Leave blank to use 1st keyboard)  
+
+```
+Interception.SendKeyEvent(GetKeySC("a"), 1)
+```
+
+```
+VID := 0x04F2, PID := 0x0112
+keyboardId := Interception.GetDeviceId(VID, PID)
+Interception.SendKeyEvent(GetKeySC("a"), 1, keyboardId)
 ```
