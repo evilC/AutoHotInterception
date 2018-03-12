@@ -38,9 +38,9 @@ F1::Msgbox You Pressed F1
 #if
 ```
 This hotkey would only fire if the `myVariable` was 1.  
-In context mode, you subscribe to a keyboard, and any time events for that keyboard are just about to happen, then AHI fires your callback and passes it `1`. Your code then sets the context variable to `1` which enables the hotkey.  
+In context mode, you subscribe to a keyboard, and any time events for that keyboard are just about to happen, AHI fires your callback and passes it `1`. Your code then sets the context variable to `1` which enables the hotkey.  
 AHI then sends the key, which triggers your hotkey.  
-AHI then fires the callback once more and the variable gets set back to `0`, disabling the hotkey.  
+AHI then fires the callback once more, passing `0` and the context variable gets set back to `0`, disabling the hotkey.  
 
 #### Step 1
 Register your callback with AHI  
