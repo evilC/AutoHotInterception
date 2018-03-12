@@ -73,6 +73,14 @@ public class InterceptionWrapper
         return true;
     }
 
+    public void SendKeyEvent(int key, int state, int device = 1)
+    {
+        var stroke = new Stroke();
+        stroke.key.code = (ushort)key;
+        stroke.key.state = (ushort)(1 - state);
+        Send(_deviceContext, device, ref stroke, 1);
+    }
+
     private void SetThreadState(bool state)
     {
         if (state)

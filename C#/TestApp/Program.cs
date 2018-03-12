@@ -14,7 +14,8 @@ class TestApp
         var iw = new InterceptionWrapper();
         var str = iw.GetDeviceList();
         // 0x2D = X key
-        iw.SubscribeKey(0x2D, true, new Action<int>((value) =>
+        //iw.SubscribeKey(0x2D, true, new Action<int>((value) =>
+        iw.SubscribeKey(2, true, new Action<int>((value) =>
         {
             Console.WriteLine("Subscription Value: " + value);
         //}), 0x413C, 0x2107);
