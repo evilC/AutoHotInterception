@@ -8,7 +8,7 @@ AHI uses the Interception driver by Francisco Lopez
 **WARNING**  
 TAKE CARE when using this code - it is entirely possible to lock up all input, requiring use of the reset button.  
 For example, using Subscription Mode with `block` enabled will **totally** block that key from working on that keyboard.  It is **totally possible** to block CTRL+ALT+DEL or do other things to make it difficult to use your system properly. Be wary of making scripts using this code run on startup. Know how to enter "Safe Mode" in windows and disable startup of the scripts.  
-"With great power comes great responsibility", as they say.  
+As they say - ***With great power comes great responsibility***.  
 
 # Setup
 1. Download and install the [Interception Driver](http://www.oblita.com/interception)  
