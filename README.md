@@ -60,7 +60,8 @@ Interception.SetContextCallback(VID, PID, Func("SetKb1Context"))
 ```
 
 #### Step 2
-Create your callback function, and set the context variable to the value of `state`
+Create your callback function, and set the context variable to the value of `state`  
+It is advised to **NOT** do anything in this callback that takes a significant amount of time. Do not wait for key presses or releases and such.  
 ```
 SetKb1Context(state){
 	global isKeyboard1Active
