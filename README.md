@@ -6,10 +6,12 @@ In other words, you can use a key on a second (or third, or fourth..) keyboard t
 AHI uses the Interception driver by Francisco Lopez  
 
 # WARNING
-**TAKE CARE** when using this code. Because Interception is a driver, and sits below windows proper, blocking with Interception goes so deep that it can even block CTRL+ALT+DEL etc. As such, it is entirely possible to lock up all input, or at least make life a little difficult. In general, worst-case scenario would require use of the reset button. This is less of an issue whilst AHI does not support mouse blocking, but if/when that happens, the potential is there.  
+**TAKE CARE** when using this code. Because Interception is a driver, and sits below windows proper, blocking with Interception goes so deep that it can even block CTRL+ALT+DEL etc. As such, it is entirely possible to lock up all input, or at least make life a little difficult.  
+In general, worst-case scenario would require use of the reset button.  
 For example, using Subscription Mode with `block` enabled will **totally** block that key from working on that keyboard.
 So if you block `Ctrl` on your only keyboard, you just blocked CTRL+ALT+DEL.  
-Be wary of making scripts using this code run on startup. Know how to enter "Safe Mode" in windows and disable startup of the scripts.  
+This is less of an issue whilst AHI does not support mouse blocking (As you could probably kill the script with just the mouse), but if/when that happens, the potential is there.  
+Be wary of making scripts using this code run on startup. Know how to enter "Safe Mode" in windows and disable startup of the scripts. Know mouse alternatives to emergency keyboard actions (Right click on clock for Task Manager!)    
 As they say - ***With great power comes great responsibility***.  
 
 # Setup
