@@ -5,7 +5,7 @@ In other words, you can use a key on a second (or third, or fourth..) keyboard t
 
 AHI uses the Interception driver by Francisco Lopez  
 
-**WARNING**  
+# WARNING
 TAKE CARE when using this code - it is entirely possible to lock up all input, requiring use of the reset button.  
 For example, using Subscription Mode with `block` enabled will **totally** block that key from working on that keyboard.  It is **totally possible** to block CTRL+ALT+DEL or do other things to make it difficult to use your system properly. Be wary of making scripts using this code run on startup. Know how to enter "Safe Mode" in windows and disable startup of the scripts.  
 As they say - ***With great power comes great responsibility***.  
