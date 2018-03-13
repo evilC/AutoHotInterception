@@ -13,6 +13,7 @@ So if you block `Ctrl` on your only keyboard, you just blocked CTRL+ALT+DEL.
 This is less of an issue whilst AHI does not support mouse blocking (As you could probably kill the script with just the mouse), but if/when that happens, the potential is there.  
 Be wary of making scripts using this code run on startup. Know how to enter "Safe Mode" in windows and disable startup of the scripts. Know mouse alternatives to emergency keyboard actions (Right click on clock for Task Manager!)    
 As they say - ***With great power comes great responsibility***.  
+If this all scares you and you don't really understand it, then TL/DR is you should probably stick to "Context Mode", it's safer.  
 
 # Setup
 1. Download and install the [Interception Driver](http://www.oblita.com/interception)  
