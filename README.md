@@ -5,6 +5,11 @@ In other words, you can use a key on a second (or third, or fourth..) keyboard t
 
 AHI uses the Interception driver by Francisco Lopez  
 
+**WARNING**  
+TAKE CARE when using this code - it is entirely possible to lock up all input, requiring use of the reset button.  
+For example, using Subscription Mode with `block` enabled will **totally** block that key from working on that keyboard.  It is **totally possible** to block CTRL+ALT+DEL or do other things to make it difficult to use your system properly. Be wary of making scripts using this code run on startup. Know how to enter "Safe Mode" in windows and disable startup of the scripts.  
+"With great power comes great responsibility", as they say.  
+
 # Setup
 1. Download and install the [Interception Driver](http://www.oblita.com/interception)  
 2. Download a zip from the releases page and extract it to a folder
@@ -109,3 +114,4 @@ VID := 0x04F2, PID := 0x0112
 keyboardId := Interception.GetDeviceId(VID, PID)
 Interception.SendKeyEvent(GetKeySC("a"), 1, keyboardId)
 ```
+If you subscribe to a key using Subscription mode with the `block` parameter set to true, then send a different key using `SendKeyEvent`, you are transforming that key in a way which is totally invisible to windows (And all apps running on it), and it will respond as appropriate. For example, AHK `$` prefixed hotkeys **will not** be able to tell that this is synthetic input, and will respond to it.
