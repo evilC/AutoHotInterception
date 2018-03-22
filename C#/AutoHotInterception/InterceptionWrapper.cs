@@ -17,7 +17,7 @@ public class InterceptionWrapper
 
     private readonly bool _filterState = false;
 
-    private readonly ConcurrentDictionary<int, ConcurrentDictionary<ushort, Mapping>> _mappings = new ConcurrentDictionary<int, ConcurrentDictionary<ushort, Mapping>>();
+    private readonly ConcurrentDictionary<int, ConcurrentDictionary<ushort, MappingOptions>> _mappings = new ConcurrentDictionary<int, ConcurrentDictionary<ushort, MappingOptions>>();
     private readonly ConcurrentDictionary<int, dynamic> _contextCallbacks = new ConcurrentDictionary<int, dynamic>();
     // If a the ID of a device exists as a key in this Dictionary, then that device is filtered.
     // Used by IsMonitoredKeyboard
@@ -63,10 +63,10 @@ public class InterceptionWrapper
         if (id == 0) return false;
         if (!_mappings.ContainsKey(id))
         {
-            _mappings.TryAdd(id, new ConcurrentDictionary<ushort, Mapping>());
+            _mappings.TryAdd(id, new ConcurrentDictionary<ushort, MappingOptions>());
         }
 
-        _mappings[id].TryAdd(code, new Mapping() { block = block, callback = callback });
+        _mappings[id].TryAdd(code, new MappingOptions() { Block = block, Callback = callback });
         _filteredDevices[id] = true;
 
         SetFilterState(true);
@@ -195,11 +195,11 @@ public class InterceptionWrapper
                         {
                             hasSubscription = true;
                             var mapping = _mappings[i][code];
-                            if (mapping.block)
+                            if (mapping.Block)
                             {
                                 block = true;
                             }
-                            mapping.callback(1 - state);
+                            mapping.Callback(1 - state);
                         }
                         // If this key had no subscriptions, but Context Mode is set for this keyboard...
                         // ... then set the Context before sending the key
@@ -226,11 +226,10 @@ public class InterceptionWrapper
         }
     }
 
-    private class Mapping
+    private class MappingOptions
     {
-        public ushort code;
-        public bool block = false;
-        public dynamic callback;
+        public bool Block { get; set; } = false;
+        public dynamic Callback { get; set; }
     }
 
 
