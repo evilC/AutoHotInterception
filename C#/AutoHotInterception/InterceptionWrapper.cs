@@ -16,7 +16,7 @@ public class InterceptionWrapper
 
     private readonly bool _filterState = false;
 
-    private readonly Dictionary<int, List<Mapping>> _mappings = new Dictionary<int, List<Mapping>>();
+    private readonly Dictionary<int, Dictionary<ushort, Mapping>> _mappings = new Dictionary<int, Dictionary<ushort, Mapping>>();
     private readonly Dictionary<int, dynamic> _contextCallbacks = new Dictionary<int, dynamic>();
     // If a the ID of a device exists as a key in this Dictionary, then that device is filtered.
     // Used by IsMonitoredKeyboard
@@ -50,7 +50,7 @@ public class InterceptionWrapper
         return str;
     }
 
-    public bool SubscribeKey(uint code, bool block, dynamic callback, int vid = 0, int pid = 0)
+    public bool SubscribeKey(ushort code, bool block, dynamic callback, int vid = 0, int pid = 0)
     {
         SetFilterState(false);
         var id = 0;
@@ -62,10 +62,10 @@ public class InterceptionWrapper
         if (id == 0) return false;
         if (!_mappings.ContainsKey(id))
         {
-            _mappings.Add(id, new List<Mapping>());
+            _mappings.Add(id, new Dictionary<ushort, Mapping>());
         }
 
-        _mappings[id].Add(new Mapping() { code = Convert.ToUInt16(code), block = block, callback = callback });
+        _mappings[id].Add(code, new Mapping() { block = block, callback = callback });
         _filteredDevices[id] = true;
 
         SetFilterState(true);
@@ -73,10 +73,10 @@ public class InterceptionWrapper
         return true;
     }
 
-    public void SendKeyEvent(int key, int state, int device = 1)
+    public void SendKeyEvent(ushort key, int state, int device = 1)
     {
         var stroke = new Stroke();
-        stroke.key.code = (ushort)key;
+        stroke.key.code = key;
         stroke.key.state = (ushort)(1 - state);
         Send(_deviceContext, device, ref stroke, 1);
     }
@@ -182,16 +182,23 @@ public class InterceptionWrapper
                     if (isMonitoredKeyboard)
                     {
                         // Process Subscription Mode
-                        foreach (var mapping in _mappings[i])
+                        var code = stroke.key.code;
+                        var state = stroke.key.state;
+                        if (state > 1)
                         {
-                            if (stroke.key.code != mapping.code) continue;
+                            code += 256;
+                            state -= 2;
+                        }
+
+                        if (_mappings[i].ContainsKey(code))
+                        {
                             hasSubscription = true;
+                            var mapping = _mappings[i][code];
                             if (mapping.block)
                             {
                                 block = true;
                             }
-                            mapping.callback(1 - stroke.key.state);
-                            break;
+                            mapping.callback(1 - state);
                         }
                         // If this key had no subscriptions, but Context Mode is set for this keyboard...
                         // ... then set the Context before sending the key
