@@ -21,7 +21,7 @@ public class InterceptionWrapper
     private readonly ConcurrentDictionary<int, dynamic> _contextCallbacks = new ConcurrentDictionary<int, dynamic>();
     // If a the ID of a device exists as a key in this Dictionary, then that device is filtered.
     // Used by IsMonitoredKeyboard
-    private readonly Dictionary<int, bool> _filteredDevices = new Dictionary<int, bool>();
+    private readonly ConcurrentDictionary<int, bool> _filteredDevices = new ConcurrentDictionary<int, bool>();
 
     public InterceptionWrapper()
     {
