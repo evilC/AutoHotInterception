@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -16,8 +17,8 @@ public class InterceptionWrapper
 
     private readonly bool _filterState = false;
 
-    private readonly Dictionary<int, Dictionary<ushort, Mapping>> _mappings = new Dictionary<int, Dictionary<ushort, Mapping>>();
-    private readonly Dictionary<int, dynamic> _contextCallbacks = new Dictionary<int, dynamic>();
+    private readonly ConcurrentDictionary<int, ConcurrentDictionary<ushort, Mapping>> _mappings = new ConcurrentDictionary<int, ConcurrentDictionary<ushort, Mapping>>();
+    private readonly ConcurrentDictionary<int, dynamic> _contextCallbacks = new ConcurrentDictionary<int, dynamic>();
     // If a the ID of a device exists as a key in this Dictionary, then that device is filtered.
     // Used by IsMonitoredKeyboard
     private readonly Dictionary<int, bool> _filteredDevices = new Dictionary<int, bool>();
@@ -62,10 +63,10 @@ public class InterceptionWrapper
         if (id == 0) return false;
         if (!_mappings.ContainsKey(id))
         {
-            _mappings.Add(id, new Dictionary<ushort, Mapping>());
+            _mappings.TryAdd(id, new ConcurrentDictionary<ushort, Mapping>());
         }
 
-        _mappings[id].Add(code, new Mapping() { block = block, callback = callback });
+        _mappings[id].TryAdd(code, new Mapping() { block = block, callback = callback });
         _filteredDevices[id] = true;
 
         SetFilterState(true);
