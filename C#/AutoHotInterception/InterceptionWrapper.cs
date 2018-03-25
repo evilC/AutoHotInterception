@@ -9,7 +9,7 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 
-public class InterceptionWrapper
+public class InterceptionWrapper : IDisposable
 {
     private readonly IntPtr _deviceContext;
     private Thread _pollThread;
@@ -143,7 +143,9 @@ public class InterceptionWrapper
         }
         else
         {
-            throw new NotImplementedException();
+            _pollThread.Abort();
+            _pollThread.Join();
+            _pollThread = null;
         }
     }
 
@@ -163,11 +165,6 @@ public class InterceptionWrapper
         SetFilterState(true);
         SetThreadState(true);
         return true;
-    }
-
-    ~InterceptionWrapper()
-    {
-        DestroyContext(_deviceContext);
     }
 
     public int GetKeyboardId(int vid, int pid)
@@ -304,7 +301,7 @@ public class InterceptionWrapper
                     bool block = false;
                     if (isMontioredMouse)
                     {
-                        if (stroke.mouse.state != 0)
+                        if (stroke.mouse.state != 0 && _mouseButtonMappings.ContainsKey(i))
                         {
                             // Mouse Button
                             //Debug.WriteLine($"AHK| Mouse {i} seen - flags: {stroke.mouse.flags}, raw state: {stroke.mouse.state}");
@@ -315,8 +312,6 @@ public class InterceptionWrapper
                                 state /= 4;
                                 btn++;
                             };
-                            //ToDo: The below line throws an exception on exit is a filtered mouse clicks the X in the test app
-                            //Implementing IDisposable may fix?
                             if (_mouseButtonMappings[i].ContainsKey((ushort)btn))
                             {
                                 hasSubscription = true;
@@ -329,24 +324,18 @@ public class InterceptionWrapper
                             }
                             //Debug.WriteLine($"AHK| Mouse {i} seen - button {btn}, state: {state}");
                         }
-                        else
+                        else if ((stroke.mouse.flags & (ushort) MouseFlag.MouseMoveRelative) == (ushort) MouseFlag.MouseMoveRelative
+                                 && _mouseAxisMappings.ContainsKey(i))
                         {
-                            if ((stroke.mouse.flags & (ushort)MouseFlag.MouseMoveRelative) == (ushort)MouseFlag.MouseMoveRelative)
+                            // Relative Mouse Move
+                            hasSubscription = true;
+                            var mapping = _mouseAxisMappings[i];
+                            if (mapping.Block)
                             {
-                                // Relative Mouse Move
-                                //Debug.WriteLine($"AHK| Mouse {i} moved");
-                                if (_mouseAxisMappings.ContainsKey(i))
-                                {
-                                    hasSubscription = true;
-                                    var mapping = _mouseAxisMappings[i];
-                                    if (mapping.Block)
-                                    {
-                                        block = true;
-                                    }
-                                    mapping.Callback(stroke.mouse.x, stroke.mouse.y);
-                                }
-
+                                block = true;
                             }
+
+                            mapping.Callback(stroke.mouse.x, stroke.mouse.y);
                         }
                     }
                     if (!(block))
@@ -660,4 +649,8 @@ public class InterceptionWrapper
     int INTERCEPTION_API interception_is_keyboard(InterceptionDevice device);
     int INTERCEPTION_API interception_is_mouse(InterceptionDevice device);
     */
+    public void Dispose()
+    {
+        SetThreadState(false);
+    }
 }
