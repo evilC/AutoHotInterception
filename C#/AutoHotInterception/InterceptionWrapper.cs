@@ -69,7 +69,7 @@ public class InterceptionWrapper : IDisposable
         var id = 0;
         if (vid != 0 && pid != 0)
         {
-            id = GetKeyboardId(vid, pid);
+            id = GetDeviceId(vid, pid);
         }
 
         if (id == 0) return false;
@@ -89,7 +89,7 @@ public class InterceptionWrapper : IDisposable
     public bool SubscribeMouseButton(ushort btn, bool block, dynamic callback, int vid = 0, int pid = 0)
     {
         int id;
-        id = GetMouseId(vid, pid);
+        id = GetDeviceId(vid, pid);
         if (id == 0) return false;
 
         if (!_mouseButtonMappings.ContainsKey(id))
@@ -107,7 +107,7 @@ public class InterceptionWrapper : IDisposable
     public bool SubscribeMouseMovement(bool block, dynamic callback, int vid, int pid)
     {
         int id;
-        id = GetMouseId(vid, pid);
+        id = GetDeviceId(vid, pid, true);
         if (id == 0) return false;
 
         _mouseAxisMappings[id] = new MappingOptions() { Block = block, Callback = callback };
@@ -149,13 +149,13 @@ public class InterceptionWrapper : IDisposable
         }
     }
 
-    public bool SetContextCallback(int vid, int pid, dynamic callback)
+    public bool SetContextCallback(int vid, int pid, dynamic callback, bool isMouse = false)
     {
         SetFilterState(false);
         var id = 0;
         if (vid != 0 && pid != 0)
         {
-            id = GetKeyboardId(vid, pid);
+            id = GetDeviceId(vid, pid, isMouse);
         }
         if (id == 0) return false;
 
@@ -165,34 +165,6 @@ public class InterceptionWrapper : IDisposable
         SetFilterState(true);
         SetThreadState(true);
         return true;
-    }
-
-    public bool SetMouseContextCallback(int vid, int pid, dynamic callback)
-    {
-        SetFilterState(false);
-        var id = 0;
-        if (vid != 0 && pid != 0)
-        {
-            id = GetMouseId(vid, pid);
-        }
-        if (id == 0) return false;
-
-        _contextCallbacks[id] = callback;
-        _filteredDevices[id] = true;
-
-        SetFilterState(true);
-        SetThreadState(true);
-        return true;
-    }
-
-    public int GetKeyboardId(int vid, int pid)
-    {
-        return GetDeviceId(false, vid, pid);
-    }
-
-    public int GetMouseId(int vid, int pid)
-    {
-        return GetDeviceId(true, vid, pid);
     }
 
     /// <summary>
@@ -202,7 +174,7 @@ public class InterceptionWrapper : IDisposable
     /// <param name="vid"></param>
     /// <param name="pid"></param>
     /// <returns></returns>
-    private int GetDeviceId(bool isMouse, int vid, int pid)
+    private int GetDeviceId(int vid, int pid, bool isMouse = false)
     {
         var start = isMouse ? 11 : 0;
         var max = isMouse ? 21 : 11;
