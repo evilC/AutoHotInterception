@@ -1,7 +1,8 @@
 # AutoHotInterception
 
-AutoHotInterception(AHI) allows you to execute AutoHotkey code in response to keys on a *specific* keyboard, whilst (optionally) blocking the native functionality of that key.  
+AutoHotInterception(AHI) allows you to execute AutoHotkey code in response to events from a *specific* keyboard or mouse, whilst (optionally) blocking the native functionality (ie stopping Windows from seeing that keyboard or mouse event).  
 In other words, you can use a key on a second (or third, or fourth..) keyboard to trigger AHK code, and that key will not be seen by applications. You can use the *same key* on multiple keyboards for individual actions.  
+Keyboard Keys, Mouse Buttons and (Relative) Mouse movement are supported. Support for Absolute Mouse movement is planned.  
 
 AHI uses the Interception driver by Francisco Lopez  
 
@@ -31,6 +32,7 @@ There are two modes of operation for AHI, currently each script can only use one
 
 ### Context mode
 Context mode is so named as it takes advantage of AutoHotkey's [Context Sensitive Hotkeys](https://autohotkey.com/docs/Hotkeys.htm#Context).  
+As such, only Keyboard Keys and Mouse Buttons are supported in this mode. Mouse Movement is not supported.  
 In AHK, you can wrap your hotkeys in a block like so:
 ```
 #if myVariable == 1
@@ -74,9 +76,11 @@ Create your hotkeys, wrapped in an `#if` block for that context variable
 
 ### Subscription mode
 In Subscription mode, you bypass AHK's hotkey system completely, and Interception notifies you of key events via callbacks.  
+All forms of input are supported in Subscription Mode.  
 
+#### Keyboard
 Subscribe to a key on a specific keyboard
-`SubscribeKey(<scanCode>, <block>, <callback>, <VID>, <PID>`
+`SubscribeKey(<scanCode>, <block>, <callback>, <VID>, <PID>)`
 ```
 VID := 0x04F2, PID := 0x0112
 Interception.SubscribeKey(GetKeySC("1"), true, Func("KeyEvent"), VID, PID)
@@ -87,5 +91,29 @@ Callback function is passed state `0` (released) or `1` (pressed)
 ```
 KeyEvent(state){
 	ToolTip % "State: " state
+}
+```
+
+#### Mouse Buttons
+`SubscribeMouseButton(<button>, <block>, <callback>, <VID>, <PID>)`  
+Where `button` is one of:  
+```
+0: Left Mouse
+1: Right Mouse
+2: Middle Mouse
+3: Side Button 1
+4: Side Button 2
+```  
+Otherwise, usage is identical to `SubscribeKey`  
+
+#### Mouse Movement
+`SubscribeMouseMove(<block>, <callback>, <VID>, <PID>)``  
+For Mouse Movement, the callback is passed two ints - x and y.  
+```
+VID := 0x04F2, PID := 0x0112
+Interception.SubscribeMouseMove(false, Func("MouseEvent"), VID, PID)
+
+MouseEvent(x, y){
+	[...]
 }
 ```
