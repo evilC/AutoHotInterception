@@ -265,7 +265,8 @@ public class InterceptionWrapper : IDisposable
                             {
                                 block = true;
                             }
-                            mapping.Callback(1 - state);
+
+                            ThreadPool.QueueUserWorkItem(threadProc => mapping.Callback(1 - state));
                         }
                     }
                     // If this key had no subscriptions, but Context Mode is set for this keyboard...
@@ -320,7 +321,7 @@ public class InterceptionWrapper : IDisposable
                                 {
                                     block = true;
                                 }
-                                mapping.Callback(2 - state);
+                                ThreadPool.QueueUserWorkItem(threadProc => mapping.Callback(2 - state));
                             }
                             //Debug.WriteLine($"AHK| Mouse {i} seen - button {btn}, state: {state}");
                         }
@@ -335,7 +336,7 @@ public class InterceptionWrapper : IDisposable
                                 block = true;
                             }
 
-                            mapping.Callback(stroke.mouse.x, stroke.mouse.y);
+                            ThreadPool.QueueUserWorkItem(threadProc => mapping.Callback(stroke.mouse.x, stroke.mouse.y));
                         }
                     }
                     // If this key had no subscriptions, but Context Mode is set for this mouse...
