@@ -89,11 +89,8 @@ Create your hotkeys, wrapped in an `#if` block for that context variable
 
 ### Subscription mode
 In Subscription mode, you bypass AHK's hotkey system completely, and Interception notifies you of key events via callbacks.  
-<<<<<<< HEAD
 All forms of input are supported in Subscription Mode.  
-=======
 Subscription Mode overrides Context Mode - that is, if a key on a keyboard has been subscribed to with Subscription Mode, then Context Mode will not fire for that key on that keyboard.  
->>>>>>> 4a0266aabbb14983a6ecc1fd662d6d645ad0b34e
 
 #### Keyboard
 Subscribe to a key on a specific keyboard
@@ -111,7 +108,6 @@ KeyEvent(state){
 }
 ```
 
-<<<<<<< HEAD
 #### Mouse Buttons
 `SubscribeMouseButton(<button>, <block>, <callback>, <VID>, <PID>)`  
 Where `button` is one of:  
@@ -135,7 +131,7 @@ MouseEvent(x, y){
 	[...]
 }
 ```
-=======
+
 ## Sending Keys
 You can send keys as a specific keyboard using the `SendKeyEvent` method.  
 `Interception.SendKeyEvent(<scanCode>, <state> [, <keyboardId = 1>])`  
@@ -153,4 +149,3 @@ keyboardId := Interception.GetDeviceId(VID, PID)
 Interception.SendKeyEvent(GetKeySC("a"), 1, keyboardId)
 ```
 If you subscribe to a key using Subscription mode with the `block` parameter set to true, then send a different key using `SendKeyEvent`, you are transforming that key in a way which is totally invisible to windows (And all apps running on it), and it will respond as appropriate. For example, AHK `$` prefixed hotkeys **will not** be able to tell that this is synthetic input, and will respond to it.
->>>>>>> 4a0266aabbb14983a6ecc1fd662d6d645ad0b34e
