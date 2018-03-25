@@ -33,7 +33,7 @@ class TestApp
         //    //}), 0x413C, 0x2107);
         //}), 0x46D, 0xC52B);
 
-        //iw.SubscribeMouseMovement(false, new Action<int, int>((x, y) =>
+        //iw.SubscribeMouseMoveRelative(false, new Action<int, int>((x, y) =>
         //{
         //    Console.WriteLine($"Mouse Axis Value: x={x}, y={y}");
         ////}), 0x46D, 0xC531);   // G700s

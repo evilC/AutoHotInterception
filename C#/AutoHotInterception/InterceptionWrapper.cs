@@ -104,7 +104,12 @@ public class InterceptionWrapper : IDisposable
         return true;
     }
 
-    public bool SubscribeMouseMovement(bool block, dynamic callback, int vid, int pid)
+    public bool SubscribeMouseMove(bool block, dynamic callback, int vid, int pid)
+    {
+        return SubscribeMouseMoveRelative(block, callback, vid, pid);
+    }
+
+    public bool SubscribeMouseMoveRelative(bool block, dynamic callback, int vid, int pid)
     {
         int id;
         id = GetDeviceId(vid, pid, true);
@@ -115,6 +120,11 @@ public class InterceptionWrapper : IDisposable
         SetFilterState(true);
         SetThreadState(true);
         return true;
+    }
+
+    public bool SubscribeMouseMoveAbsolute(bool block, dynamic callback, int vid, int pid)
+    {
+        throw new NotImplementedException();
     }
 
     public void SendKeyEvent(ushort code, int state, int device = 1)
