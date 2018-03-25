@@ -107,7 +107,7 @@ Where `button` is one of:
 Otherwise, usage is identical to `SubscribeKey`  
 
 #### Mouse Movement
-`SubscribeMouseMove(<block>, <callback>, <VID>, <PID>)``  
+`SubscribeMouseMove(<block>, <callback>, <VID>, <PID>)`  
 For Mouse Movement, the callback is passed two ints - x and y.  
 ```
 VID := 0x04F2, PID := 0x0112
