@@ -246,7 +246,7 @@ public class InterceptionWrapper : IDisposable
                 while (Receive(_deviceContext, i, ref stroke, 1) > 0)
                 {
                     var block = false;
-                    if (isMonitoredKeyboard)
+                    if (isMonitoredKeyboard && _keyboardMappings.ContainsKey(i))
                     {
                         // Process Subscription Mode
                         var code = stroke.key.code;
