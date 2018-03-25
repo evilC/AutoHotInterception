@@ -17,10 +17,12 @@ public class InterceptionWrapper
 
     private readonly bool _filterState = false;
 
-    private readonly ConcurrentDictionary<int, ConcurrentDictionary<ushort, MappingOptions>> _mappings = new ConcurrentDictionary<int, ConcurrentDictionary<ushort, MappingOptions>>();
+    private readonly ConcurrentDictionary<int, ConcurrentDictionary<ushort, MappingOptions>> _keyboardMappings = new ConcurrentDictionary<int, ConcurrentDictionary<ushort, MappingOptions>>();
+    private readonly ConcurrentDictionary<int, ConcurrentDictionary<ushort, MappingOptions>> _mouseButtonMappings = new ConcurrentDictionary<int, ConcurrentDictionary<ushort, MappingOptions>>();
+    private readonly ConcurrentDictionary<int, MappingOptions> _mouseAxisMappings = new ConcurrentDictionary<int, MappingOptions>();
     private readonly ConcurrentDictionary<int, dynamic> _contextCallbacks = new ConcurrentDictionary<int, dynamic>();
     // If a the ID of a device exists as a key in this Dictionary, then that device is filtered.
-    // Used by IsMonitoredKeyboard
+    // Used by IsMonitoredDevice
     private readonly ConcurrentDictionary<int, bool> _filteredDevices = new ConcurrentDictionary<int, bool>();
 
     public InterceptionWrapper()
@@ -45,9 +47,19 @@ public class InterceptionWrapper
             {
                 break;
             }
-            str += $"ID: {i}, VID: 0x{foundVid:X}, PID: 0x{foundPid:X}\n";
+            str += $"Keyboard ID: {i}, VID: 0x{foundVid:X}, PID: 0x{foundPid:X}\n";
         }
-
+        for (var i = 11; i < 21; i++)
+        {
+            var handle = GetHardwareStr(_deviceContext, i, 1000);
+            int foundVid = 0, foundPid = 0;
+            GetVidPid(handle, ref foundVid, ref foundPid);
+            if (foundVid == 0 || foundPid == 0)
+            {
+                break;
+            }
+            str += $"Mouse ID: {i}, VID: 0x{foundVid:X}, PID: 0x{foundPid:X}\n";
+        }
         return str;
     }
 
@@ -57,16 +69,16 @@ public class InterceptionWrapper
         var id = 0;
         if (vid != 0 && pid != 0)
         {
-            id = GetDeviceId(vid, pid);
+            id = GetKeyboardId(vid, pid);
         }
 
         if (id == 0) return false;
-        if (!_mappings.ContainsKey(id))
+        if (!_keyboardMappings.ContainsKey(id))
         {
-            _mappings.TryAdd(id, new ConcurrentDictionary<ushort, MappingOptions>());
+            _keyboardMappings.TryAdd(id, new ConcurrentDictionary<ushort, MappingOptions>());
         }
 
-        _mappings[id].TryAdd(code, new MappingOptions() { Block = block, Callback = callback });
+        _keyboardMappings[id].TryAdd(code, new MappingOptions() { Block = block, Callback = callback });
         _filteredDevices[id] = true;
 
         SetFilterState(true);
@@ -74,10 +86,46 @@ public class InterceptionWrapper
         return true;
     }
 
-    public void SendKeyEvent(ushort key, int state, int device = 1)
+    public bool SubscribeMouseButton(ushort btn, bool block, dynamic callback, int vid = 0, int pid = 0)
+    {
+        int id;
+        id = GetMouseId(vid, pid);
+        if (id == 0) return false;
+
+        if (!_mouseButtonMappings.ContainsKey(id))
+        {
+            _mouseButtonMappings.TryAdd(id, new ConcurrentDictionary<ushort, MappingOptions>());
+        }
+        _mouseButtonMappings[id].TryAdd(btn, new MappingOptions() { Block = block, Callback = callback });
+        _filteredDevices[id] = true;
+
+        SetFilterState(true);
+        SetThreadState(true);
+        return true;
+    }
+
+    public bool SubscribeMouseMovement(bool block, dynamic callback, int vid, int pid)
+    {
+        int id;
+        id = GetMouseId(vid, pid);
+        if (id == 0) return false;
+
+        _mouseAxisMappings[id] = new MappingOptions() { Block = block, Callback = callback };
+        _filteredDevices[id] = true;
+        SetFilterState(true);
+        SetThreadState(true);
+        return true;
+    }
+
+    public void SendKeyEvent(ushort code, int state, int device = 1)
     {
         var stroke = new Stroke();
-        stroke.key.code = key;
+        if (code > 255)
+        {
+            code -= 256;
+            state += 2;
+        }
+        stroke.key.code = code;
         stroke.key.state = (ushort)(1 - state);
         Send(_deviceContext, device, ref stroke, 1);
     }
@@ -105,7 +153,7 @@ public class InterceptionWrapper
         var id = 0;
         if (vid != 0 && pid != 0)
         {
-            id = GetDeviceId(vid, pid);
+            id = GetKeyboardId(vid, pid);
         }
         if (id == 0) return false;
 
@@ -122,9 +170,28 @@ public class InterceptionWrapper
         DestroyContext(_deviceContext);
     }
 
-    public int GetDeviceId(int vid, int pid)
+    public int GetKeyboardId(int vid, int pid)
     {
-        for (var i = 1; i < 11; i++)
+        return GetDeviceId(false, vid, pid);
+    }
+
+    public int GetMouseId(int vid, int pid)
+    {
+        return GetDeviceId(true, vid, pid);
+    }
+
+    /// <summary>
+    /// Tries to get Device ID from VID/PID
+    /// </summary>
+    /// <param name="isMouse"></param>
+    /// <param name="vid"></param>
+    /// <param name="pid"></param>
+    /// <returns></returns>
+    private int GetDeviceId(bool isMouse, int vid, int pid)
+    {
+        var start = isMouse ? 11 : 0;
+        var max = isMouse ? 21 : 11;
+        for (var i = start; i < max; i++)
         {
             var handle = GetHardwareStr(_deviceContext, i, 1000);
             int foundVid = 0, foundPid = 0;
@@ -148,7 +215,7 @@ public class InterceptionWrapper
         }
     }
 
-    private int IsMonitoredKeyboard(int device)
+    private int IsMonitoredDevice(int device)
     {
         return Convert.ToInt32(_filteredDevices.ContainsKey(device));
     }
@@ -157,11 +224,13 @@ public class InterceptionWrapper
     {
         if (state && !_filterState)
         {
-            SetFilter(_deviceContext, IsMonitoredKeyboard, Filter.All);
+            SetFilter(_deviceContext, IsMonitoredDevice, Filter.All);
+            //SetFilter(_deviceContext, IsMouse, Filter.All);
         }
         else if (!state && _filterState)
         {
-            SetFilter(_deviceContext, IsMonitoredKeyboard, Filter.None);
+            SetFilter(_deviceContext, IsMonitoredDevice, Filter.None);
+            //SetFilter(_deviceContext, IsMouse, Filter.None);
         }
     }
 
@@ -173,7 +242,7 @@ public class InterceptionWrapper
         {
             for (var i = 1; i < 11; i++)
             {
-                var isMonitoredKeyboard = IsMonitoredKeyboard(i) == 1;
+                var isMonitoredKeyboard = IsMonitoredDevice(i) == 1;
                 var hasSubscription = false;
                 var hasContext = _contextCallbacks.ContainsKey(i);
 
@@ -191,10 +260,10 @@ public class InterceptionWrapper
                             state -= 2;
                         }
 
-                        if (_mappings[i].ContainsKey(code))
+                        if (_keyboardMappings[i].ContainsKey(code))
                         {
                             hasSubscription = true;
-                            var mapping = _mappings[i][code];
+                            var mapping = _keyboardMappings[i][code];
                             if (mapping.Block)
                             {
                                 block = true;
@@ -219,6 +288,70 @@ public class InterceptionWrapper
                     {
                         // Unset Context
                         _contextCallbacks[i](0);
+                    }
+                }
+            }
+
+            for (var i = 11; i < 21; i++)
+            {
+                var isMontioredMouse = IsMonitoredDevice(i) == 1;
+                var hasSubscription = false;
+                var hasContext = _contextCallbacks.ContainsKey(i);
+
+                while (Receive(_deviceContext, i, ref stroke, 1) > 0)
+                {
+                    Debug.WriteLine($"AHK| Mouse {i} seen - flags: {stroke.mouse.flags}, raw state: {stroke.mouse.state}");
+                    bool block = false;
+                    if (isMontioredMouse)
+                    {
+                        if (stroke.mouse.state != 0)
+                        {
+                            // Mouse Button
+                            //Debug.WriteLine($"AHK| Mouse {i} seen - flags: {stroke.mouse.flags}, raw state: {stroke.mouse.state}");
+                            var state = stroke.mouse.state;
+                            var btn = 0;
+                            while (state > 2)
+                            {
+                                state /= 4;
+                                btn++;
+                            };
+                            //ToDo: The below line throws an exception on exit is a filtered mouse clicks the X in the test app
+                            //Implementing IDisposable may fix?
+                            if (_mouseButtonMappings[i].ContainsKey((ushort)btn))
+                            {
+                                hasSubscription = true;
+                                var mapping = _mouseButtonMappings[i][(ushort)btn];
+                                if (mapping.Block)
+                                {
+                                    block = true;
+                                }
+                                mapping.Callback(2 - state);
+                            }
+                            //Debug.WriteLine($"AHK| Mouse {i} seen - button {btn}, state: {state}");
+                        }
+                        else
+                        {
+                            if ((stroke.mouse.flags & (ushort)MouseFlag.MouseMoveRelative) == (ushort)MouseFlag.MouseMoveRelative)
+                            {
+                                // Relative Mouse Move
+                                //Debug.WriteLine($"AHK| Mouse {i} moved");
+                                if (_mouseAxisMappings.ContainsKey(i))
+                                {
+                                    hasSubscription = true;
+                                    var mapping = _mouseAxisMappings[i];
+                                    if (mapping.Block)
+                                    {
+                                        block = true;
+                                    }
+                                    mapping.Callback(stroke.mouse.x, stroke.mouse.y);
+                                }
+
+                            }
+                        }
+                    }
+                    if (!(block))
+                    {
+                        Send(_deviceContext, i, ref stroke, 1);
                     }
                 }
             }
