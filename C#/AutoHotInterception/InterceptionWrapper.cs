@@ -167,6 +167,24 @@ public class InterceptionWrapper : IDisposable
         return true;
     }
 
+    public bool SetMouseContextCallback(int vid, int pid, dynamic callback)
+    {
+        SetFilterState(false);
+        var id = 0;
+        if (vid != 0 && pid != 0)
+        {
+            id = GetMouseId(vid, pid);
+        }
+        if (id == 0) return false;
+
+        _contextCallbacks[id] = callback;
+        _filteredDevices[id] = true;
+
+        SetFilterState(true);
+        SetThreadState(true);
+        return true;
+    }
+
     public int GetKeyboardId(int vid, int pid)
     {
         return GetDeviceId(false, vid, pid);
@@ -267,13 +285,13 @@ public class InterceptionWrapper : IDisposable
                             }
                             mapping.Callback(1 - state);
                         }
-                        // If this key had no subscriptions, but Context Mode is set for this keyboard...
-                        // ... then set the Context before sending the key
-                        if (!hasSubscription && hasContext)
-                        {
-                            // Set Context
-                            _contextCallbacks[i](1);
-                        }
+                    }
+                    // If this key had no subscriptions, but Context Mode is set for this keyboard...
+                    // ... then set the Context before sending the key
+                    if (!hasSubscription && hasContext)
+                    {
+                        // Set Context
+                        _contextCallbacks[i](1);
                     }
                     // If the key was not blocked by Subscription Mode, then send it now
                     if (!block)
@@ -338,9 +356,22 @@ public class InterceptionWrapper : IDisposable
                             mapping.Callback(stroke.mouse.x, stroke.mouse.y);
                         }
                     }
+                    // If this key had no subscriptions, but Context Mode is set for this mouse...
+                    // ... then set the Context before sending the button
+                    if (!hasSubscription && hasContext)
+                    {
+                        // Set Context
+                        _contextCallbacks[i](1);
+                    }
                     if (!(block))
                     {
                         Send(_deviceContext, i, ref stroke, 1);
+                    }
+                    // If we are processing Context Mode, then Unset the context variable after sending the button
+                    if (!hasSubscription && hasContext)
+                    {
+                        // Unset Context
+                        _contextCallbacks[i](0);
                     }
                 }
             }
