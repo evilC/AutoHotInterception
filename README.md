@@ -192,14 +192,15 @@ Interception.SendKeyEvent(keyboardId, GetKeySC("a"), 1)
 If you subscribe to a key using Subscription mode with the `block` parameter set to true, then send a different key using `SendKeyEvent`, you are transforming that key in a way which is totally invisible to windows (And all apps running on it), and it will respond as appropriate. For example, AHK `$` prefixed hotkeys **will not** be able to tell that this is synthetic input, and will respond to it.
 
 ### Sending Mouse Buttons
-Not yet implemented  
+`Interception.SendMouseButtonEvent(<mouseId>, <button>, <state>)`  
+Where `button` is the button index, as used in `SubscribeMouseButton`  
 
 ### Sending Mouse Movement
 #### Relative
-Not yet implemented  
+`Interception.SendMouseMove(<mouseId>, <x>, <y>)`  
 
 #### Absolute
-Not yet implemented  
+`Interception.SendMouseMoveAbsolute(<mouseId>, <x>, <y>)`  
 
 ## Monitor App
 ToDo: Add recording of monitor app
