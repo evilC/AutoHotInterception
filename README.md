@@ -30,7 +30,7 @@ Devices 1-10 are always keyboards
 Devices 11-21 are always mice  
 This ID scheme is totally unique to Interception, and IDs may change as you plug / unplug devices etc.  
 On PC, devices are often identified by VendorID (VID) and ProductID (PID). These are identifiers baked into the hardware at time of manufacture, and are identical for all devices of the same make / model.  
-Most AHI functions (eg to Subscribe to a key etc) use an ID, so some handy functions are provided to allow you to find the (current) Interception ID of your device, given a VID / PID.  
+Most AHI functions (eg to Subscribe to a key etc) use an Interception ID, so some handy functions are provided to allow you to find the (current) Interception ID of your device, given a VID / PID.  
 If you are unsure of what the VID / PID of your device is (or even if Interception can see it), you can use the included Monitor script to find it.  
 
 # Usage
@@ -118,7 +118,7 @@ In Subscription mode, you bypass AHK's hotkey system completely, and Interceptio
 All forms of input are supported in Subscription Mode.  
 Subscription Mode overrides Context Mode - that is, if a key on a keyboard has been subscribed to with Subscription Mode, then Context Mode will not fire for that key on that keyboard.  
 
-#### Keyboard
+#### Subscribing to Keyboard keys
 Subscribe to a key on a specific keyboard
 `SubscribeKey(<deviceId>, <scanCode>, <block>, <callback>)`
 ```
@@ -133,7 +133,7 @@ KeyEvent(state){
 }
 ```
 
-#### Mouse Buttons
+#### Subscribing to Mouse Buttons
 `SubscribeMouseButton(<deviceId>, <button>, <block>, <callback>)`  
 Where `button` is one of:  
 ```
@@ -145,7 +145,15 @@ Where `button` is one of:
 ```  
 Otherwise, usage is identical to `SubscribeKey`  
 
-#### Mouse Movement
+#### Subscribing to Mouse Movement  
+**Warning!** When Subscribing to mouse movement, you will get **LOTS** of callbacks.  
+Note the CPU usage of the demo Monitor app.  
+AutoHotkey is *not good* for handling heavy processing in each callback (eg updating a GUI, like the monitor app does).  
+Keep your callbacks **short and efficient** in this mode if you wish to avoid high CPU usage.  
+
+##### Relative Mode  
+Relative mode is for normal mice and most trackpads.  
+Coordinates will be delta (change)
 `SubscribeMouseMove(<deviceId>, <block>, <callback>)`  
 For Mouse Movement, the callback is passed two ints - x and y.  
 ```
@@ -156,7 +164,21 @@ MouseEvent(x, y){
 }
 ```
 
-## Sending Keys
+##### Absolute Mode
+Absolute mode is used for Graphics Tablets, Light Guns etc.  
+Coordinates will be in the range 0..65535  
+```
+Interception.SubscribeMouseMoveAbsolute(mouseId, false, Func("MouseEvent"))
+
+MouseEvent(x, y){
+	[...]
+}
+```
+## Synthesizing Output
+Note that these commands will work in both Context and Subscription modes  
+Also note that you can send as any device, regardless of whether you have subscribed to it in some way or not. 
+
+### Sending Keyboard Keys
 You can send keys as a specific keyboard using the `SendKeyEvent` method.  
 `Interception.SendKeyEvent(<keyboardId>, <scanCode>, <state>)`  
 scanCode = the Scan Code of the key  
@@ -168,3 +190,16 @@ Interception.SendKeyEvent(keyboardId, GetKeySC("a"), 1)
 ```
 
 If you subscribe to a key using Subscription mode with the `block` parameter set to true, then send a different key using `SendKeyEvent`, you are transforming that key in a way which is totally invisible to windows (And all apps running on it), and it will respond as appropriate. For example, AHK `$` prefixed hotkeys **will not** be able to tell that this is synthetic input, and will respond to it.
+
+### Sending Mouse Buttons
+Not yet implemented  
+
+### Sending Mouse Movement
+#### Relative
+Not yet implemented  
+
+#### Absolute
+Not yet implemented  
+
+## Monitor App
+ToDo: Add recording of monitor app
