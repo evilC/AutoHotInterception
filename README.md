@@ -24,6 +24,15 @@ If this all scares you and you don't really understand it, then TL/DR is you sho
 4. Edit the example script, enter the VID and PID of your keyboard
 5. Run the example script
 
+# Device IDs / VIDs PIDs etc  
+Interception identifies unique devices by an ID. This is a number from 1..21.  
+Devices 1-10 are always keyboards  
+Devices 11-21 are always mice  
+This ID scheme is totally unique to Interception, and IDs may change as you plug / unplug devices etc.  
+On PC, devices are often identified by VendorID (VID) and ProductID (PID). These are identifiers baked into the hardware at time of manufacture, and are identical for all devices of the same make / model.  
+Most AHI functions (eg to Subscribe to a key etc) use an Interception ID, so some handy functions are provided to allow you to find the (current) Interception ID of your device, given a VID / PID.  
+If you are unsure of what the VID / PID of your device is (or even if Interception can see it), you can use the included Monitor script to find it.  
+
 # Usage
 ## Initializing the Library
 Include the library
@@ -34,8 +43,25 @@ Include the library
 
 Initialize the library
 ```
-Interception := AutoHotInterception_Init()
+InterceptionWrapper := new AutoHotInterception()
+global Interception := InterceptionWrapper.GetInstance()
 ``` 
+`Interception` is an instance of the C# class - Most of the time, you will want to directly call the functions in the DLL using this object.  
+`InterceptionWrapper` is an AHK class that makes it easy to interact with the `Interception` object. For example, it wraps `GetDeviceList()` to make it return a normal AHK array. Most of the time you will not need it.  
+
+## Finding Device IDs  
+For most of your scripts, once you know the VID/PID of your device, you just need to find out what it's ID is for that run of the script.  
+To do so, call `Interception.GetDeviceId(<isMouse>, <VID>, <PID>)`  
+Where `isMouse` is `true` if you wish to find a mouse, or `false` if you wish to find a keyboard.  
+eg `Interception.GetDeviceId(false, 0x04F2, 0x0112)`  to find a keyboard with VID 0x04F2 and PID 0x0112  
+
+If you wish to get a list of all available devices, you can call `InterceptionWrapper.GetDeviceList()`, which will return an array of `DeviceInfo` objects, each of which has the following properties:  
+```
+Id
+isMouse
+Vid
+Pid
+```
 
 ## Modes
 There are two modes of operation for AHI, and both can be used simultaneously.  
@@ -57,8 +83,8 @@ AHI then fires the callback once more, passing `0` and the context variable gets
 #### Step 1
 Register your callback with AHI  
 ```
-VID := 0x04F2, PID := 0x0112
-Interception.SetContextCallback(VID, PID, Func("SetKb1Context"))
+keyboard1Id := Interception.GetDeviceId(false, 0x04F2, 0x0112)
+Interception.SetContextCallback(keyboard1Id, Func("SetKb1Context"))
 ```
 
 #### Step 2
@@ -92,12 +118,11 @@ In Subscription mode, you bypass AHK's hotkey system completely, and Interceptio
 All forms of input are supported in Subscription Mode.  
 Subscription Mode overrides Context Mode - that is, if a key on a keyboard has been subscribed to with Subscription Mode, then Context Mode will not fire for that key on that keyboard.  
 
-#### Keyboard
+#### Subscribing to Keyboard keys
 Subscribe to a key on a specific keyboard
-`SubscribeKey(<scanCode>, <block>, <callback>, <VID>, <PID>)`
+`SubscribeKey(<deviceId>, <scanCode>, <block>, <callback>)`
 ```
-VID := 0x04F2, PID := 0x0112
-Interception.SubscribeKey(GetKeySC("1"), true, Func("KeyEvent"), VID, PID)
+Interception.SubscribeKey(keyboardId, GetKeySC("1"), true, Func("KeyEvent"))
 return
 ```
 
@@ -108,8 +133,8 @@ KeyEvent(state){
 }
 ```
 
-#### Mouse Buttons
-`SubscribeMouseButton(<button>, <block>, <callback>, <VID>, <PID>)`  
+#### Subscribing to Mouse Buttons
+`SubscribeMouseButton(<deviceId>, <button>, <block>, <callback>)`  
 Where `button` is one of:  
 ```
 0: Left Mouse
@@ -120,32 +145,61 @@ Where `button` is one of:
 ```  
 Otherwise, usage is identical to `SubscribeKey`  
 
-#### Mouse Movement
-`SubscribeMouseMove(<block>, <callback>, <VID>, <PID>)`  
+#### Subscribing to Mouse Movement  
+**Warning!** When Subscribing to mouse movement, you will get **LOTS** of callbacks.  
+Note the CPU usage of the demo Monitor app.  
+AutoHotkey is *not good* for handling heavy processing in each callback (eg updating a GUI, like the monitor app does).  
+Keep your callbacks **short and efficient** in this mode if you wish to avoid high CPU usage.  
+
+##### Relative Mode  
+Relative mode is for normal mice and most trackpads.  
+Coordinates will be delta (change)
+`SubscribeMouseMove(<deviceId>, <block>, <callback>)`  
 For Mouse Movement, the callback is passed two ints - x and y.  
 ```
-VID := 0x04F2, PID := 0x0112
-Interception.SubscribeMouseMove(false, Func("MouseEvent"), VID, PID)
+Interception.SubscribeMouseMove(mouseId, false, Func("MouseEvent"))
 
 MouseEvent(x, y){
 	[...]
 }
 ```
 
-## Sending Keys
+##### Absolute Mode
+Absolute mode is used for Graphics Tablets, Light Guns etc.  
+Coordinates will be in the range 0..65535  
+```
+Interception.SubscribeMouseMoveAbsolute(mouseId, false, Func("MouseEvent"))
+
+MouseEvent(x, y){
+	[...]
+}
+```
+## Synthesizing Output
+Note that these commands will work in both Context and Subscription modes  
+Also note that you can send as any device, regardless of whether you have subscribed to it in some way or not. 
+
+### Sending Keyboard Keys
 You can send keys as a specific keyboard using the `SendKeyEvent` method.  
-`Interception.SendKeyEvent(<scanCode>, <state> [, <keyboardId = 1>])`  
+`Interception.SendKeyEvent(<keyboardId>, <scanCode>, <state>)`  
 scanCode = the Scan Code of the key  
 state = 1 for press, 0 for release  
-keyboardId = The Interception ID of the keyboard (Leave blank to use 1st keyboard)  
+keyboardId = The Interception ID of the keyboard
 
 ```
-Interception.SendKeyEvent(GetKeySC("a"), 1)
+Interception.SendKeyEvent(keyboardId, GetKeySC("a"), 1)
 ```
 
-```
-VID := 0x04F2, PID := 0x0112
-keyboardId := Interception.GetDeviceId(VID, PID)
-Interception.SendKeyEvent(GetKeySC("a"), 1, keyboardId)
-```
 If you subscribe to a key using Subscription mode with the `block` parameter set to true, then send a different key using `SendKeyEvent`, you are transforming that key in a way which is totally invisible to windows (And all apps running on it), and it will respond as appropriate. For example, AHK `$` prefixed hotkeys **will not** be able to tell that this is synthetic input, and will respond to it.
+
+### Sending Mouse Buttons
+Not yet implemented  
+
+### Sending Mouse Movement
+#### Relative
+Not yet implemented  
+
+#### Absolute
+Not yet implemented  
+
+## Monitor App
+ToDo: Add recording of monitor app
