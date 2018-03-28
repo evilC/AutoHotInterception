@@ -5,14 +5,13 @@
 OutputDebug DBGVIEWCLEAR
 
 global DeviceList := {}
+filterMouseMove := 1
 
 ;~ global Monitor := AutoHotInterception_Init("InterceptionMonitor")
 MonitorWrapper := new AutoHotInterception("Monitor")
 global Monitor := MonitorWrapper.GetInstance()
 
 DeviceList := MonitorWrapper.GetDeviceList()
-;~ Gui, Add, Text, w
-
 
 start := 1
 
@@ -35,6 +34,12 @@ Loop 2 {
 	}
 }
 
+Gui, Add, CheckBox, w300 y+20 hwndhCbFilterMove Checked, Filter Movement (Warning: Turning off can cause crashes)
+fn := Func("FilterMove")
+GuiControl, +g, % hCbFilterMove, % fn
+Gui, Add, Button, xm w300 Center gClearKeyboard, Clear
+Gui, Add, Button, x+5 yp w300 gClearMouse Center, Clear
+
 Gui, Add, ListView, xm w300 h400 hwndhLvKeyboard, ID|State|Code|Info
 Gui, Add, ListView, x+5 yp w300 h400 hwndhLvMouse, ID|State|Flags|Rolling|X|Y|Info
 LV_ModifyCol(5, 50)
@@ -51,6 +56,22 @@ CheckboxChanged(id, hwnd){
 	;~ ToolTip % "Changed " id " to " state ". Return value: " ret
 }
 
+FilterMove(hwnd){
+	global filterMouseMove
+	GuiControlGet, state, , % hwnd
+	filterMouseMove := state
+}
+
+ClearKeyboard:
+	Gui, ListView, % hLvKeyboard
+	LV_Delete()
+	return
+
+ClearMouse:
+	Gui, ListView, % hLvMouse
+	LV_Delete()
+	return
+
 FormatHex(num){
 	return Format("{:04X}", num)
 }
@@ -64,7 +85,9 @@ KeyboardEvent(id, state, code, info){
 }
 
 MouseEvent(id, state, flags, rolling, x, y, info){
-	global hLvMouse
+	global hLvMouse, filterMouseMove
+	if (filterMouseMove && !state)
+		return
 	Gui, ListView, % hLvMouse
 	row := LV_Add(, id, state, flags, rolling, x, y, info)
 	LV_Modify(row, "Vis")
