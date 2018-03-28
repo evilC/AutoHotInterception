@@ -1,23 +1,37 @@
 #include %A_LineFile%\..\CLR.ahk
 
-AutoHotInterception_Init(){
-	dllFile := A_LineFile "\..\" "AutoHotInterception.dll"
-	if (!FileExist(dllFile)){
-		MsgBox % "Unable to find " dllFile ", exiting..."
-		ExitApp
+class AutoHotInterception {
+	__New(cls := "Manager"){
+		dllFile := A_LineFile "\..\" "AutoHotInterception.dll"
+		if (!FileExist(dllFile)){
+			MsgBox % "Unable to find " dllFile ", exiting..."
+			ExitApp
+		}
+		
+		asm := CLR_LoadLibrary(dllFile)
+		try {
+			this.Interception := asm.CreateInstance("AutoHotInterception." cls)
+		}
+		catch {
+			MsgBox Interception failed to load
+			ExitApp
+		}
+		if (this.Interception.OkCheck() != "OK"){
+			MsgBox Interception Test failed
+			ExitApp
+		}
 	}
 	
-	asm := CLR_LoadLibrary(dllFile)
-	try {
-		Interception := asm.CreateInstance("InterceptionWrapper")
+	GetInstance(){
+		return this.Interception
 	}
-	catch {
-		MsgBox Interception failed to load
-		ExitApp
+	
+	GetDeviceList(){
+		DeviceList := {}
+		arr := this.Interception.GetDeviceList()
+		for v in arr {
+			DeviceList[v.id] := { ID: v.id, VID: v.vid, PID: v.pid, IsMouse: v.IsMouse }
+		}
+		return DeviceList
 	}
-	if (Interception.Test() != "OK"){
-		MsgBox Interception Test failed
-		ExitApp
-	}
-	return Interception
 }

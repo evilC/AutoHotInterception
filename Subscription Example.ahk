@@ -4,21 +4,19 @@
 
 VID := 0x04F2, PID := 0x0112
 
-global Interception := AutoHotInterception_Init()
+InterceptionWrapper := new AutoHotInterception()
+global Interception := InterceptionWrapper.GetInstance()
 
-devices := Interception.GetDeviceList()
-if (!devices){
+devices := InterceptionWrapper.GetDeviceList()
+if (!devices.Length()){
 	msgbox Device List Check failed
 	ExitApp
 }
 
-clipboard := devices
-MsgBox % devices
+keyboardId := Interception.GetDeviceId(false, VID, PID)
 
-; Param 1: Scan Code for key
-; Param 2: Block (true/false)
-; Param 3: Callback
-result := Interception.SubscribeKey(GetKeySC("1"), true, Func("KeyEvent"), VID, PID)
+result := Interception.SubscribeKey(keyboardId, GetKeySC("1"), true, Func("KeyEvent"))
+
 if (result != -1){
 	msgbox Subscribe failed
 	ExitApp

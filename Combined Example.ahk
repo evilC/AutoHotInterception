@@ -4,28 +4,28 @@
 
 VID := 0x04F2, PID := 0x0112
 
-global Interception := AutoHotInterception_Init()
+InterceptionWrapper := new AutoHotInterception()
+global Interception := InterceptionWrapper.GetInstance()
 
-devices := Interception.GetDeviceList()
-if (!devices){
+devices := InterceptionWrapper.GetDeviceList()
+if (!devices.Length()){
 	msgbox Device List Check failed
 	ExitApp
 }
-keyboardId := Interception.GetDeviceId(VID, PID)
+
+keyboardId := Interception.GetDeviceId(false, VID, PID)
 if (keyboardId == 0){
 	MsgBox % "Could not find keyboard with VID " VID " PID " PID
 	ExitApp
 }
-;~ clipboard := devices
-;~ MsgBox % devices
 
-result := Interception.SubscribeKey(GetKeySC("2"), true, Func("KeyEvent"), VID, PID)
+result := Interception.SubscribeKey(keyboardId, GetKeySC("2"), true, Func("KeyEvent"))
 if (result != -1){
 	msgbox Subscribe failed
 	ExitApp
 }
 
-result := Interception.SetContextCallback(VID, PID, Func("SetKb1Context"))
+result := Interception.SetContextCallback(keyboardId, Func("SetKb1Context"))
 if (result != -1){
 	msgbox Context request failed
 	ExitApp
@@ -35,8 +35,8 @@ return
 KeyEvent(state){
 	static ctrlCode := GetKeySC("Ctrl")
 	global keyboardId
-	Interception.SendKeyEvent(ctrlCode, state, keyboardId)
-	;~ ToolTip % "State: " state
+	;~ Interception.SendKeyEvent(keyboardId, ctrlCode, state)
+	ToolTip % "State: " state
 }
 
 SetKb1Context(state){

@@ -4,50 +4,63 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-
-//WYSE VID 0x04F2 PID 0x0112
-//Dell VID 0x413C PID 0x2107
-
-//Main Mouse: VID: 0x46D, PID: 0xC531
-//Logitech blue wired: VID: 0x46D, PID: 0xC00C
+using AutoHotInterception;
 
 class TestApp
 {
     static void Main(string[] args)
     {
-        var iw = new InterceptionWrapper();
-        var str = iw.GetDeviceList();
-        // 0x2D = X key
-        //iw.SubscribeKey(0x2D, true, new Action<int>((value) =>
-
-        //iw.SubscribeKey(2, true, new Action<int>((value) =>
-        //{
-        //    Console.WriteLine("Subscription Value: " + value);
-        ////}), 0x413C, 0x2107);
-        //}), 0x04F2, 0x0112);
-        ////}), 0x046D, 0xC531);
-
-        //iw.SubscribeMouseButton(1, true, new Action<int>((value) =>
-        //{
-        //    Console.WriteLine("Mouse Button Value: " + value);
-        //    //}), 0x413C, 0x2107);
-        //}), 0x46D, 0xC52B);
-
-        //iw.SubscribeMouseMoveRelative(false, new Action<int, int>((x, y) =>
-        //{
-        //    Console.WriteLine($"Mouse Axis Value: x={x}, y={y}");
-        ////}), 0x46D, 0xC531);   // G700s
-        //}), 0x46D, 0xC00C);     // Logitech Wheel Mouse (Blue)
-
-        iw.SetContextCallback(0x46D, 0xC00C, new Action<int>((value) =>
-        //iw.SetContextCallback(0x04F2, 0x0112, new Action<int>((value) =>
+        var mon = new AutoHotInterception.Monitor();
+        var devInfo = mon.GetDeviceList();
+        mon.Subscribe(new Action<int, ushort, ushort, uint>((id, state, code, info) =>
         {
-            Console.WriteLine("Context Value: " + value);
+            Console.WriteLine($"Subscription Value: State={state}, Code={code}");
+        }), new Action<int, ushort, ushort, short, int, int, uint>((id, state, flags, rolling, x, y, info) =>
+        {
+            Console.WriteLine($"Subscription Value: x={x}, y={y}");
         }));
-        while (true)
+        mon.SetDeviceFilterState(16, true);
+        Console.ReadLine();
+        return;
+
+        // --------------------------------------------------------------
+
+        var im = new Manager();
+
+        var keyboardId = 0;
+        //keyboardId = im.GetDeviceId(false, 0x04F2, 0x0112);     // WYSE
+        //keyboardId = im.GetDeviceId(false, 0x413C, 0x2107);     // Dell
+
+        var mouseId = 0;
+        //mouseId = im.GetDeviceId(true, 0x46D, 0xC531);      // G700s
+        //mouseId = im.GetDeviceId(true, 0x46D, 0xC00C);      // Logitech Wired
+
+        if (keyboardId != 0)
         {
-            Thread.Sleep(100);
+            im.SubscribeKey(keyboardId, 2, true, new Action<int>((value) =>
+            {
+                Console.WriteLine("Subscription Value: " + value);
+            }));
+
+            im.SetContextCallback(keyboardId, new Action<int>((value) =>
+            {
+                Console.WriteLine("Context Value: " + value);
+            }));
         }
 
+        if (mouseId != 0)
+        {
+            im.SubscribeMouseButton(mouseId, 1, true, new Action<int>((value) =>
+            {
+                Console.WriteLine("Mouse Button Value: " + value);
+            }));
+
+            im.SubscribeMouseMoveRelative(mouseId, false, new Action<int, int>((x, y) =>
+            {
+                Console.WriteLine($"Mouse Axis Value: x={x}, y={y}");
+            }));
+
+        }
+        Console.ReadLine();
     }
 }

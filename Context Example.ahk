@@ -4,18 +4,18 @@
 
 VID := 0x04F2, PID := 0x0112
 
-global Interception := AutoHotInterception_Init()
+InterceptionWrapper := new AutoHotInterception()
+global Interception := InterceptionWrapper.GetInstance()
 
-devices := Interception.GetDeviceList()
-if (!devices){
+devices := InterceptionWrapper.GetDeviceList()
+if (!devices.Length()){
 	msgbox Device List Check failed
 	ExitApp
 }
 
-;~ clipboard := devices
-;~ MsgBox % devices
+keyboardId := Interception.GetDeviceId(false, VID, PID)
 
-result := Interception.SetContextCallback(VID, PID, Func("SetKb1Context"))
+result := Interception.SetContextCallback(keyboardId, Func("SetKb1Context"))
 if (result != -1){
 	msgbox Subscribe failed
 	ExitApp

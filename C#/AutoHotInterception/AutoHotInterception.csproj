@@ -40,11 +40,17 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="InterceptionWrapper.cs" />
+    <Compile Include="Helpers\Helpers.cs" />
+    <Compile Include="lib\ManagedWrapper.cs" />
+    <Compile Include="Manager.cs" />
+    <Compile Include="Monitor.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <PreBuildEvent>if not exist "$(TargetDir)interception.dll" xcopy "$(SolutionDir)dependencies\interception.dll" "$(TargetDir)"</PreBuildEvent>
+  </PropertyGroup>
+  <PropertyGroup>
+    <PostBuildEvent>xcopy /Q /Y "$(TargetPath)" "$(SolutionDir)..\Lib"</PostBuildEvent>
   </PropertyGroup>
 </Project>
