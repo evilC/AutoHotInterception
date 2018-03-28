@@ -27,7 +27,7 @@ namespace AutoHotInterception
             SetThreadState(true);
         }
 
-        public string Test()
+        public string OkCheck()
         {
             return "OK";
         }
