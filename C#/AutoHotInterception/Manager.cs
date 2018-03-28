@@ -190,8 +190,10 @@ namespace AutoHotInterception
         /// <param name="id">The ID of the Keyboard to send as</param>
         /// <param name="code">The ScanCode to send</param>
         /// <param name="state">The State to send (1 = pressed, 0 = released)</param>
-        public void SendKeyEvent(int id, ushort code, int state)
+        public bool SendKeyEvent(int id, ushort code, int state)
         {
+            if (!IsValidDeviceId(false, id)) return false;
+
             var stroke = new ManagedWrapper.Stroke();
             if (code > 255)
             {
@@ -201,6 +203,73 @@ namespace AutoHotInterception
             stroke.key.code = code;
             stroke.key.state = (ushort)(1 - state);
             ManagedWrapper.Send(_deviceContext, id, ref stroke, 1);
+            return true;
+        }
+
+        /// <summary>
+        /// Sends Mouse button events
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="btn"></param>
+        /// <param name="state"></param>
+        /// <returns></returns>
+        public bool SendMouseButtonEvent(int id, int btn, int state)
+        {
+            if (!IsValidDeviceId(true, id)) return false;
+
+            //var st = btn * 4;
+            //if (state == 0)
+            //{
+            //    st *= 2;
+            //}
+            var stroke = new ManagedWrapper.Stroke();
+            var bit = btn * 2;
+            if (state == 0)
+                bit += 1;
+            stroke.mouse.state = (ushort)(1 << bit);
+
+            ManagedWrapper.Send(_deviceContext, id, ref stroke, 1);
+            return true;
+        }
+
+        public bool SendMouseMove(int id, int x, int y)
+        {
+            return SendMouseMoveRelative(id, x, y);
+        }
+
+        /// <summary>
+        /// Sends Relative Mouse Movement
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="x"></param>
+        /// <param name="y"></param>
+        /// <returns></returns>
+        public bool SendMouseMoveRelative(int id, int x, int y)
+        {
+            if (!IsValidDeviceId(true, id)) return false;
+
+            var stroke = new ManagedWrapper.Stroke { mouse = { x = x, y = y, flags = (ushort)ManagedWrapper.MouseFlag.MouseMoveRelative } };
+            ManagedWrapper.Send(_deviceContext, id, ref stroke, 1);
+            return true;
+        }
+
+        /// <summary>
+        /// Sends Absolute  Mouse Movement
+        /// Note: Newing up a stroke seems to make Absolute input be relative to main monitor
+        /// Calling Send on an actual stroke from an Absolute device results in input relative to all monitors
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="x"></param>
+        /// <param name="y"></param>
+        /// <returns></returns>
+        public bool SendMouseMoveAbsolute(int id, int x, int y)
+        {
+            if (!IsValidDeviceId(true, id)) return false;
+
+            var stroke = new ManagedWrapper.Stroke { mouse = { x = x, y = y, flags = 1, state = 0, information = 0, rolling = 0} };
+            //var stroke = new ManagedWrapper.Stroke { mouse = { x = x, y = y, flags = (ushort)ManagedWrapper.MouseFlag.MouseMoveAbsolute} };
+            ManagedWrapper.Send(_deviceContext, id, ref stroke, 1);
+            return true;
         }
 
         #endregion
@@ -297,6 +366,7 @@ namespace AutoHotInterception
 
             while (true)
             {
+                // Process Keyboards
                 for (var i = 1; i < 11; i++)
                 {
                     var isMonitoredKeyboard = IsMonitoredDevice(i) == 1;
@@ -349,6 +419,7 @@ namespace AutoHotInterception
                     }
                 }
 
+                // Process Mice
                 for (var i = 11; i < 21; i++)
                 {
                     var isMontioredMouse = IsMonitoredDevice(i) == 1;
@@ -357,7 +428,7 @@ namespace AutoHotInterception
 
                     while (ManagedWrapper.Receive(_deviceContext, i, ref stroke, 1) > 0)
                     {
-                        Debug.WriteLine($"AHK| Mouse {i} seen - flags: {stroke.mouse.flags}, raw state: {stroke.mouse.state}");
+                        //Debug.WriteLine($"AHK| Mouse {i} seen - flags: {stroke.mouse.flags}, raw state: {stroke.mouse.state}");
                         var block = false;
                         if (isMontioredMouse)
                         {

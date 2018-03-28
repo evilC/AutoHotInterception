@@ -10,18 +10,18 @@ class TestApp
 {
     static void Main(string[] args)
     {
-        var mon = new AutoHotInterception.Monitor();
-        var devInfo = mon.GetDeviceList();
-        mon.Subscribe(new Action<int, ushort, ushort, uint>((id, state, code, info) =>
-        {
-            Console.WriteLine($"Subscription Value: State={state}, Code={code}");
-        }), new Action<int, ushort, ushort, short, int, int, uint>((id, state, flags, rolling, x, y, info) =>
-        {
-            Console.WriteLine($"Subscription Value: x={x}, y={y}");
-        }));
-        mon.SetDeviceFilterState(16, true);
-        Console.ReadLine();
-        return;
+        //var mon = new AutoHotInterception.Monitor();
+        //var devInfo = mon.GetDeviceList();
+        //mon.Subscribe(new Action<int, ushort, ushort, uint>((id, state, code, info) =>
+        //{
+        //    Console.WriteLine($"Subscription Value: State={state}, Code={code}");
+        //}), new Action<int, ushort, ushort, short, int, int, uint>((id, state, flags, rolling, x, y, info) =>
+        //{
+        //    Console.WriteLine($"Subscription Value: x={x}, y={y}");
+        //}));
+        //mon.SetDeviceFilterState(16, true);
+        //Console.ReadLine();
+        //return;
 
         // --------------------------------------------------------------
 
@@ -34,6 +34,13 @@ class TestApp
         var mouseId = 0;
         //mouseId = im.GetDeviceId(true, 0x46D, 0xC531);      // G700s
         //mouseId = im.GetDeviceId(true, 0x46D, 0xC00C);      // Logitech Wired
+        mouseId = im.GetDeviceId(true, 0xB57, 0x9091);      // Parblo Tablet
+
+        //im.SendMouseButtonEvent(mouseId, 1, 1);
+        //Thread.Sleep(100);
+        //im.SendMouseButtonEvent(mouseId, 1, 0);
+        //im.SendMouseMoveRelative(mouseId, 100, 100);
+        //im.SendMouseMoveAbsolute(mouseId, 100, 100);
 
         if (keyboardId != 0)
         {
