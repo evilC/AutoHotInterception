@@ -18,11 +18,14 @@ If this all scares you and you don't really understand it, then TL/DR is you sho
 
 # Setup
 1. Download and install the [Interception Driver](http://www.oblita.com/interception)  
-2. Download a zip from the releases page and extract it to a folder
-3. Copy the `interception.dll` from the folder where you ran the interecption install into the `lib` folder  
-(You can optionally place the contents of the `lib` folder in `My Documents\AutoHotkey\lib`
-4. Edit the example script, enter the VID and PID of your keyboard
-5. Run the example script
+2. Download an AHI release from the [releases page](https://github.com/evilC/AutoHotInterception/releases) and extract it to a folder.  
+DO NOT use the "Clone or Download" link on the main page.  
+This is the folder where (at least initially) you will be running scripts from.  
+It contains a number of sample `.ahk` scripts and a `lib` folder, which contains all the libraries and files needed for AHI.  
+3. Copy the `interception.dll` from the folder where you ran the interecption install into the `lib` folder that was created in step (2)
+4. Edit the example script, enter the VID and PID of your keyboard  
+5. Run one of the sample scripts  
+6. (Optional) The contents of the `lib` folder can actually be placed in one of the AutoHotkey lib folders (eg `My Documents\AutoHotkey\lib` - make it if it does not exist), and the `#include` lines of the sample scripts changed to `#include <AutoHotInterception>`, to enable your AHI scripts to be in any folder, without each needing it's own copy of the library files.  
 
 # Device IDs / VIDs PIDs etc  
 Interception identifies unique devices by an ID. This is a number from 1..21.  
