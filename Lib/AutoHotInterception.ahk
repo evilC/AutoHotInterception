@@ -2,7 +2,8 @@
 
 class AutoHotInterception {
 	__New(cls := "Manager"){
-		dllFile := A_LineFile "\..\" "AutoHotInterception.dll"
+		dllName := "AutoHotInterception.dll"
+		dllFile := A_LineFile "\..\" dllName
 		if (!FileExist(dllFile)){
 			MsgBox % "Unable to find " dllFile ", exiting..."
 			ExitApp
@@ -13,11 +14,11 @@ class AutoHotInterception {
 			this.Interception := asm.CreateInstance("AutoHotInterception." cls)
 		}
 		catch {
-			MsgBox Interception failed to load
+			MsgBox % dllName " failed to load"
 			ExitApp
 		}
 		if (this.Interception.OkCheck() != "OK"){
-			MsgBox Interception Test failed
+			MsgBox % dllName " loaded but check failed!`nTry right-clicking lib\" dllName ", select Properties, and if there is an 'Unblock' checkbox, tick it"
 			ExitApp
 		}
 	}
