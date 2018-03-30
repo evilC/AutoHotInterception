@@ -81,16 +81,16 @@ As such, only Keyboard Keys and Mouse Buttons are supported in this mode. Mouse 
 In context mode, you create a "Context Manager" object which turns on/off a set of AHK hotkeys for you.  
 You wrap your hotkeys in an #if block which is controlled by the manager.  
 
-#### Step 1
 Create a Context Manager for the keyboard or mouse, pass it the Interception ID of the device.  
+Then Create your hotkeys, wrapped in an `#if` block that checks the `.IsActive` property of your Context Manager  
+
+(Complete, working script)  
 ```
+#include Lib\AutoHotInterception.ahk
+
 keyboard1Id := AHI.GetKeyboardId(0x04F2, 0x0112)
 cm1 := AHI.CreateContextManager(keyboard1Id)
-```
 
-#### Step 2
-Create your hotkeys, wrapped in an `#if` block that checks the `.IsActive` property of your Context Manager  
-```
 #if cm1.IsActive	; Start the #if block
 ::aaa::JACKPOT
 1:: 
