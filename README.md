@@ -49,11 +49,12 @@ Include the library
 
 Initialize the library
 ```
-InterceptionWrapper := new AutoHotInterception()
-global Interception := InterceptionWrapper.GetInstance()
+AHI := new AutoHotInterception()
+global Interception := AHI.GetInstance()
 ``` 
-`Interception` is an instance of the C# class - Most of the time, you will want to directly call the functions in the DLL using this object.  
-`InterceptionWrapper` is an AHK class that makes it easy to interact with the `Interception` object. For example, it wraps `GetDeviceList()` to make it return a normal AHK array. Most of the time you will not need it.  
+
+`AHI` is an AHK class that makes it easy to interact with the AutoHotInterception DLL. For example, it wraps `GetDeviceList()` to make it return a normal AHK array. Most of the time you will not need it.  
+For advanced users, if you wish to directly communicate with the AHI DLL, you can call `AHI.Instance` instead of `AHI` for most functions (eg sending of synthesized input).  
 
 ## Finding Device IDs  
 ### Finding a specific device  
@@ -64,7 +65,7 @@ eg `Interception.GetDeviceId(false, 0x04F2, 0x0112)`  to find a keyboard with VI
 If you have multiple identical VID/PID devices, specify an `instance` (Starts from 1).  
 
 ### Getting a list of devices
-If you wish to get a list of all available devices, you can call `InterceptionWrapper.GetDeviceList()`, which will return an array of `DeviceInfo` objects, each of which has the following properties:  
+If you wish to get a list of all available devices, you can call `AHI.GetDeviceList()`, which will return an array of `DeviceInfo` objects, each of which has the following properties:  
 ```
 Id
 isMouse
