@@ -2,32 +2,12 @@
 #Persistent
 #include Lib\AutoHotInterception.ahk
 
-VID := 0x04F2, PID := 0x0112
-
-InterceptionWrapper := new AutoHotInterception()
-global Interception := InterceptionWrapper.GetInstance()
-
-devices := InterceptionWrapper.GetDeviceList()
-if (!devices.Length()){
-	msgbox Device List Check failed
-	ExitApp
-}
-
-keyboardId := Interception.GetDeviceId(false, VID, PID)
-
-result := Interception.SetContextCallback(keyboardId, Func("SetKb1Context"))
-if (result != -1){
-	msgbox Subscribe failed
-	ExitApp
-}
+AHI := new AutoHotInterception()
+id1 := AHI.GetKeyboardId(0x04F2, 0x0112, 1)
+cm1 := AHI.CreateContextManager(id1)
 return
 
-SetKb1Context(state){
-	global isKeyboard1Active
-	Sleep 0		; We seem to need this for hotstrings to work, not sure why
-	isKeyboard1Active := state
-}
-#if isKeyboard1Active
+#if cm1.IsActive
 ::aaa::JACKPOT
 1:: 
 	ToolTip % "KEY DOWN EVENT @ " A_TickCount

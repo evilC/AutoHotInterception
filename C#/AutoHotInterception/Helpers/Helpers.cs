@@ -9,11 +9,15 @@ namespace AutoHotInterception.Helpers
 {
     public static class HelperFunctions
     {
-        public static bool IsValidDeviceId(bool isMouse, int device)
+        public static void IsValidDeviceId(bool isMouse, int id)
         {
             var start = isMouse ? 11 : 1;
             var end = start + 9;
-            return device >= start && device <= end;
+            if (id < start || id > end)
+            {
+                throw new ArgumentOutOfRangeException(nameof(id), $"Invalid id ID: {id} for device type {(isMouse ? "Mouse" : "Keyboard")}. Device IDs for this type should be between {start} and {end}");
+            }
+            //return id >= start && id <= end;
         }
 
         public static void GetVidPid(string str, ref int vid, ref int pid)

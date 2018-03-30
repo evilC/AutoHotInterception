@@ -12,7 +12,7 @@ filterMouseMove := 1
 
 ;~ global Monitor := AutoHotInterception_Init("InterceptionMonitor")
 MonitorWrapper := new AutoHotInterception("Monitor")
-global Monitor := MonitorWrapper.GetInstance()
+global Monitor := MonitorWrapper.Instance
 
 DeviceList := MonitorWrapper.GetDeviceList()
 

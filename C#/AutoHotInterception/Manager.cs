@@ -57,13 +57,10 @@ namespace AutoHotInterception
         /// <param name="block">Whether or not to block the key</param>
         /// <param name="callback">The callback to fire when the key changes state</param>
         /// <returns></returns>
-        public bool SubscribeKey(int id, ushort code, bool block, dynamic callback)
+        public void SubscribeKey(int id, ushort code, bool block, dynamic callback)
         {
             SetFilterState(false);
-            if (!IsValidDeviceId(false, id))
-            {
-                return false;
-            }
+            IsValidDeviceId(false, id);
 
             if (!_keyboardMappings.ContainsKey(id))
             {
@@ -75,7 +72,6 @@ namespace AutoHotInterception
 
             SetFilterState(true);
             SetThreadState(true);
-            return true;
         }
 
         /// <summary>
@@ -86,12 +82,9 @@ namespace AutoHotInterception
         /// <param name="block">Whether or not to block the button</param>
         /// <param name="callback">The callback to fire when the button changes state</param>
         /// <returns></returns>
-        public bool SubscribeMouseButton(int id, ushort btn, bool block, dynamic callback)
+        public void SubscribeMouseButton(int id, ushort btn, bool block, dynamic callback)
         {
-            if (!IsValidDeviceId(true, id))
-            {
-                return false;
-            }
+            IsValidDeviceId(true, id);
 
             if (!_mouseButtonMappings.ContainsKey(id))
             {
@@ -102,7 +95,6 @@ namespace AutoHotInterception
 
             SetFilterState(true);
             SetThreadState(true);
-            return true;
         }
 
         //Shorthand for SubscribeMouseMoveRelative
@@ -118,18 +110,14 @@ namespace AutoHotInterception
         /// <param name="block">Whether or not to block the movement</param>
         /// <param name="callback">The callback to fire when the mouse moves</param>
         /// <returns></returns>
-        public bool SubscribeMouseMoveRelative(int id, bool block, dynamic callback)
+        public void SubscribeMouseMoveRelative(int id, bool block, dynamic callback)
         {
-            if (!IsValidDeviceId(true, id))
-            {
-                return false;
-            }
+            IsValidDeviceId(true, id);
 
             _mouseMoveRelativeMappings[id] = new MappingOptions() { Block = block, Callback = callback };
             _filteredDevices[id] = true;
             SetFilterState(true);
             SetThreadState(true);
-            return true;
         }
 
         /// <summary>
@@ -140,18 +128,14 @@ namespace AutoHotInterception
         /// <param name="block">Whether or not to block the movement</param>
         /// <param name="callback">The callback to fire when the mouse moves</param>
         /// <returns></returns>
-        public bool SubscribeMouseMoveAbsolute(int id, bool block, dynamic callback)
+        public void SubscribeMouseMoveAbsolute(int id, bool block, dynamic callback)
         {
-            if (!IsValidDeviceId(true, id))
-            {
-                return false;
-            }
+            IsValidDeviceId(true, id);
 
             _mouseMoveAbsoluteMappings[id] = new MappingOptions() { Block = block, Callback = callback };
             _filteredDevices[id] = true;
             SetFilterState(true);
             SetThreadState(true);
-            return true;
         }
 
         #endregion
@@ -164,12 +148,12 @@ namespace AutoHotInterception
         /// <param name="id">The ID of the device</param>
         /// <param name="callback">The callback to fire before and after each key or button press</param>
         /// <returns></returns>
-        public bool SetContextCallback(int id, dynamic callback)
+        public void SetContextCallback(int id, dynamic callback)
         {
             SetFilterState(false);
-            if (id < 1 || id > 21)
+            if (id < 1 || id > 20)
             {
-                return false;
+                throw new ArgumentOutOfRangeException(nameof(id), $"DeviceIds must be between 1 and 20");
             }
 
             _contextCallbacks[id] = callback;
@@ -177,7 +161,6 @@ namespace AutoHotInterception
 
             SetFilterState(true);
             SetThreadState(true);
-            return true;
         }
 
         #endregion
@@ -190,9 +173,9 @@ namespace AutoHotInterception
         /// <param name="id">The ID of the Keyboard to send as</param>
         /// <param name="code">The ScanCode to send</param>
         /// <param name="state">The State to send (1 = pressed, 0 = released)</param>
-        public bool SendKeyEvent(int id, ushort code, int state)
+        public void SendKeyEvent(int id, ushort code, int state)
         {
-            if (!IsValidDeviceId(false, id)) return false;
+            IsValidDeviceId(false, id);
 
             var stroke = new ManagedWrapper.Stroke();
             if (code > 255)
@@ -203,7 +186,6 @@ namespace AutoHotInterception
             stroke.key.code = code;
             stroke.key.state = (ushort)(1 - state);
             ManagedWrapper.Send(_deviceContext, id, ref stroke, 1);
-            return true;
         }
 
         /// <summary>
@@ -213,9 +195,9 @@ namespace AutoHotInterception
         /// <param name="btn"></param>
         /// <param name="state"></param>
         /// <returns></returns>
-        public bool SendMouseButtonEvent(int id, int btn, int state)
+        public void SendMouseButtonEvent(int id, int btn, int state)
         {
-            if (!IsValidDeviceId(true, id)) return false;
+            IsValidDeviceId(true, id);
 
             //var st = btn * 4;
             //if (state == 0)
@@ -229,7 +211,6 @@ namespace AutoHotInterception
             stroke.mouse.state = (ushort)(1 << bit);
 
             ManagedWrapper.Send(_deviceContext, id, ref stroke, 1);
-            return true;
         }
 
         public bool SendMouseMove(int id, int x, int y)
@@ -246,7 +227,7 @@ namespace AutoHotInterception
         /// <returns></returns>
         public bool SendMouseMoveRelative(int id, int x, int y)
         {
-            if (!IsValidDeviceId(true, id)) return false;
+            IsValidDeviceId(true, id);
 
             var stroke = new ManagedWrapper.Stroke { mouse = { x = x, y = y, flags = (ushort)ManagedWrapper.MouseFlag.MouseMoveRelative } };
             ManagedWrapper.Send(_deviceContext, id, ref stroke, 1);
@@ -264,7 +245,7 @@ namespace AutoHotInterception
         /// <returns></returns>
         public bool SendMouseMoveAbsolute(int id, int x, int y)
         {
-            if (!IsValidDeviceId(true, id)) return false;
+            IsValidDeviceId(true, id);
 
             var stroke = new ManagedWrapper.Stroke { mouse = { x = x, y = y, flags = 1, state = 0, information = 0, rolling = 0} };
             //var stroke = new ManagedWrapper.Stroke { mouse = { x = x, y = y, flags = (ushort)ManagedWrapper.MouseFlag.MouseMoveAbsolute} };
@@ -275,6 +256,16 @@ namespace AutoHotInterception
         #endregion
 
         #region Device Querying
+
+        public int GetKeyboardId(int vid, int pid, int instance = 1)
+        {
+            return GetDeviceId(false, vid, pid, instance);
+        }
+
+        public int GetMouseId(int vid, int pid, int instance = 1)
+        {
+            return GetDeviceId(true, vid, pid, instance);
+        }
 
         /// <summary>
         /// Tries to get Device ID from VID/PID
