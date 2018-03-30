@@ -53,11 +53,14 @@ global Interception := InterceptionWrapper.GetInstance()
 `InterceptionWrapper` is an AHK class that makes it easy to interact with the `Interception` object. For example, it wraps `GetDeviceList()` to make it return a normal AHK array. Most of the time you will not need it.  
 
 ## Finding Device IDs  
-For most of your scripts, once you know the VID/PID of your device, you just need to find out what it's ID is for that run of the script.  
-To do so, call `Interception.GetDeviceId(<isMouse>, <VID>, <PID>)`  
+### Finding a specific device  
+In most cases, you will want to hard-wire a script to a specific VID/PID - in this instance, use this method:  
+`Interception.GetDeviceId(<isMouse>, <VID>, <PID> [,<instance = 1>] )`  
 Where `isMouse` is `true` if you wish to find a mouse, or `false` if you wish to find a keyboard.  
 eg `Interception.GetDeviceId(false, 0x04F2, 0x0112)`  to find a keyboard with VID 0x04F2 and PID 0x0112  
+If you have multiple identical VID/PID devices, specify an `instance` (Starts from 1).  
 
+### Getting a list of devices
 If you wish to get a list of all available devices, you can call `InterceptionWrapper.GetDeviceList()`, which will return an array of `DeviceInfo` objects, each of which has the following properties:  
 ```
 Id
