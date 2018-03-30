@@ -22,10 +22,13 @@ If this all scares you and you don't really understand it, then TL/DR is you sho
 DO NOT use the "Clone or Download" link on the main page.  
 This is the folder where (at least initially) you will be running scripts from.  
 It contains a number of sample `.ahk` scripts and a `lib` folder, which contains all the libraries and files needed for AHI.  
-3. Copy the `interception.dll` from the folder where you ran the interecption install into the `lib` folder that was created in step (2)
-4. Edit the example script, enter the VID and PID of your keyboard  
-5. Run one of the sample scripts  
-6. (Optional) The contents of the `lib` folder can actually be placed in one of the AutoHotkey lib folders (eg `My Documents\AutoHotkey\lib` - make it if it does not exist), and the `#include` lines of the sample scripts changed to `#include <AutoHotInterception>`, to enable your AHI scripts to be in any folder, without each needing it's own copy of the library files.  
+3. Copy the `interception.dll` from the folder where you ran the interecption install into the `lib` folder that was created in step (2)  
+4. Right-click `Unblocker.ps1` in the lib folder and select `Run as Admin`.  
+This is because downloaded DLLs are often blocked and will not work.  
+This can be done manually by right clicking the DLLs, selecting Properties, and checking a "Block" box if it exists.  
+5. Edit the example script, enter the VID and PID of your keyboard  
+6. Run one of the sample scripts  
+7. (Optional) The contents of the `lib` folder can actually be placed in one of the AutoHotkey lib folders (eg `My Documents\AutoHotkey\lib` - make it if it does not exist), and the `#include` lines of the sample scripts changed to `#include <AutoHotInterception>`, to enable your AHI scripts to be in any folder, without each needing it's own copy of the library files.  
 
 # Device IDs / VIDs PIDs etc  
 Interception identifies unique devices by an ID. This is a number from 1..21.  
