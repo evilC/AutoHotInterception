@@ -77,25 +77,19 @@ There are two modes of operation for AHI, and both can be used simultaneously.
 ### Context mode
 Context mode is so named as it takes advantage of AutoHotkey's [Context Sensitive Hotkeys](https://autohotkey.com/docs/Hotkeys.htm#Context).  
 As such, only Keyboard Keys and Mouse Buttons are supported in this mode. Mouse Movement is not supported.  
-In AHK, you can wrap your hotkeys in a block like so:
-```
-#if myVariable == 1
-F1::Msgbox You Pressed F1
-#if
-```
-This hotkey would only fire if the `myVariable` was 1.  
+
 In context mode, you create a "Context Manager" object which turns on/off a set of AHK hotkeys for you.  
 You wrap your hotkeys in an #if block which is controlled by the manager.  
 
 #### Step 1
-Create a Context Manager for the keyboard
+Create a Context Manager for the keyboard or mouse, pass it the Interception ID of the device.  
 ```
 keyboard1Id := AHI.GetKeyboardId(0x04F2, 0x0112)
 cm1 := AHI.CreateContextManager(keyboard1Id)
 ```
 
 #### Step 2
-Create your hotkeys, wrapped in an `#if` block that checks the `.IsActive` property of the Context Manager  
+Create your hotkeys, wrapped in an `#if` block that checks the `.IsActive` property of your Context Manager  
 ```
 #if cm1.IsActive	; Start the #if block
 ::aaa::JACKPOT
