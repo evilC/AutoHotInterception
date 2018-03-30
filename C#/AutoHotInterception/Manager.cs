@@ -283,9 +283,8 @@ namespace AutoHotInterception
         /// <param name="vid">The VID of the device</param>
         /// <param name="pid">The PID of the device</param>
         /// <param name="instance">The instance of the VID/PID (Optional)</param>
-        /// ToDo: Implement instance support
         /// <returns></returns>
-        public int GetDeviceId(bool isMouse, int vid, int pid, int instance = 0)
+        public int GetDeviceId(bool isMouse, int vid, int pid, int instance = 1)
         {
             var start = isMouse ? 11 : 0;
             var max = isMouse ? 21 : 11;
@@ -294,12 +293,15 @@ namespace AutoHotInterception
                 var handle = ManagedWrapper.GetHardwareStr(_deviceContext, i, 1000);
                 int foundVid = 0, foundPid = 0;
                 GetVidPid(handle, ref foundVid, ref foundPid);
-                if (foundVid == vid && foundPid == pid)
+                if (foundVid != vid || foundPid != pid) continue;
+                if (instance == 1)
                 {
                     return i;
                 }
+                instance--;
             }
 
+            //ToDo: Should throw here?
             return 0;
         }
 
