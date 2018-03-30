@@ -4,7 +4,7 @@ class AutoHotInterception {
 	__New(cls := "Manager"){
 		dllName := "AutoHotInterception.dll"
 		dllFile := A_LineFile "\..\" dllName
-		hintMessage := "Try right-clicking lib\" dllName ", select Properties, and if there is an 'Unblock' checkbox, tick it"
+		hintMessage := "Try right-clicking lib\" dllName ", select Properties, and if there is an 'Unblock' checkbox, tick it`nAlternatively, running Unblocker.ps1 in the lib folder (ideally as admin) can do this for you."
 		if (!FileExist(dllFile)){
 			MsgBox % "Unable to find " dllName ", exiting..."
 			ExitApp
