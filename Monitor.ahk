@@ -16,7 +16,7 @@ global Monitor := MonitorWrapper.GetInstance()
 
 DeviceList := MonitorWrapper.GetDeviceList()
 
-start := 1
+start := 0
 
 Gui, Add, Text, w300 Center Section, Keyboards
 Loop 2 {
@@ -33,7 +33,7 @@ Loop 2 {
 	}
 	if (!IsMouse){
 		Gui, Add, Text, x+5 ym w300 Center Section, Mice
-		start := 11
+		start := 10
 	}
 }
 
