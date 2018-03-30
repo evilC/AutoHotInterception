@@ -26,6 +26,10 @@ class AutoHotInterception {
 		}
 	}
 	
+	GetInstance(){
+		return this.Instance
+	}
+	
 	; --------------- Input Synthesis ----------------
 	SendKeyEvent(id, code, state){
 		this.Instance.SendKeyEvent(id, code, state)
