@@ -56,11 +56,19 @@ The majority of the documented commands can be called directly on the DLL itself
 
 ## Finding Device IDs  
 ### Finding a specific device  
-In most cases, you will want to hard-wire a script to a specific VID/PID - in this instance, use this method:  
+In most cases, you will want to hard-wire a script to a specific VID/PID - in this instance, use one of the following methods.    
+For all these methods, if you have multiple identical VID/PID devices, you can specify an `instance` (Starts from 1).  
+
+#### GetDeviceId
 `AHI.GetDeviceId(<isMouse>, <VID>, <PID> [,<instance = 1>] )`  
 Where `isMouse` is `true` if you wish to find a mouse, or `false` if you wish to find a keyboard.  
 eg `AHI.GetDeviceId(false, 0x04F2, 0x0112)`  to find a keyboard with VID 0x04F2 and PID 0x0112  
-If you have multiple identical VID/PID devices, specify an `instance` (Starts from 1).  
+
+#### GetKeyboardId
+`AHI.GetKeyboardId(<VID>, <PID> [,<instance = 1>] )`  
+
+#### GetMouseId
+`AHI.GetMouseId(<VID>, <PID> [,<instance = 1>] )`  
 
 ### Getting a list of devices
 If you wish to get a list of all available devices, you can call `AHI.GetDeviceList()`, which will return an array of `DeviceInfo` objects, each of which has the following properties:  
