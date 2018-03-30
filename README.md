@@ -49,22 +49,21 @@ Include the library
 
 Initialize the library
 ```
-InterceptionWrapper := new AutoHotInterception()
-global Interception := InterceptionWrapper.GetInstance()
+global AHI := InterceptionWrapper()
 ``` 
-`Interception` is an instance of the C# class - Most of the time, you will want to directly call the functions in the DLL using this object.  
-`InterceptionWrapper` is an AHK class that makes it easy to interact with the `Interception` object. For example, it wraps `GetDeviceList()` to make it return a normal AHK array. Most of the time you will not need it.  
+In this case, `AHI` is actually an AHK class - it wraps the AHI DLL and provides some extra functionality.  
+The majority of the documented commands can be called directly on the DLL itself by calling them on `AHI.Instance` instead of `AHI`.  
 
 ## Finding Device IDs  
 ### Finding a specific device  
 In most cases, you will want to hard-wire a script to a specific VID/PID - in this instance, use this method:  
-`Interception.GetDeviceId(<isMouse>, <VID>, <PID> [,<instance = 1>] )`  
+`AHI.GetDeviceId(<isMouse>, <VID>, <PID> [,<instance = 1>] )`  
 Where `isMouse` is `true` if you wish to find a mouse, or `false` if you wish to find a keyboard.  
-eg `Interception.GetDeviceId(false, 0x04F2, 0x0112)`  to find a keyboard with VID 0x04F2 and PID 0x0112  
+eg `AHI.GetDeviceId(false, 0x04F2, 0x0112)`  to find a keyboard with VID 0x04F2 and PID 0x0112  
 If you have multiple identical VID/PID devices, specify an `instance` (Starts from 1).  
 
 ### Getting a list of devices
-If you wish to get a list of all available devices, you can call `InterceptionWrapper.GetDeviceList()`, which will return an array of `DeviceInfo` objects, each of which has the following properties:  
+If you wish to get a list of all available devices, you can call `AHI.GetDeviceList()`, which will return an array of `DeviceInfo` objects, each of which has the following properties:  
 ```
 Id
 isMouse
@@ -85,32 +84,20 @@ F1::Msgbox You Pressed F1
 #if
 ```
 This hotkey would only fire if the `myVariable` was 1.  
-In context mode, you subscribe to a keyboard, and any time events for that keyboard are just about to happen, AHI fires your callback and passes it `1`. Your code then sets the context variable to `1` which enables the hotkey.  
-AHI then sends the key, which triggers your hotkey.  
-AHI then fires the callback once more, passing `0` and the context variable gets set back to `0`, disabling the hotkey.  
+In context mode, you create a "Context Manager" object which turns on/off a set of AHK hotkeys for you.  
+You wrap your hotkeys in an #if block which is controlled by the manager.  
 
 #### Step 1
-Register your callback with AHI  
+Create a Context Manager for the keyboard
 ```
-keyboard1Id := Interception.GetDeviceId(false, 0x04F2, 0x0112)
-Interception.SetContextCallback(keyboard1Id, Func("SetKb1Context"))
+keyboard1Id := AHI.GetKeyboardId(0x04F2, 0x0112)
+cm1 := AHI.CreateContextManager(keyboard1Id)
 ```
 
 #### Step 2
-Create your callback function, and set the context variable to the value of `state`  
-It is advised to **NOT** do anything in this callback that takes a significant amount of time. Do not wait for key presses or releases and such.  
+Create your hotkeys, wrapped in an `#if` block that checks the `.IsActive` property of the Context Manager  
 ```
-SetKb1Context(state){
-	global isKeyboard1Active
-	Sleep 0		; We seem to need this for hotstrings to work, not sure why
-	isKeyboard1Active := state
-}
-```
-
-#### Step 3
-Create your hotkeys, wrapped in an `#if` block for that context variable
-```
-#if isKeyboard1Active
+#if cm1.IsActive	; Start the #if block
 ::aaa::JACKPOT
 1:: 
 	ToolTip % "KEY DOWN EVENT @ " A_TickCount
@@ -119,7 +106,7 @@ Create your hotkeys, wrapped in an `#if` block for that context variable
 1 up::
 	ToolTip % "KEY UP EVENT @ " A_TickCount
 	return
-#if
+#if			; Close the #if block
 ```
 
 ### Subscription mode
