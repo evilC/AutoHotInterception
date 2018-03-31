@@ -49,19 +49,17 @@ Include the library
 
 Initialize the library
 ```
-<<<<<<< HEAD
 global AHI := InterceptionWrapper()
 ``` 
 In this case, `AHI` is actually an AHK class - it wraps the AHI DLL and provides some extra functionality.  
 The majority of the documented commands can be called directly on the DLL itself by calling them on `AHI.Instance` instead of `AHI`.  
-=======
+```
 AHI := new AutoHotInterception()
 global Interception := AHI.GetInstance()
 ``` 
 
 `AHI` is an AHK class that makes it easy to interact with the AutoHotInterception DLL. For example, it wraps `GetDeviceList()` to make it return a normal AHK array. Most of the time you will not need it.  
 For advanced users, if you wish to directly communicate with the AHI DLL (eg for best possible performance), you can call `AHI.Instance` instead of `AHI` for most functions (eg when sending of synthesized input using `SendMouseMove`).  
->>>>>>> 612da55d842ed730fc4884b04d28356e3527e3b6
 
 ## Finding Device IDs  
 ### Finding a specific device  
