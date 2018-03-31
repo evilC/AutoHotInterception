@@ -438,6 +438,7 @@ namespace AutoHotInterception
                                 // Mouse Button
                                 //Debug.WriteLine($"AHK| Mouse {i} seen - flags: {stroke.mouse.flags}, raw state: {stroke.mouse.state}");
                                 var state = stroke.mouse.state;
+                                // ToDo: Replace with Bit Shift, move into Helpers
                                 var btn = 0;
                                 while (state > 2)
                                 {
