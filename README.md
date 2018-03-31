@@ -197,15 +197,22 @@ Interception.SendKeyEvent(keyboardId, GetKeySC("a"), 1)
 If you subscribe to a key using Subscription mode with the `block` parameter set to true, then send a different key using `SendKeyEvent`, you are transforming that key in a way which is totally invisible to windows (And all apps running on it), and it will respond as appropriate. For example, AHK `$` prefixed hotkeys **will not** be able to tell that this is synthetic input, and will respond to it.
 
 ### Sending Mouse Buttons
+You can send clicks and other mouse button events with:  
 `Interception.SendMouseButtonEvent(<mouseId>, <button>, <state>)`  
 Where `button` is the button index, as used in `SubscribeMouseButton`  
 
+If you are working in Absolute mode (eg with a graphics tablet or light guns), you can send mouse button events at specific coordinates using:  
+`Interception.SendMouseButtonEventAbsolute(<mouseId>, <button>, <state>, <x>, <y>)`  
+
 ### Sending Mouse Movement
 #### Relative
+To send Relative (Normal) mouse movement, use:  
 `Interception.SendMouseMove(<mouseId>, <x>, <y>)`  
 
 #### Absolute
+To sent Absolute mouse movement, use:  
 `Interception.SendMouseMoveAbsolute(<mouseId>, <x>, <y>)`  
+Note that Absolute mode will probably not work with FPS style mouse-aim games.  
 
 ## Monitor App
 ToDo: Add recording of monitor app
