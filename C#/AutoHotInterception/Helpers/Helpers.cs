@@ -47,6 +47,20 @@ namespace AutoHotInterception.Helpers
             return ret.ToArray();
         }
 
+        /// <summary>
+        /// Converts a button index plus a state into a State value for a mouse Stroke
+        /// </summary>
+        /// <param name="btn">0 = LMB, 1 = RMB etc</param>
+        /// <param name="state">1 = Press, 0 = Release</param>
+        /// <returns>A State value for a Mouse Stroke</returns>
+        public static ushort ButtonAndStateToStrokeState(int btn, int state)
+        {
+            var bit = btn * 2;
+            if (state == 0)
+                bit += 1;
+            return (ushort)(1 << bit);
+        }
+
         public class DeviceInfo
         {
             public int Id { get; set; }

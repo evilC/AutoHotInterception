@@ -39,6 +39,10 @@ class AutoHotInterception {
 		this.Instance.SendMouseButtonEvent(id, btn, state)
 	}
 	
+	SendMouseButtonEventAbsolute(id, btn, state, x, y){
+		this.Instance.SendMouseButtonEventAbsolute(id, btn, state, x, y)
+	}
+	
 	SendMouseMove(id, x, y){
 		this.Instance.SendMouseMove(id, x, y)
 	}

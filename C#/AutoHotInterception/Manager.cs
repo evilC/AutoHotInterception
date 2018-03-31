@@ -199,23 +199,34 @@ namespace AutoHotInterception
         {
             IsValidDeviceId(true, id);
 
-            //var st = btn * 4;
-            //if (state == 0)
-            //{
-            //    st *= 2;
-            //}
-            var stroke = new ManagedWrapper.Stroke();
-            var bit = btn * 2;
-            if (state == 0)
-                bit += 1;
-            stroke.mouse.state = (ushort)(1 << bit);
-
+            var stroke = new ManagedWrapper.Stroke {mouse = {state = ButtonAndStateToStrokeState(btn, state)}};
             ManagedWrapper.Send(_deviceContext, id, ref stroke, 1);
         }
 
-        public bool SendMouseMove(int id, int x, int y)
+        /// <summary>
+        /// Same as <see cref="SendMouseButtonEvent"/>, but sends button events in Absolute mode (with coordinates)
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="btn"></param>
+        /// <param name="state"></param>
+        /// <param name="x"></param>
+        /// <param name="y"></param>
+        public void SendMouseButtonEventAbsolute(int id, int btn, int state, int x, int y)
         {
-            return SendMouseMoveRelative(id, x, y);
+            var stroke = new ManagedWrapper.Stroke
+            {
+                mouse =
+                {
+                    x = x, y = y, flags = (ushort)ManagedWrapper.MouseFlag.MouseMoveAbsolute,
+                    state = ButtonAndStateToStrokeState(btn, state)
+                }
+            };
+            ManagedWrapper.Send(_deviceContext, id, ref stroke, 1);
+        }
+
+        public void SendMouseMove(int id, int x, int y)
+        {
+            SendMouseMoveRelative(id, x, y);
         }
 
         /// <summary>
@@ -225,13 +236,12 @@ namespace AutoHotInterception
         /// <param name="x"></param>
         /// <param name="y"></param>
         /// <returns></returns>
-        public bool SendMouseMoveRelative(int id, int x, int y)
+        public void SendMouseMoveRelative(int id, int x, int y)
         {
             IsValidDeviceId(true, id);
 
             var stroke = new ManagedWrapper.Stroke { mouse = { x = x, y = y, flags = (ushort)ManagedWrapper.MouseFlag.MouseMoveRelative } };
             ManagedWrapper.Send(_deviceContext, id, ref stroke, 1);
-            return true;
         }
 
         /// <summary>
@@ -243,14 +253,12 @@ namespace AutoHotInterception
         /// <param name="x"></param>
         /// <param name="y"></param>
         /// <returns></returns>
-        public bool SendMouseMoveAbsolute(int id, int x, int y)
+        public void SendMouseMoveAbsolute(int id, int x, int y)
         {
             IsValidDeviceId(true, id);
 
-            var stroke = new ManagedWrapper.Stroke { mouse = { x = x, y = y, flags = 1, state = 0, information = 0, rolling = 0} };
-            //var stroke = new ManagedWrapper.Stroke { mouse = { x = x, y = y, flags = (ushort)ManagedWrapper.MouseFlag.MouseMoveAbsolute} };
+            var stroke = new ManagedWrapper.Stroke { mouse = { x = x, y = y, flags = (ushort)ManagedWrapper.MouseFlag.MouseMoveAbsolute } };
             ManagedWrapper.Send(_deviceContext, id, ref stroke, 1);
-            return true;
         }
 
         #endregion
