@@ -153,7 +153,7 @@ namespace AutoHotInterception
             SetFilterState(false);
             if (id < 1 || id > 20)
             {
-                throw new ArgumentOutOfRangeException(nameof(id), $"DeviceIds must be between 1 and 20");
+                throw new ArgumentOutOfRangeException(nameof(id), "DeviceIds must be between 1 and 20");
             }
 
             _contextCallbacks[id] = callback;
@@ -199,7 +199,7 @@ namespace AutoHotInterception
         {
             IsValidDeviceId(true, id);
 
-            var stroke = new ManagedWrapper.Stroke {mouse = {state = ButtonAndStateToStrokeState(btn, state)}};
+            var stroke = ButtonAndStateToStroke(btn, state);
             ManagedWrapper.Send(_deviceContext, id, ref stroke, 1);
         }
 
@@ -213,14 +213,10 @@ namespace AutoHotInterception
         /// <param name="y"></param>
         public void SendMouseButtonEventAbsolute(int id, int btn, int state, int x, int y)
         {
-            var stroke = new ManagedWrapper.Stroke
-            {
-                mouse =
-                {
-                    x = x, y = y, flags = (ushort)ManagedWrapper.MouseFlag.MouseMoveAbsolute,
-                    state = ButtonAndStateToStrokeState(btn, state)
-                }
-            };
+            var stroke = ButtonAndStateToStroke(btn, state);
+            stroke.mouse.x = x;
+            stroke.mouse.y = y;
+            stroke.mouse.flags = (ushort) ManagedWrapper.MouseFlag.MouseMoveAbsolute;
             ManagedWrapper.Send(_deviceContext, id, ref stroke, 1);
         }
 
@@ -437,25 +433,21 @@ namespace AutoHotInterception
                             {
                                 // Mouse Button
                                 //Debug.WriteLine($"AHK| Mouse {i} seen - flags: {stroke.mouse.flags}, raw state: {stroke.mouse.state}");
-                                var state = stroke.mouse.state;
-                                // ToDo: Replace with Bit Shift, move into Helpers
-                                var btn = 0;
-                                while (state > 2)
-                                {
-                                    state /= 4;
-                                    btn++;
-                                };
-                                if (_mouseButtonMappings[i].ContainsKey((ushort)btn))
+                                var btnState = StrokeStateToButtonState(stroke);
+                                if (_mouseButtonMappings[i].ContainsKey(btnState.Button))
                                 {
                                     hasSubscription = true;
-                                    var mapping = _mouseButtonMappings[i][(ushort)btn];
+                                    var mapping = _mouseButtonMappings[i][btnState.Button];
                                     if (mapping.Block)
                                     {
                                         block = true;
                                     }
-                                    ThreadPool.QueueUserWorkItem(threadProc => mapping.Callback(2 - state));
+
+                                    var state = btnState;
+                                    ThreadPool.QueueUserWorkItem(threadProc => mapping.Callback(state.State));
                                 }
-                                //Debug.WriteLine($"AHK| Mouse {i} seen - button {btn}, state: {state}");
+                                //Console.WriteLine($"AHK| Mouse {i} seen - button {btnState.Button}, state: {btnState.State}, rolling: {stroke.mouse.rolling}");
+                                Console.WriteLine($"AHK| Mouse {i} seen - button {btnState.Button}, state: {stroke.mouse.state}, rolling: {stroke.mouse.rolling}");
                             }
                             else if ((stroke.mouse.flags & (ushort) ManagedWrapper.MouseFlag.MouseMoveAbsolute) ==
                                      (ushort) ManagedWrapper.MouseFlag.MouseMoveAbsolute
@@ -515,7 +507,7 @@ namespace AutoHotInterception
 
         private class MappingOptions
         {
-            public bool Block { get; set; } = false;
+            public bool Block { get; set; }
             public dynamic Callback { get; set; }
         }
         #endregion
@@ -527,6 +519,4 @@ namespace AutoHotInterception
         }
 
     }
-
-
 }
