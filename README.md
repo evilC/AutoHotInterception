@@ -6,6 +6,8 @@ Keyboard Keys, Mouse Buttons and (Relative) Mouse movement are supported. Suppor
 
 AHI uses the Interception driver by Francisco Lopez  
 
+------
+
 # WARNING
 **TAKE CARE** when using this code. Because Interception is a driver, and sits below windows proper, blocking with Interception goes so deep that it can even block CTRL+ALT+DEL etc. As such, it is entirely possible to lock up all input, or at least make life a little difficult.  
 In general, worst-case scenario would require use of the reset button.  
@@ -16,21 +18,10 @@ Be wary of making scripts using this code run on startup. Know how to enter "Saf
 As they say - ***With great power comes great responsibility***.  
 If this all scares you and you don't really understand it, then TL/DR is you should probably stick to "Context Mode", it's safer.  
 
-# Setup
-1. Download and install the [Interception Driver](http://www.oblita.com/interception)  
-2. Download an AHI release from the [releases page](https://github.com/evilC/AutoHotInterception/releases) and extract it to a folder.  
-DO NOT use the "Clone or Download" link on the main page.  
-This is the folder where (at least initially) you will be running scripts from.  
-It contains a number of sample `.ahk` scripts and a `lib` folder, which contains all the libraries and files needed for AHI.  
-3. Copy the `interception.dll` from the folder where you ran the interecption install into the `lib` folder that was created in step (2)  
-4. Right-click `Unblocker.ps1` in the lib folder and select `Run as Admin`.  
-This is because downloaded DLLs are often blocked and will not work.  
-This can be done manually by right clicking the DLLs, selecting Properties, and checking a "Block" box if it exists.  
-5. Edit the example script, enter the VID and PID of your keyboard  
-6. Run one of the sample scripts  
-7. (Optional) The contents of the `lib` folder can actually be placed in one of the AutoHotkey lib folders (eg `My Documents\AutoHotkey\lib` - make it if it does not exist), and the `#include` lines of the sample scripts changed to `#include <AutoHotInterception>`, to enable your AHI scripts to be in any folder, without each needing it's own copy of the library files.  
+------
 
-# Device IDs / VIDs PIDs etc  
+# Device IDs / VIDs PIDs etc
+
 Interception identifies unique devices by an ID. This is a number from 1..21.  
 Devices 1-10 are always keyboards  
 Devices 11-21 are always mice  
@@ -38,6 +29,29 @@ This ID scheme is totally unique to Interception, and IDs may change as you plug
 On PC, devices are often identified by VendorID (VID) and ProductID (PID). These are identifiers baked into the hardware at time of manufacture, and are identical for all devices of the same make / model.  
 Most AHI functions (eg to Subscribe to a key etc) use an Interception ID, so some handy functions are provided to allow you to find the (current) Interception ID of your device, given a VID / PID.  
 If you are unsure of what the VID / PID of your device is (or even if Interception can see it), you can use the included Monitor script to find it.  
+
+You will need to know the VID / PID of at least one of your devices in order to do anything with AHI.
+
+------
+
+# Setup
+
+1. Download and install the [Interception Driver](http://www.oblita.com/interception)  
+2. Download an AHI release from the [releases page](https://github.com/evilC/AutoHotInterception/releases) and extract it to a folder.  
+DO NOT use the "Clone or Download" link on the main page.  
+This is the folder where (at least initially) you will be running scripts from.  
+It contains a number of sample `.ahk` scripts and a `lib` folder, which contains all the libraries and files needed for AHI.  
+3. Copy the `interception.dll` from the folder where you ran the interecption install into the `lib` folder that was created in step (2)  
+4. Right-click `Unblocker.ps1` in the lib folder and select `Run as Admin`.  
+  This is because downloaded DLLs are often blocked and will not work.  
+  This can be done manually by right clicking the DLLs, selecting Properties, and checking a "Block" box if it exists.  
+5. If you do not know the VID/PID of your device, use the included Monitor app to find it.
+  When using the monitor app, **DO NOT** tick all devices at once, as if it crashes, it will lock up all devices.
+  Instead, tick one at a time and see if it your device.  
+6. Edit one of the example remapping scripts, replacing the VID/PID(s) with that of your device and run it to make sure it works.  
+6. (Optional) The contents of the `lib` folder can actually be placed in one of the AutoHotkey lib folders (eg `My Documents\AutoHotkey\lib` - make it if it does not exist), and the `#include` lines of the sample scripts changed to `#include <AutoHotInterception>`, to enable your AHI scripts to be in any folder, without each needing it's own copy of the library files.  
+
+------
 
 # Usage
 ## Initializing the Library
@@ -50,13 +64,13 @@ Include the library
 Initialize the library
 ```
 global AHI := InterceptionWrapper()
-``` 
+```
 In this case, `AHI` is actually an AHK class - it wraps the AHI DLL and provides some extra functionality.  
 The majority of the documented commands can be called directly on the DLL itself by calling them on `AHI.Instance` instead of `AHI`.  
 ```
 AHI := new AutoHotInterception()
-global Interception := AHI.GetInstance()
-``` 
+AHI.Instance.SendMouseMove(...)
+```
 
 `AHI` is an AHK class that makes it easy to interact with the AutoHotInterception DLL. For example, it wraps `GetDeviceList()` to make it return a normal AHK array. Most of the time you will not need it.  
 For advanced users, if you wish to directly communicate with the AHI DLL (eg for best possible performance), you can call `AHI.Instance` instead of `AHI` for most functions (eg when sending of synthesized input using `SendMouseMove`).  
@@ -86,14 +100,14 @@ Vid
 Pid
 ```
 
-## Modes
-There are two modes of operation for AHI, and both can be used simultaneously.  
+## Input Detection
+AHI has two input detection modes - *Context Mode* and *Subscription Mode*, and both can be used simultaneously.  
 
 ### Context mode
 Context mode is so named as it takes advantage of AutoHotkey's [Context Sensitive Hotkeys](https://autohotkey.com/docs/Hotkeys.htm#Context).  
 As such, only Keyboard Keys and Mouse Buttons are supported in this mode. Mouse Movement is not supported.  
 
-In context mode, you create a "Context Manager" object which turns on/off a set of AHK hotkeys for you.  
+In context mode, you create a *Context Manager* object which turns on/off a set of AHK hotkeys for you.  
 You wrap your hotkeys in an #if block which is controlled by the manager.  
 
 Create a Context Manager for the keyboard or mouse, pass it the Interception ID of the device.  
@@ -147,7 +161,10 @@ Where `button` is one of:
 2: Middle Mouse
 3: Side Button 1
 4: Side Button 2
-```  
+5: Mouse Wheel
+```
+For Mouse Wheel events, the `<state>` parameter will be `1` for Wheel Up and `0` for Wheel Down
+
 Otherwise, usage is identical to `SubscribeKey`  
 
 #### Subscribing to Mouse Movement  
@@ -200,6 +217,8 @@ If you subscribe to a key using Subscription mode with the `block` parameter set
 You can send clicks and other mouse button events with:  
 `Interception.SendMouseButtonEvent(<mouseId>, <button>, <state>)`  
 Where `button` is the button index, as used in `SubscribeMouseButton`  
+
+When Sending Mouse Wheel events, set `<state>` to `1` for Wheel Up and `-1` for Wheel Down.
 
 If you are working in Absolute mode (eg with a graphics tablet or light guns), you can send mouse button events at specific coordinates using:  
 `Interception.SendMouseButtonEventAbsolute(<mouseId>, <button>, <state>, <x>, <y>)`  
