@@ -22,9 +22,9 @@ If this all scares you and you don't really understand it, then TL/DR is you sho
 
 # Device IDs / VIDs PIDs etc
 
-Interception identifies unique devices by an ID. This is a number from 1..21.  
+Interception identifies unique devices by an ID. This is a number from 1..20.  
 Devices 1-10 are always keyboards  
-Devices 11-21 are always mice  
+Devices 11-20 are always mice  
 This ID scheme is totally unique to Interception, and IDs may change as you plug / unplug devices etc.  
 On PC, devices are often identified by VendorID (VID) and ProductID (PID). These are identifiers baked into the hardware at time of manufacture, and are identical for all devices of the same make / model.  
 Most AHI functions (eg to Subscribe to a key etc) use an Interception ID, so some handy functions are provided to allow you to find the (current) Interception ID of your device, given a VID / PID.  
