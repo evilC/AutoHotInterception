@@ -446,8 +446,7 @@ namespace AutoHotInterception
                                     var state = btnState;
                                     ThreadPool.QueueUserWorkItem(threadProc => mapping.Callback(state.State));
                                 }
-                                //Console.WriteLine($"AHK| Mouse {i} seen - button {btnState.Button}, state: {btnState.State}, rolling: {stroke.mouse.rolling}");
-                                Console.WriteLine($"AHK| Mouse {i} seen - button {btnState.Button}, state: {stroke.mouse.state}, rolling: {stroke.mouse.rolling}");
+                                //Console.WriteLine($"AHK| Mouse {i} seen - button {btnState.Button}, state: {stroke.mouse.state}, rolling: {stroke.mouse.rolling}");
                             }
                             else if ((stroke.mouse.flags & (ushort) ManagedWrapper.MouseFlag.MouseMoveAbsolute) ==
                                      (ushort) ManagedWrapper.MouseFlag.MouseMoveAbsolute
