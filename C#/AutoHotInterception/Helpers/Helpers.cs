@@ -78,6 +78,10 @@ namespace AutoHotInterception.Helpers
             {
                 state = stroke.mouse.rolling < 0 ? -1 : 1;
             }
+            else
+            {
+                state = 2 - state;
+            }
             return new ButtonState {Button = btn, State = state};
         }
 
