@@ -4,7 +4,10 @@ AutoHotInterception(AHI) allows you to execute AutoHotkey code in response to ev
 In other words, you can use a key on a second (or third, or fourth..) keyboard to trigger AHK code, and that key will not be seen by applications. You can use the *same key* on multiple keyboards for individual actions.  
 Keyboard Keys, Mouse Buttons and (Relative) Mouse movement are supported. Support for Absolute Mouse movement is planned.  
 
-AHI uses the Interception driver by Francisco Lopez  
+AHI uses the Interception driver by Francisco Lopez
+
+# Getting Help  
+Use the [AHI Discussion Thread on the AHK forums](https://autohotkey.com/boards/viewtopic.php?f=6&t=45307)
 
 ------
 
