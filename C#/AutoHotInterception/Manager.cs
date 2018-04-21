@@ -357,34 +357,77 @@ namespace AutoHotInterception
             _filterState = state;
         }
 
+        // ScanCode notes: https://www.win.tue.nl/~aeb/linux/kbd/scancodes-1.html
         private void PollThread()
         {
             ManagedWrapper.Stroke stroke = new ManagedWrapper.Stroke();
 
             while (true)
             {
-                // Process Keyboards
+                // Iterate through all Keyboards
                 for (var i = 1; i < 11; i++)
                 {
                     var isMonitoredKeyboard = IsMonitoredDevice(i) == 1;
                     var hasSubscription = false;
                     var hasContext = _contextCallbacks.ContainsKey(i);
 
+                    // Process any waiting input for this keyboard
                     while (ManagedWrapper.Receive(_deviceContext, i, ref stroke, 1) > 0)
                     {
                         var block = false;
+                        // If this is not a monitored keyboard, skip.
+                        // This check should not really be needed as the IsMonitoredDevice() predicate should only match monitored keyboards...
+                        // ... but in case it does, we want to ignore this bit and pass the input through
                         if (isMonitoredKeyboard && _keyboardMappings.ContainsKey(i))
                         {
                             // Process Subscription Mode
                             var code = stroke.key.code;
                             var state = stroke.key.state;
-                            if (state > 1)
+
+                            #region KeyCode, State, Extended Flag translation
+                            // Begin translation of incoming key code, state, extended flag etc...
+                            var processMappings = true;
+                            if (code == 54)
                             {
-                                code += 256;
-                                state -= 2;
+                                // Interception seems to report Right Shift as 54 / 0x36...
+                                // ... this code is normally unused (Alt-SysRq according to linked page) ...
+                                // ... and AHK uses 54 + 256 = 310 (0x36 + 0x100 = 0x136)...
+                                // ... so just keep the key code and behave as if the extended flag was set
+                                state += 2;
                             }
 
-                            if (_keyboardMappings[i].ContainsKey(code))
+                            // If state is shifted up by 2 (1 or 2 instead of 0 or 1), then this is an "Extended" key code
+                            if (state > 1)
+                            {
+                                if (code == 42)
+                                {
+                                    // Shift (42/0x2a) with extended flag = the key after this one is extended.
+                                    // Example case is Delete (The one above the arrow keys, not on numpad)...
+                                    // ... this generates a stroke of 0x2a (Shift) with *extended flag set* (Normal shift does not do this)...
+                                    // ... followed by 0x53 with extended flag set.
+                                    // We do not want to fire subsriptions for the extended shift, but *do* want to let the key flow through...
+                                    // ... so that is handled here.
+                                    // When the extended key (Delete in the above example) subsequently comes through...
+                                    // ... it will have code 0x53, which we shift to 0x153 (Adding 256 Dec) to signify extended version...
+                                    // ... as this is how AHK behaves with GetKeySC()
+
+                                    // Set flag to stop Context Mode from firing
+                                    hasSubscription = true;
+                                    // Set flag to indicate disable mapping processing
+                                    processMappings = false;
+                                }
+                                else
+                                {
+                                    // Extended flag set
+                                    // Shift code up by 256 (0x100) to signify extended code
+                                    code += 256;
+                                    state -= 2;
+                                }
+                            }
+                            #endregion
+
+                            // Code and state now normalized, proceed with checking for subscriptions...
+                            if (processMappings && _keyboardMappings[i].ContainsKey(code))
                             {
                                 hasSubscription = true;
                                 var mapping = _keyboardMappings[i][code];
@@ -396,6 +439,7 @@ namespace AutoHotInterception
                                 ThreadPool.QueueUserWorkItem(threadProc => mapping.Callback(1 - state));
                             }
                         }
+
                         // If the key was blocked by Subscription Mode, then move on to next key...
                         if (block) continue;
 
@@ -406,6 +450,7 @@ namespace AutoHotInterception
                             _contextCallbacks[i](1);
                         }
 
+                        // Pass the key through to the OS.
                         ManagedWrapper.Send(_deviceContext, i, ref stroke, 1);
 
                         // If we are processing Context Mode, then Unset the context variable after sending the key
