@@ -4,11 +4,18 @@ class AutoHotInterception {
 	_contextManagers := {}
 	;_contextStates := {}
 	__New(cls := "Manager"){
+		dllName := "Interception.dll"
+		dllFile := A_LineFile "\..\" dllName
+		if (!FileExist(dllFile)){
+			MsgBox % "Unable to find lib\" dllName ", exiting...`nYou should take a copy of this file from where you installed Interception, and drop it into AHI's lib folder"
+			ExitApp
+		}
+		
 		dllName := "AutoHotInterception.dll"
 		dllFile := A_LineFile "\..\" dllName
 		hintMessage := "Try right-clicking lib\" dllName ", select Properties, and if there is an 'Unblock' checkbox, tick it`nAlternatively, running Unblocker.ps1 in the lib folder (ideally as admin) can do this for you."
 		if (!FileExist(dllFile)){
-			MsgBox % "Unable to find " dllName ", exiting..."
+			MsgBox % "Unable to find lib\" dllName ", exiting..."
 			ExitApp
 		}
 		
