@@ -16,7 +16,7 @@ Use the [AHI Discussion Thread on the AHK forums](https://autohotkey.com/boards/
 In general, worst-case scenario would require use of the reset button.  
 For example, using Subscription Mode with `block` enabled will **totally** block that key from working on that keyboard.
 So if you block `Ctrl` on your only keyboard, you just blocked CTRL+ALT+DEL.  
-This is less of an issue whilst AHI does not support mouse blocking (As you could probably kill the script with just the mouse), but if/when that happens, the potential is there.  
+The best insurance policy is to have another keyboard or mouse handy, one that you don't block.    
 Be wary of making scripts using this code run on startup. Know how to enter "Safe Mode" in windows and disable startup of the scripts. Know mouse alternatives to emergency keyboard actions (Right click on clock for Task Manager!)    
 As they say - ***With great power comes great responsibility***.  
 If this all scares you and you don't really understand it, then TL/DR is you should probably stick to "Context Mode", it's safer.  
