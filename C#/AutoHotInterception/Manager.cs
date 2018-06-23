@@ -464,7 +464,7 @@ namespace AutoHotInterception
                 // Process Mice
                 for (var i = 11; i < 21; i++)
                 {
-                    var isMontioredMouse = IsMonitoredDevice(i) == 1;
+                    var isMonitoredMouse = IsMonitoredDevice(i) == 1;
                     var hasSubscription = false;
                     var hasContext = _contextCallbacks.ContainsKey(i);
 
@@ -472,7 +472,7 @@ namespace AutoHotInterception
                     {
                         //Debug.WriteLine($"AHK| Mouse {i} seen - flags: {stroke.mouse.flags}, raw state: {stroke.mouse.state}");
                         var block = false;
-                        if (isMontioredMouse)
+                        if (isMonitoredMouse)
                         {
                             if (stroke.mouse.state != 0 && _mouseButtonMappings.ContainsKey(i))
                             {
