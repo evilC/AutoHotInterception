@@ -53,15 +53,9 @@ namespace AutoHotInterception.Helpers
         public static ManagedWrapper.Stroke ButtonAndStateToStroke(int btn, int state)
         {
             var stroke = new ManagedWrapper.Stroke();
-            var bit = btn * 2;
-            if (state == 0)
-                bit += 1;
-            if (btn == 5)
-            {
-                // Mouse wheel
-                stroke.mouse.rolling = (short)(state * 120);
-            }
-            stroke.mouse.state = (ushort)(1 << bit);
+            var power = btn < 5 ? btn * 2 + (state == 0 ? 1 : 0) : btn + 5;
+            stroke.mouse.state = (ushort)(1 << power);
+            if (btn >= 5) stroke.mouse.rolling = (short)(state * 120);
             return stroke;
         }
 
@@ -69,18 +63,20 @@ namespace AutoHotInterception.Helpers
         {
             int state = stroke.mouse.state;
             ushort btn = 0;
-            while (state > 2)
+            if (state < 0x400)
             {
-                state >>= 2;
-                btn++;
-            }
-            if (btn == 5)
-            {
-                state = stroke.mouse.rolling < 0 ? -1 : 1;
+                while (state > 2)
+                {
+                    state >>= 2;
+                    btn++;
+                }
+                state = 2 - state; // 1 = Pressed, 0 = Released
             }
             else
             {
-                state = 2 - state;
+                if (state == 0x400) btn = 5; // Vertical mouse wheel
+                else if (state == 0x800) btn = 6; // Horizontal mouse wheel
+                state = stroke.mouse.rolling < 0 ? -1 : 1;
             }
             return new ButtonState {Button = btn, State = state};
         }

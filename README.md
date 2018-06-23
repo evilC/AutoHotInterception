@@ -1,7 +1,7 @@
 # AutoHotInterception
 
 AutoHotInterception(AHI) allows you to execute AutoHotkey code in response to events from a *specific* keyboard or mouse, whilst (optionally) blocking the native functionality (ie stopping Windows from seeing that keyboard or mouse event).  
-In other words, you can use a key on a second (or third, or fourth..) keyboard to trigger AHK code, and that key will not be seen by applications. You can use the *same key* on multiple keyboards for individual actions.  
+In other words, you can use a key on a second (or third, or fourth...) keyboard to trigger AHK code, and that key will not be seen by applications. You can use the *same key* on multiple keyboards for individual actions.  
 Keyboard Keys, Mouse Buttons and Mouse movement (Both Relative and Absolute modes) are supported.
 
 AHI uses the Interception driver by Francisco Lopez
@@ -164,9 +164,10 @@ Where `button` is one of:
 2: Middle Mouse
 3: Side Button 1
 4: Side Button 2
-5: Mouse Wheel
+5: Mouse Wheel (Vertical)
+6: Mouse Wheel (Horizontal)
 ```
-For Mouse Wheel events, the `<state>` parameter will be `1` for Wheel Up and `0` for Wheel Down
+For Mouse Wheel events, the `<state>` parameter will be `1` for Wheel Up / Right and `-1` for Wheel Down / Left
 
 Otherwise, usage is identical to `SubscribeKey`  
 
@@ -221,7 +222,7 @@ You can send clicks and other mouse button events with:
 `Interception.SendMouseButtonEvent(<mouseId>, <button>, <state>)`  
 Where `button` is the button index, as used in `SubscribeMouseButton`  
 
-When Sending Mouse Wheel events, set `<state>` to `1` for Wheel Up and `-1` for Wheel Down.
+When Sending Mouse Wheel events, set `<state>` to `1` for Wheel Up / Right and `-1` for Wheel Down / Left.
 
 If you are working in Absolute mode (eg with a graphics tablet or light guns), you can send mouse button events at specific coordinates using:  
 `Interception.SendMouseButtonEventAbsolute(<mouseId>, <button>, <state>, <x>, <y>)`  
