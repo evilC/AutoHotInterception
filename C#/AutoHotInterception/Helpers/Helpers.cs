@@ -36,9 +36,9 @@ namespace AutoHotInterception.Helpers
                 if (handle == "") continue;
                 int foundVid = 0, foundPid = 0;
                 GetVidPid(handle, ref foundVid, ref foundPid);
-                if (foundVid == 0 || foundPid == 0) continue;
+                //if (foundVid == 0 || foundPid == 0) continue;
 
-                ret.Add(new DeviceInfo { Id = i, Vid = foundVid, Pid = foundPid, IsMouse = i > 10 });
+                ret.Add(new DeviceInfo { Id = i, Vid = foundVid, Pid = foundPid, IsMouse = i > 10, Handle = handle});
             }
 
             return ret.ToArray();
@@ -91,6 +91,7 @@ namespace AutoHotInterception.Helpers
             public bool IsMouse { get; set; }
             public int Vid { get; set; }
             public int Pid { get; set; }
+            public string Handle { get; set; }
         }
 
         public class ButtonState
