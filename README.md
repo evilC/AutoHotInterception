@@ -100,7 +100,8 @@ In this case, use the monitor app (Or `GetDeviceList()`) to findle out the "Hand
 
 #### GetDeviceIdFromHandle  
 `AHI.GetDeviceIdFromHandle(<isMouse>, <handle> [,<instance = 1>] )`  
-eg `AHI.GetDeviceId(false, "ACPI\PNP0303")`  to find a keyboard with the handle `ACPI\PNP0303`  
+This works in the same way as `GetDeviceId` above, except you pass a string containing the handle.  
+eg `AHI.GetDeviceIdFromHandle(false, "ACPI\PNP0303")`  to find a keyboard with the handle `ACPI\PNP0303`  
 
 #### GetKeyboardIdFromHandle  
 `AHI.GetKeyboardIdFromHandle(<handle> [,<instance = 1>] )`  
