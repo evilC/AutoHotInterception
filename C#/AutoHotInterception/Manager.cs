@@ -176,15 +176,15 @@ namespace AutoHotInterception
         public void SendKeyEvent(int id, ushort code, int state)
         {
             IsValidDeviceId(false, id);
-
+            var st = 1 - state;
             var stroke = new ManagedWrapper.Stroke();
             if (code > 255)
             {
                 code -= 256;
-                state += 2;
+                st += 2;
             }
             stroke.key.code = code;
-            stroke.key.state = (ushort)(1 - state);
+            stroke.key.state = (ushort)st;
             ManagedWrapper.Send(_deviceContext, id, ref stroke, 1);
         }
 
