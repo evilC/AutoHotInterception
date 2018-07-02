@@ -1,3 +1,9 @@
+![GitHub release](https://img.shields.io/github/release/evilc/autohotinterception.svg)
+[![Github All Releases](https://img.shields.io/github/downloads/evilc/autohotinterception/total.svg)]
+[![Discord](https://img.shields.io/discord/330423308103319562.svg)](https://discord.gg/9d3DNN4)
+![Github commits (since latest release)](https://img.shields.io/github/commits-since/evilc/autohotinterception/latest.svg)
+
+
 # AutoHotInterception
 
 AutoHotInterception(AHI) allows you to execute AutoHotkey code in response to events from a *specific* keyboard or mouse, whilst (optionally) blocking the native functionality (ie stopping Windows from seeing that keyboard or mouse event).  
