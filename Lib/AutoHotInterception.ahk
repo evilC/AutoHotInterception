@@ -101,11 +101,11 @@ class AutoHotInterception {
 	}
 	
 	GetKeyboardIdFromHandle(handle, instance := 1){
-		return this.GetDeviceId(false, handle, instance)
+		return this.GetDeviceIdFromHandle(false, handle, instance)
 	}
 	
 	GetMouseIDFromHandle(handle, instance := 1){
-		return this.GetDeviceId(true, handle, instance)
+		return this.GetDeviceIdFromHandle(true, handle, instance)
 	}
 	
 	GetDeviceList(){
