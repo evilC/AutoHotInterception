@@ -79,7 +79,7 @@ AHI.Instance.SendMouseMove(...)
 For advanced users, if you wish to directly communicate with the AHI DLL (eg for best possible performance), you can call `AHI.Instance` instead of `AHI` for most functions (eg when sending of synthesized input using `SendMouseMove`).  
 
 ## Finding Device IDs  
-### Finding a specific device  
+### USB Devices
 In most cases, you will want to hard-wire a script to a specific VID/PID - in this instance, use one of the following methods.    
 For all these methods, if you have multiple identical VID/PID devices, you can specify an `instance` (Starts from 1).  
 
@@ -94,6 +94,21 @@ eg `AHI.GetDeviceId(false, 0x04F2, 0x0112)`  to find a keyboard with VID 0x04F2 
 #### GetMouseId
 `AHI.GetMouseId(<VID>, <PID> [,<instance = 1>] )`  
 
+### PS/2 and other Legacy devices (Can also apply to Laptops)  
+Some devices (eg older machines with PS/2 interfaces, or some laptops) may not use USB, so these will not have a VID and PID.  
+In this case, use the monitor app (Or `GetDeviceList()`) to findle out the "Handle" of your device, and get it's ID from that.
+
+#### GetDeviceIdFromHandle  
+`AHI.GetDeviceIdFromHandle(<isMouse>, <handle> [,<instance = 1>] )`  
+This works in the same way as `GetDeviceId` above, except you pass a string containing the handle.  
+eg `AHI.GetDeviceIdFromHandle(false, "ACPI\PNP0303")`  to find a keyboard with the handle `ACPI\PNP0303`  
+
+#### GetKeyboardIdFromHandle  
+`AHI.GetKeyboardIdFromHandle(<handle> [,<instance = 1>] )`  
+
+#### GetMouseIdFromHandle  
+`AHI.GetMouseIdFromHandle(<handle> [,<instance = 1>] )`  
+
 ### Getting a list of devices
 If you wish to get a list of all available devices, you can call `AHI.GetDeviceList()`, which will return an array of `DeviceInfo` objects, each of which has the following properties:  
 ```
@@ -101,6 +116,7 @@ Id
 isMouse
 Vid
 Pid
+Handle
 ```
 
 ## Input Detection

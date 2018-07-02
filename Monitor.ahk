@@ -18,7 +18,8 @@ DeviceList := MonitorWrapper.GetDeviceList()
 
 start := 0
 
-Gui, Add, Text, w300 Center Section, Keyboards
+colWidth := 350
+Gui, Add, Text, w%colWidth% Center Section, Keyboards
 Loop 2 {
 	isMouse := A_Index - 1
 	Loop 10 {
@@ -27,24 +28,24 @@ Loop 2 {
 		if (!IsObject(dev)){
 			continue
 		}
-		Gui, Add, Checkbox, % "hwndhCb w300", % "ID: " dev.id ", VID: 0x" FormatHex(dev.VID) ", PID: 0x" FormatHex(dev.PID)
+		Gui, Add, Checkbox, % "hwndhCb w" colWidth, % "ID: " dev.id ", VID: 0x" FormatHex(dev.VID) ", PID: 0x" FormatHex(dev.PID) "`nHandle: " dev.Handle
 		fn := Func("CheckboxChanged").Bind(dev.id)
 		GuiControl, +g, % hCb, % fn
 	}
 	if (!IsMouse){
-		Gui, Add, Text, x+5 ym w300 Center Section, Mice
+		Gui, Add, Text, x+5 ym w%colWidth% Center Section, Mice
 		start := 10
 	}
 }
 
-Gui, Add, CheckBox, w300 y+20 hwndhCbFilterMove Checked, Filter Movement (Warning: Turning off can cause crashes)
+Gui, Add, CheckBox, w%colWidth% y+20 hwndhCbFilterMove Checked, Filter Movement (Warning: Turning off can cause crashes)
 fn := Func("FilterMove")
 GuiControl, +g, % hCbFilterMove, % fn
-Gui, Add, Button, xm w300 Center gClearKeyboard, Clear
-Gui, Add, Button, x+5 yp w300 gClearMouse Center, Clear
+Gui, Add, Button, xm w%colWidth% Center gClearKeyboard, Clear
+Gui, Add, Button, x+5 yp w%colWidth% gClearMouse Center, Clear
 
-Gui, Add, ListView, xm w300 h400 hwndhLvKeyboard, ID|State|Code|Info
-Gui, Add, ListView, x+5 yp w300 h400 hwndhLvMouse, ID|State|Flags|Rolling|X|Y|Info
+Gui, Add, ListView, xm w%colWidth% h400 hwndhLvKeyboard, ID|State|Code|Info
+Gui, Add, ListView, x+5 yp w%colWidth% h400 hwndhLvMouse, ID|State|Flags|Rolling|X|Y|Info
 LV_ModifyCol(5, 50)
 LV_ModifyCol(6, 50)
 Gui, Show
