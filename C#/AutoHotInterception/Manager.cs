@@ -181,7 +181,10 @@ namespace AutoHotInterception
             if (code > 255)
             {
                 code -= 256;
-                st += 2;
+                if (code != 54) // RShift has > 256 code, but state is 0/1
+                {
+                    st += 2;
+                }
             }
             stroke.key.code = code;
             stroke.key.state = (ushort)st;
@@ -426,11 +429,11 @@ namespace AutoHotInterception
                             var processMappings = true;
                             if (code == 54)
                             {
-                                // Interception seems to report Right Shift as 54 / 0x36...
+                                // Interception seems to report Right Shift as 54 / 0x36 with state 0/1...
                                 // ... this code is normally unused (Alt-SysRq according to linked page) ...
                                 // ... and AHK uses 54 + 256 = 310 (0x36 + 0x100 = 0x136)...
-                                // ... so just keep the key code and behave as if the extended flag was set
-                                state += 2;
+                                // ... so change the code, but leave the state as 0/1
+                                code = 310;
                             }
 
                             // If state is shifted up by 2 (1 or 2 instead of 0 or 1), then this is an "Extended" key code
