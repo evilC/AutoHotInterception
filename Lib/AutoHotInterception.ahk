@@ -4,18 +4,19 @@ class AutoHotInterception {
 	_contextManagers := {}
 	;_contextStates := {}
 	__New(cls := "Manager"){
-		dllName := "Interception.dll"
-		dllFile := A_LineFile "\..\" dllName
+		bitness := A_PtrSize == 8 ? "x64" : "x86"
+		dllName := "interception.dll"
+		dllFile := A_LineFile "\..\" bitness "\" dllName
 		if (!FileExist(dllFile)){
-			MsgBox % "Unable to find lib\" dllName ", exiting...`nYou should take a copy of this file from where you installed Interception, and drop it into AHI's lib folder"
+			MsgBox % "Unable to find lib\" bitness "\" dllName ", exiting...`nYou should extract both x86 and x64 folders from the library folder in interception.zip into AHI's lib folder."
 			ExitApp
 		}
-		
+
 		hModule := DllCall("LoadLibrary", "Str", dllFile, "Ptr")
 		if (hModule == 0){
 			this_bitness := A_PtrSize == 8 ? "64-bit" : "32-bit"
 			other_bitness := A_PtrSize == 4 ? "64-bit" : "32-bit"
-			MsgBox % "Bitness of Interception.dll does not match bitness of AHK.`nAHK is " this_bitness ", but Interception.dll is " other_bitness
+			MsgBox % "Bitness of " dllName " does not match bitness of AHK.`nAHK is " this_bitness ", but " dllName " is " other_bitness "."
 			ExitApp
 		}
 		DllCall("FreeLibrary", "Ptr", hModule)
@@ -27,7 +28,7 @@ class AutoHotInterception {
 			MsgBox % "Unable to find lib\" dllName ", exiting..."
 			ExitApp
 		}
-		
+
 		asm := CLR_LoadLibrary(dllFile)
 		try {
 			this.Instance := asm.CreateInstance("AutoHotInterception." cls)
