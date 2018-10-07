@@ -1,9 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+using System.IO;
+using System.Reflection;
 using System.Runtime.InteropServices;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace AutoHotInterception
 {
@@ -230,6 +228,16 @@ namespace AutoHotInterception
             public KeyStroke key;
         }
 
+        static ManagedWrapper()
+        {
+            var folder = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+            var subfolder = Environment.Is64BitProcess ? "\\x64\\" : "\\x86\\";
+
+            LoadLibrary(folder + subfolder + "interception.dll");
+        }
+
+        [DllImport("kernel32.dll")]
+        private static extern IntPtr LoadLibrary(string dllToLoad);
 
         [DllImport("interception.dll", EntryPoint = "interception_create_context", CallingConvention = CallingConvention.Cdecl)]
         public static extern IntPtr CreateContext();

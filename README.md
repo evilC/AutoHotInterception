@@ -1,12 +1,12 @@
 ![GitHub release](https://img.shields.io/github/release/evilc/autohotinterception.svg)
-[![Github All Releases](https://img.shields.io/github/downloads/evilc/autohotinterception/total.svg)]
+![Github All Releases](https://img.shields.io/github/downloads/evilc/autohotinterception/total.svg)
 [![Discord](https://img.shields.io/discord/330423308103319562.svg)](https://discord.gg/9d3DNN4)
 ![Github commits (since latest release)](https://img.shields.io/github/commits-since/evilc/autohotinterception/latest.svg)
 
 
 # AutoHotInterception
 
-AutoHotInterception(AHI) allows you to execute AutoHotkey code in response to events from a *specific* keyboard or mouse, whilst (optionally) blocking the native functionality (ie stopping Windows from seeing that keyboard or mouse event).  
+AutoHotInterception (AHI) allows you to execute AutoHotkey code in response to events from a *specific* keyboard or mouse, whilst (optionally) blocking the native functionality (ie stopping Windows from seeing that keyboard or mouse event).  
 In other words, you can use a key on a second (or third, or fourth...) keyboard to trigger AHK code, and that key will not be seen by applications. You can use the *same key* on multiple keyboards for individual actions.  
 Keyboard Keys, Mouse Buttons and Mouse movement (Both Relative and Absolute modes) are supported.
 
@@ -50,7 +50,7 @@ You will need to know the VID / PID of at least one of your devices in order to 
 DO NOT use the "Clone or Download" link on the main page.  
 This is the folder where (at least initially) you will be running scripts from.  
 It contains a number of sample `.ahk` scripts and a `lib` folder, which contains all the libraries and files needed for AHI.  
-3. Copy the `interception.dll` from the folder where you ran the interecption install into the `lib` folder that was created in step (2)  
+3. Extract both `x86` and `x64` folders from the `library` folder in `interception.zip` into the `lib` folder that was created in step (2).
 4. Right-click `Unblocker.ps1` in the lib folder and select `Run as Admin`.  
   This is because downloaded DLLs are often blocked and will not work.  
   This can be done manually by right clicking the DLLs, selecting Properties, and checking a "Block" box if it exists.  
