@@ -74,15 +74,15 @@ Initialize the library
 ```
 global AHI := InterceptionWrapper()
 ```
-In this case, `AHI` is actually an AHK class - it wraps the AHI DLL and provides some extra functionality.  
-The majority of the documented commands can be called directly on the DLL itself by calling them on `AHI.Instance` instead of `AHI`.  
+
+*Note* 
+The `AHI` variable is an AHK class that makes it easy to interact with the AutoHotInterception DLL (Which itself then interacts with the Interception dll). For example, it wraps `GetDeviceList()` to make it return a normal AHK array. Most of the time you will not need it.  
+For advanced users, if you wish to directly communicate with the AHI DLL (eg for best possible performance), you can call `AHI.Instance` instead of `AHI` for most functions (eg when sending of synthesized input using `SendMouseMove`).  
 ```
 AHI := new AutoHotInterception()
 AHI.Instance.SendMouseMove(...)
 ```
 
-`AHI` is an AHK class that makes it easy to interact with the AutoHotInterception DLL. For example, it wraps `GetDeviceList()` to make it return a normal AHK array. Most of the time you will not need it.  
-For advanced users, if you wish to directly communicate with the AHI DLL (eg for best possible performance), you can call `AHI.Instance` instead of `AHI` for most functions (eg when sending of synthesized input using `SendMouseMove`).  
 
 ## Finding Device IDs  
 ### USB Devices
