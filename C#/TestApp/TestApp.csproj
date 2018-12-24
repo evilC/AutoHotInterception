@@ -56,9 +56,7 @@
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
-    <PreBuildEvent>if not exist "$(TargetDir)\x86" mkdir "$(TargetDir)\x86"
-if not exist "$(TargetDir)\x64" mkdir "$(TargetDir)\x64"
-if not exist "$(TargetDir)\x86\interception.dll" xcopy "$(SolutionDir)\dependencies\x86\interception.dll" "$(TargetDir)\x86"
-if not exist "$(TargetDir)\x64\interception.dll" xcopy "$(SolutionDir)\dependencies\x64\interception.dll" "$(TargetDir)\x64"</PreBuildEvent>
+    <PreBuildEvent>if not exist "$(TargetDir)interception.dll" xcopy "$(SolutionDir)dependencies\interception.dll" "$(TargetDir)"
+</PreBuildEvent>
   </PropertyGroup>
 </Project>
