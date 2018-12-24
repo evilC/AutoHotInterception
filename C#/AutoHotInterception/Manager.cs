@@ -98,9 +98,9 @@ namespace AutoHotInterception
         }
 
         //Shorthand for SubscribeMouseMoveRelative
-        public bool SubscribeMouseMove(int id, bool block, dynamic callback)
+        public void SubscribeMouseMove(int id, bool block, dynamic callback)
         {
-            return SubscribeMouseMoveRelative(id, block, callback);
+            SubscribeMouseMoveRelative(id, block, callback);
         }
 
         /// <summary>
