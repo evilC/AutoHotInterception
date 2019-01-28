@@ -31,12 +31,12 @@ namespace AutoHotInterception
 
         // If an event is subscribed to with concurrent set to false then use a single worker thread to process each event.
         // Makes sure the events are handled synchronously and with a FIFO order.
-        private readonly ConcurrentDictionary<int, ConcurrentDictionary<ushort, WorkerThread>> _workers =
+        private readonly ConcurrentDictionary<int, ConcurrentDictionary<ushort, WorkerThread>> _workerThreads =
             new ConcurrentDictionary<int, ConcurrentDictionary<ushort, WorkerThread>>();
 
         private bool _filterState;
         private Thread _pollThread;
-        private bool _pollThreadRunning;
+        private volatile bool _pollThreadRunning;
 
         public void Dispose()
         {
@@ -84,11 +84,11 @@ namespace AutoHotInterception
 
             if (!concurrent)
             {
-                if (!_workers.ContainsKey(id)) _workers.TryAdd(id, new ConcurrentDictionary<ushort, WorkerThread>());
+                if (!_workerThreads.ContainsKey(id))
+                    _workerThreads.TryAdd(id, new ConcurrentDictionary<ushort, WorkerThread>());
 
-                var worker = new WorkerThread();
-                _workers[id].TryAdd(code, worker);
-                worker.Start();
+                _workerThreads[id].TryAdd(code, new WorkerThread());
+                _workerThreads[id][code].Start();
             }
 
             SetFilterState(true);
@@ -116,11 +116,11 @@ namespace AutoHotInterception
 
             if (!concurrent)
             {
-                if (!_workers.ContainsKey(id)) _workers.TryAdd(id, new ConcurrentDictionary<ushort, WorkerThread>());
+                if (!_workerThreads.ContainsKey(id))
+                    _workerThreads.TryAdd(id, new ConcurrentDictionary<ushort, WorkerThread>());
 
-                var worker = new WorkerThread();
-                _workers[id].TryAdd(btn, worker);
-                worker.Start();
+                _workerThreads[id].TryAdd(btn, new WorkerThread());
+                _workerThreads[id][btn].Start();
             }
 
             SetFilterState(true);
@@ -145,11 +145,11 @@ namespace AutoHotInterception
 
             if (!concurrent)
             {
-                if (!_workers.ContainsKey(id)) _workers.TryAdd(id, new ConcurrentDictionary<ushort, WorkerThread>());
+                if (!_workerThreads.ContainsKey(id))
+                    _workerThreads.TryAdd(id, new ConcurrentDictionary<ushort, WorkerThread>());
 
-                var worker = new WorkerThread();
-                _workers[id].TryAdd(7, worker); // Use 7 as second index for MouseMoveAbsolute
-                worker.Start();
+                _workerThreads[id].TryAdd(7, new WorkerThread()); // Use 7 as second index for MouseMoveAbsolute
+                _workerThreads[id][7].Start();
             }
 
             SetFilterState(true);
@@ -180,11 +180,11 @@ namespace AutoHotInterception
 
             if (!concurrent)
             {
-                if (!_workers.ContainsKey(id)) _workers.TryAdd(id, new ConcurrentDictionary<ushort, WorkerThread>());
+                if (!_workerThreads.ContainsKey(id))
+                    _workerThreads.TryAdd(id, new ConcurrentDictionary<ushort, WorkerThread>());
 
-                var worker = new WorkerThread();
-                _workers[id].TryAdd(8, worker); // Use 8 as second index for MouseMoveRelative
-                worker.Start();
+                _workerThreads[id].TryAdd(8, new WorkerThread()); // Use 8 as second index for MouseMoveRelative
+                _workerThreads[id][8].Start();
             }
 
             SetFilterState(true);
@@ -407,16 +407,14 @@ namespace AutoHotInterception
         {
             if (state)
             {
-                if (!_pollThreadRunning)
-                {
-                    _pollThreadRunning = true;
-                    _pollThread = new Thread(PollThread);
-                    _pollThread.Start();
-                }
+                if (_pollThreadRunning) return;
+                _pollThreadRunning = true;
+                _pollThread = new Thread(PollThread);
+                _pollThread.Start();
             }
             else
             {
-                _pollThread.Interrupt();
+                _pollThreadRunning = false;
                 _pollThread.Join();
                 _pollThread = null;
             }
@@ -448,7 +446,7 @@ namespace AutoHotInterception
         {
             var stroke = new ManagedWrapper.Stroke();
 
-            while (true)
+            while (_pollThreadRunning)
             {
                 // Iterate through all Keyboards
                 for (var i = 1; i < 11; i++)
@@ -514,14 +512,9 @@ namespace AutoHotInterception
                                 var mapping = _keyboardMappings[i][code];
                                 if (mapping.Block) block = true;
                                 if (mapping.Concurrent)
-                                {
                                     ThreadPool.QueueUserWorkItem(threadProc => mapping.Callback(1 - state));
-                                }
-                                else if (_workers.ContainsKey(i) && _workers[i].ContainsKey(code))
-                                {
-                                    var worker = _workers[i][code];
-                                    worker?.Actions.Add(() => mapping.Callback(1 - state));
-                                }
+                                else if (_workerThreads.ContainsKey(i) && _workerThreads[i].ContainsKey(code))
+                                    _workerThreads[i][code]?.Actions.Add(() => mapping.Callback(1 - state));
                             }
                         }
 
@@ -567,14 +560,11 @@ namespace AutoHotInterception
                                     var state = btnState;
 
                                     if (mapping.Concurrent)
-                                    {
-                                        ThreadPool.QueueUserWorkItem(threadProc => mapping.Callback(1 - state.State));
-                                    }
-                                    else if (_workers.ContainsKey(i) && _workers[i].ContainsKey(btnState.Button))
-                                    {
-                                        var worker = _workers[i][btnState.Button];
-                                        worker?.Actions.Add(() => mapping.Callback(1 - state.State));
-                                    }
+                                        ThreadPool.QueueUserWorkItem(threadProc => mapping.Callback(state.State));
+                                    else if (_workerThreads.ContainsKey(i) &&
+                                             _workerThreads[i].ContainsKey(btnState.Button))
+                                        _workerThreads[i][btnState.Button]?.Actions
+                                            .Add(() => mapping.Callback(state.State));
                                 }
 
                                 //Console.WriteLine($"AHK| Mouse {i} seen - button {btnState.Button}, state: {stroke.mouse.state}, rolling: {stroke.mouse.rolling}");
@@ -591,14 +581,9 @@ namespace AutoHotInterception
                                 var x = stroke.mouse.x;
                                 var y = stroke.mouse.y;
                                 if (mapping.Concurrent)
-                                {
                                     ThreadPool.QueueUserWorkItem(threadProc => mapping.Callback(x, y));
-                                }
-                                else if (_workers.ContainsKey(i) && _workers[i].ContainsKey(7))
-                                {
-                                    var worker = _workers[i][7];
-                                    worker?.Actions.Add(() => mapping.Callback(x, y));
-                                }
+                                else if (_workerThreads.ContainsKey(i) && _workerThreads[i].ContainsKey(7))
+                                    _workerThreads[i][7]?.Actions.Add(() => mapping.Callback(x, y));
                             }
                             else if ((stroke.mouse.flags & (ushort) ManagedWrapper.MouseFlag.MouseMoveRelative) ==
                                      (ushort) ManagedWrapper.MouseFlag.MouseMoveRelative
@@ -612,14 +597,9 @@ namespace AutoHotInterception
                                 var x = stroke.mouse.x;
                                 var y = stroke.mouse.y;
                                 if (mapping.Concurrent)
-                                {
                                     ThreadPool.QueueUserWorkItem(threadProc => mapping.Callback(x, y));
-                                }
-                                else if (_workers.ContainsKey(i) && _workers[i].ContainsKey(8))
-                                {
-                                    var worker = _workers[i][8];
-                                    worker?.Actions.Add(() => mapping.Callback(x, y));
-                                }
+                                else if (_workerThreads.ContainsKey(i) && _workerThreads[i].ContainsKey(8))
+                                    _workerThreads[i][8]?.Actions.Add(() => mapping.Callback(x, y));
                             }
                         }
 
@@ -646,7 +626,7 @@ namespace AutoHotInterception
         private class WorkerThread : IDisposable
         {
             private readonly Thread _worker;
-            private bool _running;
+            private volatile bool _running;
 
             public WorkerThread()
             {
@@ -660,20 +640,20 @@ namespace AutoHotInterception
             public void Dispose()
             {
                 if (!_running) return;
-                _worker.Interrupt();
-                _worker.Join();
                 _running = false;
+                _worker.Join();
             }
 
             public void Start()
             {
-                _worker.Start();
+                if (_running) return;
                 _running = true;
+                _worker.Start();
             }
 
             private void Run()
             {
-                while (true)
+                while (_running)
                 {
                     var action = Actions.Take();
                     action.Invoke();
