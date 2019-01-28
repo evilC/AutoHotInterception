@@ -1,11 +1,6 @@
 ﻿using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
-using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
 using AutoHotInterception.Helpers;
 using static AutoHotInterception.Helpers.HelperFunctions;
 
@@ -14,12 +9,12 @@ namespace AutoHotInterception
     public class Monitor : IDisposable
     {
         private readonly IntPtr _deviceContext;
-        private Thread _pollThread;
-        private bool _pollThreadRunning = false;
+        private readonly ConcurrentDictionary<int, bool> _filteredDevices = new ConcurrentDictionary<int, bool>();
+        private bool _filterState;
         private dynamic _keyboardCallback;
         private dynamic _mouseCallback;
-        private bool _filterState = false;
-        private readonly ConcurrentDictionary<int, bool> _filteredDevices = new ConcurrentDictionary<int, bool>();
+        private Thread _pollThread;
+        private bool _pollThreadRunning;
 
         public Monitor()
         {
@@ -27,15 +22,16 @@ namespace AutoHotInterception
             SetThreadState(true);
         }
 
+        public void Dispose()
+        {
+            SetFilterState(false);
+            SetThreadState(false);
+        }
+
         public string OkCheck()
         {
             return "OK";
         }
-
-        //public void Log(string text)
-        //{
-        //    Debug.WriteLine($"AHK| {text}");
-        //}
 
         public void Subscribe(dynamic keyboardCallback, dynamic mouseCallback)
         {
@@ -47,20 +43,11 @@ namespace AutoHotInterception
         {
             SetFilterState(false);
             if (state)
-            {
                 _filteredDevices[device] = true;
-                //Log($"Adding device {device}, count: {_filteredDevices.Count}");
-            }
             else
-            {
                 _filteredDevices.TryRemove(device, out _);
-                //Log($"Removing device {device}, count: {_filteredDevices.Count}");
-            }
 
-            if (_filteredDevices.Count > 0)
-            {
-                SetFilterState(true);
-            }
+            if (_filteredDevices.Count > 0) SetFilterState(true);
             return true;
         }
 
@@ -80,7 +67,6 @@ namespace AutoHotInterception
         {
             return Convert.ToInt32(_filteredDevices.ContainsKey(device));
         }
-
 
         private void SetThreadState(bool state)
         {
@@ -107,40 +93,33 @@ namespace AutoHotInterception
             while (true)
             {
                 for (var i = 1; i < 11; i++)
-                {
                     while (ManagedWrapper.Receive(_deviceContext, i, ref stroke, 1) > 0)
                     {
                         ManagedWrapper.Send(_deviceContext, i, ref stroke, 1);
                         FireKeyboardCallback(i, stroke);
                     }
-                }
 
                 for (var i = 11; i < 21; i++)
-                {
                     while (ManagedWrapper.Receive(_deviceContext, i, ref stroke, 1) > 0)
                     {
                         ManagedWrapper.Send(_deviceContext, i, ref stroke, 1);
                         FireMouseCallback(i, stroke);
                     }
-                }
+
                 Thread.Sleep(10);
             }
         }
 
         private void FireKeyboardCallback(int id, ManagedWrapper.Stroke stroke)
         {
-            ThreadPool.QueueUserWorkItem(threadProc => _keyboardCallback(id, stroke.key.state, stroke.key.code, stroke.key.information));
+            ThreadPool.QueueUserWorkItem(threadProc =>
+                _keyboardCallback(id, stroke.key.state, stroke.key.code, stroke.key.information));
         }
 
         private void FireMouseCallback(int id, ManagedWrapper.Stroke stroke)
         {
-            ThreadPool.QueueUserWorkItem(threadProc => _mouseCallback(id, stroke.mouse.state, stroke.mouse.flags, stroke.mouse.rolling, stroke.mouse.x, stroke.mouse.y, stroke.mouse.information));
-        }
-
-        public void Dispose()
-        {
-            SetFilterState(false);
-            SetThreadState(false);
+            ThreadPool.QueueUserWorkItem(threadProc => _mouseCallback(id, stroke.mouse.state, stroke.mouse.flags,
+                stroke.mouse.rolling, stroke.mouse.x, stroke.mouse.y, stroke.mouse.information));
         }
     }
 }

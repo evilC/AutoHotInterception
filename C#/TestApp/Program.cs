@@ -1,73 +1,44 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
 using AutoHotInterception;
 
-class TestApp
+namespace TestApp
 {
-    static void Main(string[] args)
+    internal class TestApp
     {
-        //var mon = new AutoHotInterception.Monitor();
-        //var devInfo = mon.GetDeviceList();
-        //mon.Subscribe(new Action<int, ushort, ushort, uint>((id, state, code, info) =>
-        //{
-        //    Console.WriteLine($"Subscription Value: State={state}, Code={code}");
-        //}), new Action<int, ushort, ushort, short, int, int, uint>((id, state, flags, rolling, x, y, info) =>
-        //{
-        //    Console.WriteLine($"Subscription Value: x={x}, y={y}");
-        //}));
-        //mon.SetDeviceFilterState(16, true);
-        //Console.ReadLine();
-        //return;
-
-        // --------------------------------------------------------------
-
-        var im = new Manager();
-
-        var keyboardId = 0;
-        //keyboardId = im.GetDeviceId(false, 0x04F2, 0x0112);     // WYSE
-        //keyboardId = im.GetDeviceId(false, 0x413C, 0x2107);     // Dell
-
-        var mouseId = 0;
-        //mouseId = im.GetDeviceId(true, 0x46D, 0xC531);      // G700s
-        //mouseId = im.GetDeviceId(true, 0x46D, 0xC00C);      // Logitech Wired
-        mouseId = im.GetDeviceId(true, 0xB57, 0x9091);      // Parblo Tablet
-
-        //im.SendMouseButtonEvent(mouseId, 1, 1);
-        //Thread.Sleep(100);
-        //im.SendMouseButtonEvent(mouseId, 1, 0);
-        //im.SendMouseMoveRelative(mouseId, 100, 100);
-        //im.SendMouseMoveAbsolute(mouseId, 100, 100);
-
-        if (keyboardId != 0)
+        private static void Main()
         {
-            im.SubscribeKey(keyboardId, 2, true, new Action<int>((value) =>
-            {
-                Console.WriteLine("Subscription Value: " + value);
-            }));
+            var im = new Manager();
 
-            im.SetContextCallback(keyboardId, new Action<int>((value) =>
+            var mouseHandle = "HID\\VID_046D&PID_C52B&REV_2407&MI_02&Qid_1028&WI_01&Class_00000004";
+            var mouseId = im.GetMouseIdFromHandle(mouseHandle);
+
+            var counter = 0;
+
+            if (mouseId != 0)
             {
-                Console.WriteLine("Context Value: " + value);
-            }));
+                im.SubscribeMouseButton(mouseId, 1, true, new Action<int>(value =>
+                {
+                    //Console.WriteLine("RButton Button Value: " + value);
+                }));
+                im.SubscribeMouseButton(mouseId, 3, true, new Action<int>(value =>
+                {
+                    //Console.WriteLine("XButton1 Button Value: " + value);
+                }));
+                im.SubscribeMouseButton(mouseId, 4, true, new Action<int>(value =>
+                {
+                    //Console.WriteLine("XButton2 Button Value: " + value);
+                }));
+                im.SubscribeMouseButton(mouseId, 5, true, new Action<int>(value =>
+                {
+                    //Console.WriteLine("WheelVertical Value: " + value);
+                    var mycounter = counter;
+                    mycounter++;
+                    Console.WriteLine("Counter: " + mycounter);
+                    counter = mycounter;
+                }), false);
+            }
+
+            Console.ReadLine();
         }
-
-        if (mouseId != 0)
-        {
-            im.SubscribeMouseButton(mouseId, 1, true, new Action<int>((value) =>
-            {
-                Console.WriteLine("Mouse Button Value: " + value);
-            }));
-
-            im.SubscribeMouseMoveRelative(mouseId, false, new Action<int, int>((x, y) =>
-            {
-                Console.WriteLine($"Mouse Axis Value: x={x}, y={y}");
-            }));
-
-        }
-        Console.ReadLine();
     }
 }
