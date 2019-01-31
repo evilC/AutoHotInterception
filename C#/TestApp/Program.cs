@@ -18,24 +18,24 @@ namespace TestApp
             {
                 im.SubscribeMouseButton(mouseId, 1, true, new Action<int>(value =>
                 {
-                    //Console.WriteLine("RButton Button Value: " + value);
+                    Console.WriteLine("RButton Button Value: " + value);
                 }));
                 im.SubscribeMouseButton(mouseId, 3, true, new Action<int>(value =>
                 {
-                    //Console.WriteLine("XButton1 Button Value: " + value);
+                    Console.WriteLine("XButton1 Button Value: " + value);
                 }));
                 im.SubscribeMouseButton(mouseId, 4, true, new Action<int>(value =>
                 {
-                    //Console.WriteLine("XButton2 Button Value: " + value);
+                    Console.WriteLine("XButton2 Button Value: " + value);
                 }));
                 im.SubscribeMouseButton(mouseId, 5, true, new Action<int>(value =>
                 {
-                    //Console.WriteLine("WheelVertical Value: " + value);
+                    Console.Write("WheelVertical Value: " + value);
                     var mycounter = counter;
                     mycounter++;
-                    Console.WriteLine("Counter: " + mycounter);
+                    Console.WriteLine(" Counter: " + mycounter);
                     counter = mycounter;
-                }), false);
+                }));
             }
 
             Console.ReadLine();

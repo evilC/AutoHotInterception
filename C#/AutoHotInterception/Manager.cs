@@ -34,14 +34,8 @@ namespace AutoHotInterception
         private readonly ConcurrentDictionary<int, ConcurrentDictionary<ushort, WorkerThread>> _workerThreads =
             new ConcurrentDictionary<int, ConcurrentDictionary<ushort, WorkerThread>>();
 
-        private bool _filterState;
         private Thread _pollThread;
         private volatile bool _pollThreadRunning;
-
-        public void Dispose()
-        {
-            SetThreadState(false);
-        }
 
         #region Public
 
@@ -50,6 +44,11 @@ namespace AutoHotInterception
         public Manager()
         {
             _deviceContext = ManagedWrapper.CreateContext();
+        }
+
+        public void Dispose()
+        {
+            SetThreadState(false);
         }
 
         public string OkCheck()
@@ -70,7 +69,7 @@ namespace AutoHotInterception
         /// <param name="callback">The callback to fire when the key changes state</param>
         /// <param name="concurrent">Whether or not to execute callbacks concurrently</param>
         /// <returns></returns>
-        public void SubscribeKey(int id, ushort code, bool block, dynamic callback, bool concurrent = true)
+        public void SubscribeKey(int id, ushort code, bool block, dynamic callback, bool concurrent = false)
         {
             SetFilterState(false);
             IsValidDeviceId(false, id);
@@ -104,7 +103,7 @@ namespace AutoHotInterception
         /// <param name="callback">The callback to fire when the button changes state</param>
         /// <param name="concurrent">Whether or not to execute callbacks concurrently</param>
         /// <returns></returns>
-        public void SubscribeMouseButton(int id, ushort btn, bool block, dynamic callback, bool concurrent = true)
+        public void SubscribeMouseButton(int id, ushort btn, bool block, dynamic callback, bool concurrent = false)
         {
             IsValidDeviceId(true, id);
 
@@ -135,7 +134,7 @@ namespace AutoHotInterception
         /// <param name="callback">The callback to fire when the mouse moves</param>
         /// <param name="concurrent">Whether or not to execute callbacks concurrently</param>
         /// <returns></returns>
-        public void SubscribeMouseMoveAbsolute(int id, bool block, dynamic callback, bool concurrent = true)
+        public void SubscribeMouseMoveAbsolute(int id, bool block, dynamic callback, bool concurrent = false)
         {
             IsValidDeviceId(true, id);
 
@@ -157,7 +156,7 @@ namespace AutoHotInterception
         }
 
         //Shorthand for SubscribeMouseMoveRelative
-        public void SubscribeMouseMove(int id, bool block, dynamic callback, bool concurrent = true)
+        public void SubscribeMouseMove(int id, bool block, dynamic callback, bool concurrent = false)
         {
             SubscribeMouseMoveRelative(id, block, callback, concurrent);
         }
@@ -170,7 +169,7 @@ namespace AutoHotInterception
         /// <param name="callback">The callback to fire when the mouse moves</param>
         /// <param name="concurrent">Whether or not to execute callbacks concurrently</param>
         /// <returns></returns>
-        public void SubscribeMouseMoveRelative(int id, bool block, dynamic callback, bool concurrent = true)
+        public void SubscribeMouseMoveRelative(int id, bool block, dynamic callback, bool concurrent = false)
         {
             IsValidDeviceId(true, id);
 
@@ -437,8 +436,6 @@ namespace AutoHotInterception
         {
             ManagedWrapper.SetFilter(_deviceContext, IsMonitoredDevice,
                 state ? ManagedWrapper.Filter.All : ManagedWrapper.Filter.None);
-
-            _filterState = state;
         }
 
         // ScanCode notes: https://www.win.tue.nl/~aeb/linux/kbd/scancodes-1.html

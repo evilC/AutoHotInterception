@@ -9,12 +9,16 @@ namespace AutoHotInterception
     public class Monitor : IDisposable
     {
         private readonly IntPtr _deviceContext;
+
         private readonly ConcurrentDictionary<int, bool> _filteredDevices = new ConcurrentDictionary<int, bool>();
-        private bool _filterState;
+
         private dynamic _keyboardCallback;
         private dynamic _mouseCallback;
+
         private Thread _pollThread;
-        private bool _pollThreadRunning;
+        private volatile bool _pollThreadRunning;
+
+        #region Public
 
         public Monitor()
         {
@@ -56,11 +60,25 @@ namespace AutoHotInterception
             return HelperFunctions.GetDeviceList(_deviceContext);
         }
 
-        private void SetFilterState(bool state)
+        #endregion
+
+        #region Private
+
+        private void SetThreadState(bool state)
         {
-            ManagedWrapper.SetFilter(_deviceContext, IsMonitoredDevice,
-                state ? ManagedWrapper.Filter.All : ManagedWrapper.Filter.None);
-            _filterState = state;
+            if (state)
+            {
+                if (_pollThreadRunning) return;
+                _pollThreadRunning = true;
+                _pollThread = new Thread(PollThread);
+                _pollThread.Start();
+            }
+            else
+            {
+                _pollThreadRunning = true;
+                _pollThread.Join();
+                _pollThread = null;
+            }
         }
 
         private int IsMonitoredDevice(int device)
@@ -68,29 +86,17 @@ namespace AutoHotInterception
             return Convert.ToInt32(_filteredDevices.ContainsKey(device));
         }
 
-        private void SetThreadState(bool state)
+        private void SetFilterState(bool state)
         {
-            if (state)
-            {
-                if (_pollThreadRunning) return;
-
-                _pollThreadRunning = true;
-                _pollThread = new Thread(PollThread);
-                _pollThread.Start();
-            }
-            else
-            {
-                _pollThread.Abort();
-                _pollThread.Join();
-                _pollThread = null;
-            }
+            ManagedWrapper.SetFilter(_deviceContext, IsMonitoredDevice,
+                state ? ManagedWrapper.Filter.All : ManagedWrapper.Filter.None);
         }
 
         private void PollThread()
         {
             var stroke = new ManagedWrapper.Stroke();
 
-            while (true)
+            while (_pollThreadRunning)
             {
                 for (var i = 1; i < 11; i++)
                     while (ManagedWrapper.Receive(_deviceContext, i, ref stroke, 1) > 0)
@@ -121,5 +127,7 @@ namespace AutoHotInterception
             ThreadPool.QueueUserWorkItem(threadProc => _mouseCallback(id, stroke.mouse.state, stroke.mouse.flags,
                 stroke.mouse.rolling, stroke.mouse.x, stroke.mouse.y, stroke.mouse.information));
         }
+
+        #endregion
     }
 }

@@ -3,7 +3,7 @@ using System.IO;
 using System.Reflection;
 using System.Runtime.InteropServices;
 
-namespace AutoHotInterception
+namespace AutoHotInterception.Helpers
 {
     public static class ManagedWrapper
     {
@@ -66,6 +66,7 @@ namespace AutoHotInterception
                                MouseState.Button4Up | MouseState.Button5Up,
 
             MouseWheel = MouseState.Wheel,
+
             MouseHWheel = MouseState.HWheel
             /*
             enum InterceptionFilterMouseState
@@ -116,6 +117,7 @@ namespace AutoHotInterception
             E1 = 0x04,
             TermsrvSetLED = 0x08,
             TermsrvShadow = 0x10,
+
             TermsrvVKPacket = 0x20
             /*
             enum InterceptionKeyState
@@ -137,6 +139,7 @@ namespace AutoHotInterception
             MouseVirturalDesktop = 0x002,
             MouseAttributesChanged = 0x004,
             MouseMoveNocoalesce = 0x008,
+
             MouseTermsrvSrcShadow = 0x100
             /*
             enum InterceptionMouseFlag
@@ -174,6 +177,7 @@ namespace AutoHotInterception
             Button5Up = 0x200,
 
             Wheel = 0x400,
+
             HWheel = 0x800
             /*
             enum InterceptionMouseState
