@@ -59,8 +59,8 @@ namespace AutoHotInterception
         /// <returns></returns>
         public void SubscribeKey(int id, ushort code, bool block, dynamic callback)
         {
-            SetFilterState(false);
             IsValidDeviceId(false, id);
+            SetFilterState(false);
 
             if (!_keyboardMappings.ContainsKey(id))
             {
@@ -68,7 +68,26 @@ namespace AutoHotInterception
             }
 
             _keyboardMappings[id].TryAdd(code, new MappingOptions() { Block = block, Callback = callback });
-            _filteredDevices[id] = true;
+            SetDeviceFilterState(id, true);
+
+            SetFilterState(true);
+            SetThreadState(true);
+        }
+
+        public void UnsubscribeKey(int id, ushort code)
+        {
+            IsValidDeviceId(false, id);
+            SetFilterState(false);
+
+            if (_keyboardMappings.TryGetValue(id, out var thisDevice))
+            {
+                thisDevice.TryRemove(code, out _);
+                if (thisDevice.Count == 0)
+                {
+                    _keyboardMappings.TryRemove(id, out _);
+                    SetDeviceFilterState(id, false);
+                }
+            }
 
             SetFilterState(true);
             SetThreadState(true);
@@ -91,7 +110,26 @@ namespace AutoHotInterception
                 _mouseButtonMappings.TryAdd(id, new ConcurrentDictionary<ushort, MappingOptions>());
             }
             _mouseButtonMappings[id].TryAdd(btn, new MappingOptions() { Block = block, Callback = callback });
-            _filteredDevices[id] = true;
+            SetDeviceFilterState(id, true);
+
+            SetFilterState(true);
+            SetThreadState(true);
+        }
+
+        public void UnsubscribeMouseButton(int id, ushort btn)
+        {
+            IsValidDeviceId(false, id);
+            SetFilterState(false);
+
+            if (_mouseButtonMappings.TryGetValue(id, out var thisDevice))
+            {
+                thisDevice.TryRemove(btn, out _);
+                if (thisDevice.Count == 0)
+                {
+                    _mouseButtonMappings.TryRemove(id, out _);
+                    SetDeviceFilterState(id, false);
+                }
+            }
 
             SetFilterState(true);
             SetThreadState(true);
@@ -101,6 +139,11 @@ namespace AutoHotInterception
         public void SubscribeMouseMove(int id, bool block, dynamic callback)
         {
             SubscribeMouseMoveRelative(id, block, callback);
+        }
+
+        public void UnsubscribeMouseMove(int id)
+        {
+            UnsubscribeMouseMoveRelative(id);
         }
 
         /// <summary>
@@ -115,7 +158,22 @@ namespace AutoHotInterception
             IsValidDeviceId(true, id);
 
             _mouseMoveRelativeMappings[id] = new MappingOptions() { Block = block, Callback = callback };
-            _filteredDevices[id] = true;
+            SetDeviceFilterState(id, true);
+            SetFilterState(true);
+            SetThreadState(true);
+        }
+
+        public void UnsubscribeMouseMoveRelative(int id)
+        {
+            IsValidDeviceId(true, id);
+
+            if (_mouseMoveRelativeMappings.TryRemove(id, out _))
+            {
+                if (!DeviceHasBindings(id))
+                {
+                    SetDeviceFilterState(id, false);
+                }
+            }
             SetFilterState(true);
             SetThreadState(true);
         }
@@ -133,9 +191,21 @@ namespace AutoHotInterception
             IsValidDeviceId(true, id);
 
             _mouseMoveAbsoluteMappings[id] = new MappingOptions() { Block = block, Callback = callback };
-            _filteredDevices[id] = true;
+            SetDeviceFilterState(id, true);
             SetFilterState(true);
             SetThreadState(true);
+        }
+
+        public void UnsubscribeMouseMoveAbsolute(int id)
+        {
+            IsValidDeviceId(true, id);
+            if (_mouseMoveAbsoluteMappings.TryRemove(id, out _))
+            {
+                if (!DeviceHasBindings(id))
+                {
+                    SetDeviceFilterState(id, false);
+                }
+            }
         }
 
         #endregion
@@ -157,7 +227,7 @@ namespace AutoHotInterception
             }
 
             _contextCallbacks[id] = callback;
-            _filteredDevices[id] = true;
+            SetDeviceFilterState(id, true);
 
             SetFilterState(true);
             SetThreadState(true);
@@ -395,6 +465,31 @@ namespace AutoHotInterception
                 state ? ManagedWrapper.Filter.All : ManagedWrapper.Filter.None);
 
             _filterState = state;
+        }
+
+        private void SetDeviceFilterState(int device, bool state)
+        {
+            if (state && !_filteredDevices.ContainsKey(device))
+            {
+                _filteredDevices[device] = true;
+            }
+            else if (!state && _filteredDevices.ContainsKey(device))
+            {
+                _filteredDevices.TryRemove(device, out _);
+            }
+        }
+
+        private bool DeviceHasBindings(int id)
+        {
+            if (id < 11)
+            {
+                return _keyboardMappings.ContainsKey(id);
+            }
+
+            return _mouseButtonMappings.ContainsKey(id)
+                   || _mouseMoveRelativeMappings.ContainsKey(id)
+                   || _mouseMoveAbsoluteMappings.ContainsKey(id);
+
         }
 
         // ScanCode notes: https://www.win.tue.nl/~aeb/linux/kbd/scancodes-1.html

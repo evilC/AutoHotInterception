@@ -5,6 +5,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 ### Added
+- UnsubscribeKey, UnsubscribeMouseButton, UnsubscribeMouseMove, UnsubscribeMouseMoveRelative, UnsubscribeMouseMoveAbsolute methods added to Subscription Mode
+- Added "Unsubscription Example.ahk" to demo Subscribe / Unsubscribe
 ### Changed 
 - Fixed Build Event to copy Interception dll
 ### Deprecated
