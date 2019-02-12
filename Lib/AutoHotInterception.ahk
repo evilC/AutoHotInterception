@@ -123,20 +123,40 @@ class AutoHotInterception {
 		this.Instance.SubscribeKey(id, code, block, callback, concurrent)
 	}
 
+	UnsubscribeKey(id, code){
+		this.Instance.UnsubscribeKey(id, code)
+	}
+
 	SubscribeMouseButton(id, btn, block, callback, concurrent := false) {
 		this.Instance.SubscribeMouseButton(id, btn, block, callback, concurrent)
+	}
+
+	UnsubscribeMouseButton(id, btn){
+		this.Instance.UnsubscribeMouseButton(id, btn)
 	}
 
 	SubscribeMouseMove(id, block, callback, concurrent := false) {
 		this.Instance.SubscribeMouseMove(id, block, callback, concurrent)
 	}
 
+	UnsubscribeMouseMove(id){
+		this.Instance.UnsubscribeMouseMove(id)
+	}
+
 	SubscribeMouseMoveRelative(id, block, callback, concurrent := false) {
 		this.Instance.SubscribeMouseMoveRelative(id, block, callback, concurrent)
 	}
 
+	UnsubscribeMouseMoveRelative(id){
+		this.Instance.UnsubscribeMouseMoveRelative(id)
+	}
+
 	SubscribeMouseMoveAbsolute(id, block, callback, concurrent := false) {
 		this.Instance.SubscribeMouseMoveAbsolute(id, block, callback, concurrent)
+	}
+
+	UnsubscribeMouseMoveAbsolute(id){
+		this.Instance.UnsubscribeMouseMoveAbsolute(id)
 	}
 
 	; ------------- Context Mode ----------------

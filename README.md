@@ -161,10 +161,12 @@ cm1 := AHI.CreateContextManager(keyboard1Id)
 In Subscription mode, you bypass AHK's hotkey system completely, and Interception notifies you of key events via callbacks.  
 All forms of input are supported in Subscription Mode.  
 Subscription Mode overrides Context Mode - that is, if a key on a keyboard has been subscribed to with Subscription Mode, then Context Mode will not fire for that key on that keyboard.  
+Each Subscribe endpont also has a corresponding Unsubscribe endpoint, which removes the subscription and any block associated with it.  
 
 #### Subscribing to Keyboard keys
-Subscribe to a key on a specific keyboard
+Subscribe to a key on a specific keyboard  
 `SubscribeKey(<deviceId>, <scanCode>, <block>, <callback>, <concurrent>)`
+`UnsubscribeKey(<deviceId>, <scanCode>)`
 ```
 Interception.SubscribeKey(keyboardId, GetKeySC("1"), true, Func("KeyEvent"))
 return
@@ -180,6 +182,7 @@ KeyEvent(state){
 Parameter `<concurrent>` is optional and is <b>false</b> by default meaning that all the events raised for that key will be handled sequentially (i.e. callback function will be called on a single thread). If set to <b>true</b>, a new thread will be created for each event and the callback function will be called on it.
 #### Subscribing to Mouse Buttons
 `SubscribeMouseButton(<deviceId>, <button>, <block>, <callback>, <concurrent>)`  
+`UnsubscribeMouseButton(<deviceId>, <button>)`  
 Where `button` is one of:  
 ```
 0: Left Mouse
@@ -202,8 +205,13 @@ Keep your callbacks **short and efficient** in this mode if you wish to avoid hi
 
 ##### Relative Mode  
 Relative mode is for normal mice and most trackpads.  
-Coordinates will be delta (change)
+Coordinates will be delta (change)  
+Each endpoint has two naming variants for convenience, they both do the same.  
+
 `SubscribeMouseMove(<deviceId>, <block>, <callback>, <concurrent>)`  
+`SubscribeMouseMoveRelative(<deviceId>, <block>, <callback>, <concurrent>)`  
+`UnsubscribeMouseMove(<deviceId>)`  
+`UnsubscribeMouseMoveRelative(<deviceId>)`  
 For Mouse Movement, the callback is passed two ints - x and y.  
 ```
 Interception.SubscribeMouseMove(mouseId, false, Func("MouseEvent"))
@@ -217,6 +225,7 @@ MouseEvent(x, y){
 Absolute mode is used for Graphics Tablets, Light Guns etc.  
 Coordinates will be in the range 0..65535  
 `SubscribeMouseMoveAbsolute(<deviceId>, <block>, <callback>, <concurrent>)`  
+`UnsubscribeMouseMoveAbsolute(<deviceId>)`  
 Again, the callback is passed two ints - x and y.  
 ```
 Interception.SubscribeMouseMoveAbsolute(mouseId, false, Func("MouseEvent"))
