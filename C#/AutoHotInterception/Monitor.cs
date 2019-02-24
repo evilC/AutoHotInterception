@@ -112,15 +112,27 @@ namespace AutoHotInterception
                     {
                         ManagedWrapper.Send(_deviceContext, i, ref stroke, 1);
                         var processedState = KeyboardStrokeToKeyboardState(stroke);
-                        stroke.key.code = processedState.Code;
-                        stroke.key.state = processedState.State;
-                        FireKeyboardCallback(i, new KeyboardCallback
+                        var info = "";
+                        if (processedState.Ignore)
                         {
-                            Id = i,
-                            Code = stroke.key.code,
-                            State = stroke.key.state,
-                            Info = stroke.key.code > 255 ? "Extended" : ""
-                        });
+                            FireKeyboardCallback(i, new KeyboardCallback
+                            {
+                                Id = i,
+                                Code = stroke.key.code,
+                                State = stroke.key.state,
+                                Info = "Ignored - showing raw values"
+                            });
+                        }
+                        else
+                        {
+                            FireKeyboardCallback(i, new KeyboardCallback
+                            {
+                                Id = i,
+                                Code = processedState.Code,
+                                State = processedState.State,
+                                Info = stroke.key.code > 255 ? "Extended" : ""
+                            });
+                        }
                     }
                 }
 
