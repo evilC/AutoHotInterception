@@ -148,7 +148,7 @@ namespace AutoHotInterception
 
         public void UnsubscribeMouseButton(int id, ushort btn)
         {
-            IsValidDeviceId(false, id);
+            IsValidDeviceId(true, id);
             SetFilterState(false);
 
             if (_mouseButtonMappings.TryGetValue(id, out var thisDevice))
