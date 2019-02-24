@@ -44,10 +44,11 @@ GuiControl, +g, % hCbFilterMove, % fn
 Gui, Add, Button, xm w%colWidth% Center gClearKeyboard, Clear
 Gui, Add, Button, x+5 yp w%colWidth% gClearMouse Center, Clear
 
-Gui, Add, ListView, xm w%colWidth% h400 hwndhLvKeyboard, ID|State|Code|Info
-Gui, Add, ListView, x+5 yp w%colWidth% h400 hwndhLvMouse, ID|State|Flags|Rolling|X|Y|Info
-LV_ModifyCol(5, 50)
-LV_ModifyCol(6, 50)
+Gui, Add, ListView, xm w%colWidth% h400 hwndhLvKeyboard, ID|Code|State|Key Name|Info
+LV_ModifyCol(4, 100)
+LV_ModifyCol(5, 150)
+Gui, Add, ListView, x+5 yp w%colWidth% h400 hwndhLvMouse, ID|Code|State|X|Y|Info
+LV_ModifyCol(6, 200)
 Gui, Show
 
 
@@ -80,20 +81,22 @@ FormatHex(num){
 	return Format("{:04X}", num)
 }
 
-KeyboardEvent(id, state, code, info){
+KeyboardEvent(id, code, state, info){
 	global hLvKeyboard
 	Gui, ListView, % hLvKeyboard
-	row := LV_Add(, id, state, code, info)
+	scanCode := Format("{:x}", code)
+	keyName := GetKeyName("SC" scanCode)
+	row := LV_Add(, id, code, state, keyName, info)
 	LV_Modify(row, "Vis")
 	;~ ToolTip % "Keybd: " id "`nState: " state ", Code: " code
 }
 
-MouseEvent(id, state, flags, rolling, x, y, info){
+MouseEvent(id, code, state, x, y, info){
 	global hLvMouse, filterMouseMove
-	if (filterMouseMove && !state)
+	if (filterMouseMove && (x != 0 || y != 0))
 		return
 	Gui, ListView, % hLvMouse
-	row := LV_Add(, id, state, flags, rolling, x, y, info)
+	row := LV_Add(, id, code, state, x, y, info)
 	LV_Modify(row, "Vis")
 	;~ ToolTip % "Mouse: " id "`nX: " x ", Y: " y
 }

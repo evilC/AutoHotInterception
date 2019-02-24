@@ -10,7 +10,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 - "Unsubscription Example.ahk" to demo Subscribe / Unsubscribe
 ### Changed
 - By default the new concurrency switch will be set to false meaning that for every subscription there will be only a single worker thread and callbacks will be run sequentially.
+- Monitor now outputs data as would be seen in Subscription mode, rather than as it comes raw from Interception
+- Monitor now shows key names
 ### Deprecated
 ### Removed
 ### Fixed
 - SubscribeMouseMove endpoint fixed to not return bool (Fix "Can not implicitly convert type Void to object" error)
+- Pause button now works

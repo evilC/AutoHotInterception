@@ -315,7 +315,7 @@ namespace AutoHotInterception
         {
             IsValidDeviceId(true, id);
 
-            var stroke = ButtonAndStateToStroke(btn, state);
+            var stroke = MouseButtonAndStateToStroke(btn, state);
             ManagedWrapper.Send(_deviceContext, id, ref stroke, 1);
         }
 
@@ -329,7 +329,7 @@ namespace AutoHotInterception
         /// <param name="y"></param>
         public void SendMouseButtonEventAbsolute(int id, int btn, int state, int x, int y)
         {
-            var stroke = ButtonAndStateToStroke(btn, state);
+            var stroke = MouseButtonAndStateToStroke(btn, state);
             stroke.mouse.x = x;
             stroke.mouse.y = y;
             stroke.mouse.flags = (ushort) ManagedWrapper.MouseFlag.MouseMoveAbsolute;
@@ -544,49 +544,25 @@ namespace AutoHotInterception
                         if (isMonitoredKeyboard && _keyboardMappings.ContainsKey(i))
                         {
                             // Process Subscription Mode
-                            var code = stroke.key.code;
-                            var state = stroke.key.state;
 
                             #region KeyCode, State, Extended Flag translation
 
                             // Begin translation of incoming key code, state, extended flag etc...
                             var processMappings = true;
-                            // Interception seems to report Right Shift as 54 / 0x36 with state 0/1...
-                            // ... this code is normally unused (Alt-SysRq according to linked page) ...
-                            // ... and AHK uses 54 + 256 = 310 (0x36 + 0x100 = 0x136)...
-                            // ... so change the code, but leave the state as 0/1
-                            if (code == 54) code = 310;
-
-                            // If state is shifted up by 2 (1 or 2 instead of 0 or 1), then this is an "Extended" key code
-                            if (state > 1)
-                            {
-                                if (code == 42)
-                                {
-                                    // Shift (42/0x2a) with extended flag = the key after this one is extended.
-                                    // Example case is Delete (The one above the arrow keys, not on numpad)...
-                                    // ... this generates a stroke of 0x2a (Shift) with *extended flag set* (Normal shift does not do this)...
-                                    // ... followed by 0x53 with extended flag set.
-                                    // We do not want to fire subscriptions for the extended shift, but *do* want to let the key flow through...
-                                    // ... so that is handled here.
-                                    // When the extended key (Delete in the above example) subsequently comes through...
-                                    // ... it will have code 0x53, which we shift to 0x153 (Adding 256 Dec) to signify extended version...
-                                    // ... as this is how AHK behaves with GetKeySC()
-
-                                    // Set flag to stop Context Mode from firing
-                                    hasSubscription = true;
-                                    // Set flag to indicate disable mapping processing
-                                    processMappings = false;
-                                }
-                                else
-                                {
-                                    // Extended flag set
-                                    // Shift code up by 256 (0x100) to signify extended code
-                                    code += 256;
-                                    state -= 2;
-                                }
-                            }
+                            var processedState = KeyboardStrokeToKeyboardState(stroke);
 
                             #endregion
+
+                            if (processedState.Ignore)
+                            {
+                                // Set flag to stop Context Mode from firing
+                                hasSubscription = true;
+                                // Set flag to indicate disable mapping processing
+                                processMappings = false;
+                            }
+
+                            var code = processedState.Code;
+                            var state = processedState.State;
 
                             // Code and state now normalized, proceed with checking for subscriptions...
                             if (processMappings && _keyboardMappings[i].ContainsKey(code))
@@ -633,7 +609,7 @@ namespace AutoHotInterception
                             {
                                 // Mouse Button
                                 //Debug.WriteLine($"AHK| Mouse {i} seen - flags: {stroke.mouse.flags}, raw state: {stroke.mouse.state}");
-                                var btnState = StrokeStateToButtonState(stroke);
+                                var btnState = MouseStrokeToButtonState(stroke);
                                 if (_mouseButtonMappings[i].ContainsKey(btnState.Button))
                                 {
                                     hasSubscription = true;

@@ -102,30 +102,102 @@ namespace AutoHotInterception
                     while (ManagedWrapper.Receive(_deviceContext, i, ref stroke, 1) > 0)
                     {
                         ManagedWrapper.Send(_deviceContext, i, ref stroke, 1);
-                        FireKeyboardCallback(i, stroke);
+                        var processedState = KeyboardStrokeToKeyboardState(stroke);
+                        if (processedState.Ignore)
+                            FireKeyboardCallback(i, new KeyboardCallback
+                            {
+                                Id = i,
+                                Code = stroke.key.code,
+                                State = stroke.key.state,
+                                Info = "Ignored - showing raw values"
+                            });
+                        else
+                            FireKeyboardCallback(i, new KeyboardCallback
+                            {
+                                Id = i,
+                                Code = processedState.Code,
+                                State = processedState.State,
+                                Info = stroke.key.code > 255 ? "Extended" : ""
+                            });
                     }
 
                 for (var i = 11; i < 21; i++)
                     while (ManagedWrapper.Receive(_deviceContext, i, ref stroke, 1) > 0)
                     {
                         ManagedWrapper.Send(_deviceContext, i, ref stroke, 1);
-                        FireMouseCallback(i, stroke);
+                        if (stroke.mouse.state != 0)
+                        {
+                            // Mouse Button
+                            var btnState = MouseStrokeToButtonState(stroke);
+                            FireMouseCallback(new MouseCallback
+                            {
+                                Id = i,
+                                Code = btnState.Button,
+                                State = btnState.State,
+                                Info = "Mouse Button"
+                            });
+                        }
+                        else if ((stroke.mouse.flags & (ushort) ManagedWrapper.MouseFlag.MouseMoveAbsolute) ==
+                                 (ushort) ManagedWrapper.MouseFlag.MouseMoveAbsolute)
+                        {
+                            // Absolute Mouse Move
+                            FireMouseCallback(new MouseCallback
+                            {
+                                Id = i,
+                                X = stroke.mouse.x,
+                                Y = stroke.mouse.y,
+                                Info = "Absolute Move"
+                            });
+                        }
+                        else if ((stroke.mouse.flags & (ushort) ManagedWrapper.MouseFlag.MouseMoveRelative) ==
+                                 (ushort) ManagedWrapper.MouseFlag.MouseMoveRelative)
+
+                        {
+                            // Relative Mouse Move
+                            FireMouseCallback(new MouseCallback
+                            {
+                                Id = i,
+                                X = stroke.mouse.x,
+                                Y = stroke.mouse.y,
+                                Info = "Relative Move"
+                            });
+                        }
+
+                        //FireMouseCallback(i, stroke);
                     }
 
                 Thread.Sleep(10);
             }
         }
 
-        private void FireKeyboardCallback(int id, ManagedWrapper.Stroke stroke)
+        private void FireKeyboardCallback(int id, KeyboardCallback data)
         {
             ThreadPool.QueueUserWorkItem(threadProc =>
-                _keyboardCallback(id, stroke.key.state, stroke.key.code, stroke.key.information));
+                _keyboardCallback(data.Id, data.Code, data.State, data.Info));
         }
 
-        private void FireMouseCallback(int id, ManagedWrapper.Stroke stroke)
+        private void FireMouseCallback(MouseCallback data)
         {
-            ThreadPool.QueueUserWorkItem(threadProc => _mouseCallback(id, stroke.mouse.state, stroke.mouse.flags,
-                stroke.mouse.rolling, stroke.mouse.x, stroke.mouse.y, stroke.mouse.information));
+            ThreadPool.QueueUserWorkItem(threadProc =>
+                _mouseCallback(data.Id, data.Code, data.State, data.X, data.Y, data.Info));
+        }
+
+        public class MouseCallback
+        {
+            public int Id { get; set; }
+            public int Code { get; set; }
+            public int State { get; set; }
+            public int X { get; set; }
+            public int Y { get; set; }
+            public string Info { get; set; } = "";
+        }
+
+        public class KeyboardCallback
+        {
+            public int Id { get; set; }
+            public int Code { get; set; }
+            public int State { get; set; }
+            public string Info { get; set; } = "";
         }
 
         #endregion
