@@ -111,6 +111,9 @@ namespace AutoHotInterception
                     while (ManagedWrapper.Receive(_deviceContext, i, ref stroke, 1) > 0)
                     {
                         ManagedWrapper.Send(_deviceContext, i, ref stroke, 1);
+                        var processedState = KeyboardStrokeToKeyboardState(stroke);
+                        stroke.key.code = processedState.Code;
+                        stroke.key.state = processedState.State;
                         FireKeyboardCallback(i, stroke);
                     }
                 }

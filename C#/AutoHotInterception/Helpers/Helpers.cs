@@ -50,7 +50,7 @@ namespace AutoHotInterception.Helpers
         /// <param name="btn">0 = LMB, 1 = RMB etc</param>
         /// <param name="state">1 = Press, 0 = Release</param>
         /// <returns>A State value for a Mouse Stroke</returns>
-        public static ManagedWrapper.Stroke ButtonAndStateToStroke(int btn, int state)
+        public static ManagedWrapper.Stroke MouseButtonAndStateToStroke(int btn, int state)
         {
             var stroke = new ManagedWrapper.Stroke();
             var power = btn < 5 ? btn * 2 + (state == 0 ? 1 : 0) : btn + 5;
@@ -59,7 +59,7 @@ namespace AutoHotInterception.Helpers
             return stroke;
         }
 
-        public static ButtonState StrokeStateToButtonState(ManagedWrapper.Stroke stroke)
+        public static ButtonState MouseStrokeToButtonState(ManagedWrapper.Stroke stroke)
         {
             int state = stroke.mouse.state;
             ushort btn = 0;
@@ -94,6 +94,60 @@ namespace AutoHotInterception.Helpers
         {
             public ushort Button { get; set; }
             public int State { get; set; }
+        }
+
+        public class KeyboardState
+        {
+            public ushort Code { get; set; }
+            public ushort State { get; set; }
+            public bool Ignore { get; set; }
+
+        }
+
+        public static KeyboardState KeyboardStrokeToKeyboardState(ManagedWrapper.Stroke stroke)
+        {
+            var code = stroke.key.code;
+            var state = stroke.key.state;
+            var retVal = new KeyboardState();
+            if (code == 54)
+            {
+                // Interception seems to report Right Shift as 54 / 0x36 with state 0/1...
+                // ... this code is normally unused (Alt-SysRq according to linked page) ...
+                // ... and AHK uses 54 + 256 = 310 (0x36 + 0x100 = 0x136)...
+                // ... so change the code, but leave the state as 0/1
+                code = 310;
+            }
+
+            // If state is shifted up by 2 (1 or 2 instead of 0 or 1), then this is an "Extended" key code
+            if (state > 1)
+            {
+                if (code == 42)
+                {
+                    // Shift (42/0x2a) with extended flag = the key after this one is extended.
+                    // Example case is Delete (The one above the arrow keys, not on numpad)...
+                    // ... this generates a stroke of 0x2a (Shift) with *extended flag set* (Normal shift does not do this)...
+                    // ... followed by 0x53 with extended flag set.
+                    // We do not want to fire subsriptions for the extended shift, but *do* want to let the key flow through...
+                    // ... so that is handled here.
+                    // When the extended key (Delete in the above example) subsequently comes through...
+                    // ... it will have code 0x53, which we shift to 0x153 (Adding 256 Dec) to signify extended version...
+                    // ... as this is how AHK behaves with GetKeySC()
+
+                    // Set flag to indicate ignore
+                    retVal.Ignore = true;
+                }
+                else
+                {
+                    // Extended flag set
+                    // Shift code up by 256 (0x100) to signify extended code
+                    code += 256;
+                    state -= 2;
+                }
+            }
+
+            retVal.Code = code;
+            retVal.State = (ushort) (1 - state);
+            return retVal;
         }
     }
 }

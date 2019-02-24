@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 ## [Unreleased]
 ### Added
 ### Changed 
+- Monitor now outputs code and state as it would be passed if using Manager  
+
 ### Deprecated
 ### Removed
 ### Fixed
