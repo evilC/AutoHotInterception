@@ -10,6 +10,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 ### Deprecated
 ### Removed
 ### Fixed
+- Pause button now works
 - SubscribeMouseMove endpoint fixed to not return bool (Fix "Can not implicitly convert type Void to object" error)
 
 ## [0.3.7] - 2019-02-10

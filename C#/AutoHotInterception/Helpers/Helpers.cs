@@ -121,8 +121,9 @@ namespace AutoHotInterception.Helpers
             // If state is shifted up by 2 (1 or 2 instead of 0 or 1), then this is an "Extended" key code
             if (state > 1)
             {
-                if (code == 42)
+                if (code == 42 || state > 3)
                 {
+                    // code == 42
                     // Shift (42/0x2a) with extended flag = the key after this one is extended.
                     // Example case is Delete (The one above the arrow keys, not on numpad)...
                     // ... this generates a stroke of 0x2a (Shift) with *extended flag set* (Normal shift does not do this)...
@@ -132,6 +133,10 @@ namespace AutoHotInterception.Helpers
                     // When the extended key (Delete in the above example) subsequently comes through...
                     // ... it will have code 0x53, which we shift to 0x153 (Adding 256 Dec) to signify extended version...
                     // ... as this is how AHK behaves with GetKeySC()
+
+                    // state > 3
+                    // Pause sends code 69 normally as state 0/1, but also LCtrl (29) as state 4/5
+                    // Ignore the LCtrl in this case
 
                     // Set flag to indicate ignore
                     retVal.Ignore = true;
