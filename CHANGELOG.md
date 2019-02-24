@@ -6,8 +6,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 ## [Unreleased]
 ### Added
 ### Changed 
-- Monitor now outputs code and state as it would be passed if using Manager  
-
+- Monitor now outputs data as would be seen in Subscription mode, rather than as it comes raw from Interception
 ### Deprecated
 ### Removed
 ### Fixed
