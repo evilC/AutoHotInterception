@@ -50,7 +50,9 @@ You will need to know the VID / PID of at least one of your devices in order to 
 DO NOT use the "Clone or Download" link on the main page.  
 This is the folder where (at least initially) you will be running scripts from.  
 It contains a number of sample `.ahk` scripts and a `lib` folder, which contains all the libraries and files needed for AHI.  
-3. Extract both `x86` and `x64` folders from the `library` folder in `interception.zip` into the `lib` folder that was created in step (2).
+AHI comes with the latest x86 Interception dll, so as long as you are running x86 AHK (x86 Unicode is recommended), then you can probably skip step 3.  
+3. In the Interception installer zip, there is a `library` folder containing `x86` and `x64` folders.  
+From the folder that matches the bitness of AHK you have installed, take `interception.dll` and copy it to the AHI `lib` folder that was created in step (2).  
 4. Right-click `Unblocker.ps1` in the lib folder and select `Run as Admin`.  
   This is because downloaded DLLs are often blocked and will not work.  
   This can be done manually by right clicking the DLLs, selecting Properties, and checking a "Block" box if it exists.  
