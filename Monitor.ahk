@@ -44,10 +44,11 @@ GuiControl, +g, % hCbFilterMove, % fn
 Gui, Add, Button, xm w%colWidth% Center gClearKeyboard, Clear
 Gui, Add, Button, x+5 yp w%colWidth% gClearMouse Center, Clear
 
-Gui, Add, ListView, xm w%colWidth% h400 hwndhLvKeyboard, ID|Code|State|Info
+Gui, Add, ListView, xm w%colWidth% h400 hwndhLvKeyboard, ID|Code|State|Key Name|Info
+LV_ModifyCol(4, 100)
+LV_ModifyCol(5, 150)
 Gui, Add, ListView, x+5 yp w%colWidth% h400 hwndhLvMouse, ID|Code|State|X|Y|Info
-;~ LV_ModifyCol(5, 50)
-LV_ModifyCol(6, 100)
+LV_ModifyCol(6, 200)
 Gui, Show
 
 
@@ -83,7 +84,9 @@ FormatHex(num){
 KeyboardEvent(id, code, state, info){
 	global hLvKeyboard
 	Gui, ListView, % hLvKeyboard
-	row := LV_Add(, id, code, state, info)
+	scanCode := Format("{:x}", code)
+	keyName := GetKeyName("SC" scanCode)
+	row := LV_Add(, id, code, state, keyName, info)
 	LV_Modify(row, "Vis")
 	;~ ToolTip % "Keybd: " id "`nState: " state ", Code: " code
 }

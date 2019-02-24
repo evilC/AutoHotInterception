@@ -7,6 +7,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 ### Added
 ### Changed 
 - Monitor now outputs data as would be seen in Subscription mode, rather than as it comes raw from Interception
+- Monitor now shows key names
 ### Deprecated
 ### Removed
 ### Fixed
