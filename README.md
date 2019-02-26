@@ -49,10 +49,24 @@ You will need to know the VID / PID of at least one of your devices in order to 
 2. Download an AHI release from the [releases page](https://github.com/evilC/AutoHotInterception/releases) and extract it to a folder.  
 DO NOT use the "Clone or Download" link on the main page.  
 This is the folder where (at least initially) you will be running scripts from.  
-It contains a number of sample `.ahk` scripts and a `lib` folder, which contains all the libraries and files needed for AHI.  
-AHI comes with the latest x86 Interception dll, so as long as you are running x86 AHK (x86 Unicode is recommended), then you can probably skip step 3.  
+It contains a number of sample `.ahk` scripts and a `lib` folder, which contains all the AHI libraries.  
 3. In the Interception installer zip, there is a `library` folder containing `x86` and `x64` folders.  
-From the folder that matches the bitness of AHK you have installed, take `interception.dll` and copy it to the AHI `lib` folder that was created in step (2).  
+Copy both of these folders into the AHI `lib` folder that you created in step (3) - the folder structure should end up looking like:  
+```
+AHI Root Folder
+	Monitor.ahk
+	etc...
+	Lib
+		AutoHotInterception.ahk
+		AutoHotInterception.dll
+		CLR.ahk
+		Unblocker.ps1
+		etc..
+		x86
+			interception.dll
+		x64
+			interception.dll
+```
 4. Right-click `Unblocker.ps1` in the lib folder and select `Run as Admin`.  
 This is because downloaded DLLs are often blocked and will not work.  
 This can be done manually by right clicking the DLLs, selecting Properties, and checking a "Block" box if it exists.  
