@@ -1,11 +1,6 @@
 ﻿using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
-using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
 using AutoHotInterception.Helpers;
 using static AutoHotInterception.Helpers.HelperFunctions;
 
@@ -14,12 +9,16 @@ namespace AutoHotInterception
     public class Monitor : IDisposable
     {
         private readonly IntPtr _deviceContext;
-        private Thread _pollThread;
-        private bool _pollThreadRunning = false;
+
+        private readonly ConcurrentDictionary<int, bool> _filteredDevices = new ConcurrentDictionary<int, bool>();
+
         private dynamic _keyboardCallback;
         private dynamic _mouseCallback;
-        private bool _filterState = false;
-        private readonly ConcurrentDictionary<int, bool> _filteredDevices = new ConcurrentDictionary<int, bool>();
+
+        private Thread _pollThread;
+        private volatile bool _pollThreadRunning;
+
+        #region Public
 
         public Monitor()
         {
@@ -27,15 +26,16 @@ namespace AutoHotInterception
             SetThreadState(true);
         }
 
+        public void Dispose()
+        {
+            SetFilterState(false);
+            SetThreadState(false);
+        }
+
         public string OkCheck()
         {
             return "OK";
         }
-
-        //public void Log(string text)
-        //{
-        //    Debug.WriteLine($"AHK| {text}");
-        //}
 
         public void Subscribe(dynamic keyboardCallback, dynamic mouseCallback)
         {
@@ -47,20 +47,11 @@ namespace AutoHotInterception
         {
             SetFilterState(false);
             if (state)
-            {
                 _filteredDevices[device] = true;
-                //Log($"Adding device {device}, count: {_filteredDevices.Count}");
-            }
             else
-            {
                 _filteredDevices.TryRemove(device, out _);
-                //Log($"Removing device {device}, count: {_filteredDevices.Count}");
-            }
 
-            if (_filteredDevices.Count > 0)
-            {
-                SetFilterState(true);
-            }
+            if (_filteredDevices.Count > 0) SetFilterState(true);
             return true;
         }
 
@@ -69,11 +60,25 @@ namespace AutoHotInterception
             return HelperFunctions.GetDeviceList(_deviceContext);
         }
 
-        private void SetFilterState(bool state)
+        #endregion
+
+        #region Private
+
+        private void SetThreadState(bool state)
         {
-            ManagedWrapper.SetFilter(_deviceContext, IsMonitoredDevice,
-                state ? ManagedWrapper.Filter.All : ManagedWrapper.Filter.None);
-            _filterState = state;
+            if (state)
+            {
+                if (_pollThreadRunning) return;
+                _pollThreadRunning = true;
+                _pollThread = new Thread(PollThread);
+                _pollThread.Start();
+            }
+            else
+            {
+                _pollThreadRunning = true;
+                _pollThread.Join();
+                _pollThread = null;
+            }
         }
 
         private int IsMonitoredDevice(int device)
@@ -81,40 +86,24 @@ namespace AutoHotInterception
             return Convert.ToInt32(_filteredDevices.ContainsKey(device));
         }
 
-
-        private void SetThreadState(bool state)
+        private void SetFilterState(bool state)
         {
-            if (state)
-            {
-                if (_pollThreadRunning) return;
-
-                _pollThreadRunning = true;
-                _pollThread = new Thread(PollThread);
-                _pollThread.Start();
-            }
-            else
-            {
-                _pollThread.Abort();
-                _pollThread.Join();
-                _pollThread = null;
-            }
+            ManagedWrapper.SetFilter(_deviceContext, IsMonitoredDevice,
+                state ? ManagedWrapper.Filter.All : ManagedWrapper.Filter.None);
         }
 
         private void PollThread()
         {
             var stroke = new ManagedWrapper.Stroke();
 
-            while (true)
+            while (_pollThreadRunning)
             {
                 for (var i = 1; i < 11; i++)
-                {
                     while (ManagedWrapper.Receive(_deviceContext, i, ref stroke, 1) > 0)
                     {
                         ManagedWrapper.Send(_deviceContext, i, ref stroke, 1);
                         var processedState = KeyboardStrokeToKeyboardState(stroke);
-                        var info = "";
                         if (processedState.Ignore)
-                        {
                             FireKeyboardCallback(i, new KeyboardCallback
                             {
                                 Id = i,
@@ -122,9 +111,7 @@ namespace AutoHotInterception
                                 State = stroke.key.state,
                                 Info = "Ignored - showing raw values"
                             });
-                        }
                         else
-                        {
                             FireKeyboardCallback(i, new KeyboardCallback
                             {
                                 Id = i,
@@ -132,12 +119,9 @@ namespace AutoHotInterception
                                 State = processedState.State,
                                 Info = stroke.key.code > 255 ? "Extended" : ""
                             });
-                        }
                     }
-                }
 
                 for (var i = 11; i < 21; i++)
-                {
                     while (ManagedWrapper.Receive(_deviceContext, i, ref stroke, 1) > 0)
                     {
                         ManagedWrapper.Send(_deviceContext, i, ref stroke, 1);
@@ -164,10 +148,9 @@ namespace AutoHotInterception
                                 Y = stroke.mouse.y,
                                 Info = "Absolute Move"
                             });
-
                         }
-                        else if ((stroke.mouse.flags & (ushort)ManagedWrapper.MouseFlag.MouseMoveRelative) ==
-                                 (ushort)ManagedWrapper.MouseFlag.MouseMoveRelative)
+                        else if ((stroke.mouse.flags & (ushort) ManagedWrapper.MouseFlag.MouseMoveRelative) ==
+                                 (ushort) ManagedWrapper.MouseFlag.MouseMoveRelative)
 
                         {
                             // Relative Mouse Move
@@ -178,23 +161,25 @@ namespace AutoHotInterception
                                 Y = stroke.mouse.y,
                                 Info = "Relative Move"
                             });
-
                         }
+
                         //FireMouseCallback(i, stroke);
                     }
-                }
+
                 Thread.Sleep(10);
             }
         }
 
         private void FireKeyboardCallback(int id, KeyboardCallback data)
         {
-            ThreadPool.QueueUserWorkItem(threadProc => _keyboardCallback(data.Id, data.Code, data.State, data.Info));
+            ThreadPool.QueueUserWorkItem(threadProc =>
+                _keyboardCallback(data.Id, data.Code, data.State, data.Info));
         }
 
         private void FireMouseCallback(MouseCallback data)
         {
-            ThreadPool.QueueUserWorkItem(threadProc => _mouseCallback(data.Id, data.Code, data.State, data.X, data.Y, data.Info));
+            ThreadPool.QueueUserWorkItem(threadProc =>
+                _mouseCallback(data.Id, data.Code, data.State, data.X, data.Y, data.Info));
         }
 
         public class MouseCallback
@@ -215,10 +200,6 @@ namespace AutoHotInterception
             public string Info { get; set; } = "";
         }
 
-        public void Dispose()
-        {
-            SetFilterState(false);
-            SetThreadState(false);
-        }
+        #endregion
     }
 }

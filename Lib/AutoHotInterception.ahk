@@ -2,18 +2,18 @@
 
 class AutoHotInterception {
 	_contextManagers := {}
-	;_contextStates := {}
-	__New(cls := "Manager"){
+
+	__New(cls := "Manager") {
 		bitness := A_PtrSize == 8 ? "x64" : "x86"
 		dllName := "interception.dll"
 		dllFile := A_LineFile "\..\" bitness "\" dllName
-		if (!FileExist(dllFile)){
+		if (!FileExist(dllFile)) {
 			MsgBox % "Unable to find lib\" bitness "\" dllName ", exiting...`nYou should extract both x86 and x64 folders from the library folder in interception.zip into AHI's lib folder."
 			ExitApp
 		}
 
 		hModule := DllCall("LoadLibrary", "Str", dllFile, "Ptr")
-		if (hModule == 0){
+		if (hModule == 0) {
 			this_bitness := A_PtrSize == 8 ? "64-bit" : "32-bit"
 			other_bitness := A_PtrSize == 4 ? "64-bit" : "32-bit"
 			MsgBox % "Bitness of " dllName " does not match bitness of AHK.`nAHK is " this_bitness ", but " dllName " is " other_bitness "."
@@ -24,7 +24,7 @@ class AutoHotInterception {
 		dllName := "AutoHotInterception.dll"
 		dllFile := A_LineFile "\..\" dllName
 		hintMessage := "Try right-clicking lib\" dllName ", select Properties, and if there is an 'Unblock' checkbox, tick it`nAlternatively, running Unblocker.ps1 in the lib folder (ideally as admin) can do this for you."
-		if (!FileExist(dllFile)){
+		if (!FileExist(dllFile)) {
 			MsgBox % "Unable to find lib\" dllName ", exiting..."
 			ExitApp
 		}
@@ -37,79 +37,79 @@ class AutoHotInterception {
 			MsgBox % dllName " failed to load`n`n" hintMessage
 			ExitApp
 		}
-		if (this.Instance.OkCheck() != "OK"){
+		if (this.Instance.OkCheck() != "OK") {
 			MsgBox % dllName " loaded but check failed!`n`n" hintMessage
 			ExitApp
 		}
 	}
-	
-	GetInstance(){
+
+	GetInstance() {
 		return this.Instance
 	}
-	
+
 	; --------------- Input Synthesis ----------------
-	SendKeyEvent(id, code, state){
+	SendKeyEvent(id, code, state) {
 		this.Instance.SendKeyEvent(id, code, state)
 	}
-	
-	SendMouseButtonEvent(id, btn, state){
+
+	SendMouseButtonEvent(id, btn, state) {
 		this.Instance.SendMouseButtonEvent(id, btn, state)
 	}
-	
-	SendMouseButtonEventAbsolute(id, btn, state, x, y){
+
+	SendMouseButtonEventAbsolute(id, btn, state, x, y) {
 		this.Instance.SendMouseButtonEventAbsolute(id, btn, state, x, y)
 	}
-	
-	SendMouseMove(id, x, y){
+
+	SendMouseMove(id, x, y) {
 		this.Instance.SendMouseMove(id, x, y)
 	}
-	
-	SendMouseMoveRelative(id, x, y){
+
+	SendMouseMoveRelative(id, x, y) {
 		this.Instance.SendMouseMoveRelative(id, x, y)
 	}
-	
-	SendMouseMoveAbsolute(id, x, y){
+
+	SendMouseMoveAbsolute(id, x, y) {
 		this.Instance.SendMouseMoveAbsolute(id, x, y)
 	}
 	*/
 	; --------------- Querying ------------------------
-	GetDeviceID(IsMouse, VID, PID, instance := 1){
+	GetDeviceId(IsMouse, VID, PID, instance := 1) {
 		static devType := {0: "Keyboard", 1: "Mouse"}
 		dev := this.Instance.GetDeviceId(IsMouse, VID, PID, instance)
-		if (dev == 0){
+		if (dev == 0) {
 			MsgBox % "Could not get " devType[isMouse] " with VID " VID ", PID " PID ", Instance " instance
 			ExitApp
 		}
 		return dev
 	}
-	
-	GetDeviceIdFromHandle(isMouse, handle, instance := 1){
+
+	GetDeviceIdFromHandle(isMouse, handle, instance := 1) {
 		static devType := {0: "Keyboard", 1: "Mouse"}
 		dev := this.Instance.GetDeviceIdFromHandle(IsMouse, handle, instance)
-		if (dev == 0){
+		if (dev == 0) {
 			MsgBox % "Could not get " devType[isMouse] " with Handle " handle ", Instance " instance
 			ExitApp
 		}
 		return dev
 	}
-	
-	GetKeyboardID(VID, PID, instance := 1){
+
+	GetKeyboardId(VID, PID, instance := 1) {
 		return this.GetDeviceId(false, VID, PID, instance)
 	}
-	
-	GetMouseID(VID, PID, instance := 1){
+
+	GetMouseId(VID, PID, instance := 1) {
 		return this.GetDeviceId(true, VID, PID, instance)
 	}
-	
-	GetKeyboardIdFromHandle(handle, instance := 1){
+
+	GetKeyboardIdFromHandle(handle, instance := 1) {
 		return this.GetDeviceIdFromHandle(false, handle, instance)
 	}
-	
-	GetMouseIDFromHandle(handle, instance := 1){
+
+	GetMouseIdFromHandle(handle, instance := 1) {
 		return this.GetDeviceIdFromHandle(true, handle, instance)
 	}
-	
-	GetDeviceList(){
+
+	GetDeviceList() {
 		DeviceList := {}
 		arr := this.Instance.GetDeviceList()
 		for v in arr {
@@ -117,52 +117,52 @@ class AutoHotInterception {
 		}
 		return DeviceList
 	}
-	
+
 	; ---------------------- Subscription Mode ----------------------
-	SubscribeKey(id, code, block, callback){
-		this.Instance.SubscribeKey(id, code, block, callback)
+	SubscribeKey(id, code, block, callback, concurrent := false) {
+		this.Instance.SubscribeKey(id, code, block, callback, concurrent)
 	}
-	
+
 	UnsubscribeKey(id, code){
 		this.Instance.UnsubscribeKey(id, code)
 	}
-	
-	SubscribeMouseButton(id, btn, block, callback){
-		this.Instance.SubscribeMouseButton(id, btn, block, callback)
+
+	SubscribeMouseButton(id, btn, block, callback, concurrent := false) {
+		this.Instance.SubscribeMouseButton(id, btn, block, callback, concurrent)
 	}
-	
+
 	UnsubscribeMouseButton(id, btn){
 		this.Instance.UnsubscribeMouseButton(id, btn)
 	}
-	
-	SubscribeMouseMove(id, block, callback){
-		this.Instance.SubscribeMouseMove(id, block, callback)
+
+	SubscribeMouseMove(id, block, callback, concurrent := false) {
+		this.Instance.SubscribeMouseMove(id, block, callback, concurrent)
 	}
-	
+
 	UnsubscribeMouseMove(id){
 		this.Instance.UnsubscribeMouseMove(id)
 	}
-	
-	SubscribeMouseMoveRelative(id, block, callback){
-		this.Instance.SubscribeMouseMoveRelative(id, block, callback)
+
+	SubscribeMouseMoveRelative(id, block, callback, concurrent := false) {
+		this.Instance.SubscribeMouseMoveRelative(id, block, callback, concurrent)
 	}
-	
+
 	UnsubscribeMouseMoveRelative(id){
 		this.Instance.UnsubscribeMouseMoveRelative(id)
 	}
-	
-	SubscribeMouseMoveAbsolute(id, block, callback){
-		this.Instance.SubscribeMouseMoveAbsolute(id, block, callback)
+
+	SubscribeMouseMoveAbsolute(id, block, callback, concurrent := false) {
+		this.Instance.SubscribeMouseMoveAbsolute(id, block, callback, concurrent)
 	}
-	
+
 	UnsubscribeMouseMoveAbsolute(id){
 		this.Instance.UnsubscribeMouseMoveAbsolute(id)
 	}
-	
+
 	; ------------- Context Mode ----------------
 	; Creates a context class to make it easy to turn on/off the hotkeys
-	CreateContextManager(id){
-		if (this._contextManagers.ContainsKey(id)){
+	CreateContextManager(id) {
+		if (this._contextManagers.ContainsKey(id)) {
 			Msgbox % "ID " id " already has a Context Manager"
 			ExitApp
 		}
@@ -174,14 +174,13 @@ class AutoHotInterception {
 	; Helper class for dealing with context mode
 	class ContextManager {
 		IsActive := 0
-		__New(parent, id){
+		__New(parent, id) {
 			this.parent := parent
 			this.id := id
-			
 			result := this.parent.Instance.SetContextCallback(id, this.OnContextCallback.Bind(this))
 		}
 		
-		OnContextCallback(state){
+		OnContextCallback(state) {
 			Sleep 0
 			this.IsActive := state
 		}
