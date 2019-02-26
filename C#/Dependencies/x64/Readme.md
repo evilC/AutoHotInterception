@@ -1,0 +1,1 @@
+In order to build, you should copy `interception.dll` into this folder from `library\x64` in the Interception zip

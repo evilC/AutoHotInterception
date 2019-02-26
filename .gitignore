@@ -23,6 +23,11 @@ C#/Dependencies/*.lib
 [Rr]eleases/
 x64/
 x86/
+# Do not ignore x86 / x64 folders in Lib or Dependencies folders
+!Lib/x64/
+!Lib/x86/
+!C#/Dependencies/x64
+!C#/Dependencies/x86
 bld/
 [Bb]in/
 [Oo]bj/
