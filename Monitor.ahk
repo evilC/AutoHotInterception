@@ -28,7 +28,7 @@ Loop 2 {
 		if (!IsObject(dev)){
 			continue
 		}
-		Gui, Add, Checkbox, % "hwndhCb w" colWidth, % "ID: " dev.id ", VID: 0x" FormatHex(dev.VID) ", PID: 0x" FormatHex(dev.PID) "`nHandle: " dev.Handle
+		Gui, Add, Checkbox, % "hwndhCb w" colWidth, % "ID: " dev.id ", VID: 0x" FormatHex(dev.VID) ", PID: 0x" FormatHex(dev.PID) "`nHandle: " StrReplace(dev.Handle, "&", "&&")
 		fn := Func("CheckboxChanged").Bind(dev.id)
 		GuiControl, +g, % hCb, % fn
 	}
