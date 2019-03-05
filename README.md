@@ -13,7 +13,8 @@ Keyboard Keys, Mouse Buttons and Mouse movement (Both Relative and Absolute mode
 AHI uses the Interception driver by Francisco Lopez
 
 # Getting Help  
-Use the [AHI Discussion Thread on the AHK forums](https://autohotkey.com/boards/viewtopic.php?f=6&t=45307)
+## [AHI Discussion Thread on the AHK forums](https://autohotkey.com/boards/viewtopic.php?f=6&t=45307)  
+## [Discord Channel](https://discord.gg/sFPMv86)
 
 ------
 
