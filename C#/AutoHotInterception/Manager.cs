@@ -571,9 +571,9 @@ namespace AutoHotInterception
                                 var mapping = _keyboardMappings[i][code];
                                 if (mapping.Block) block = true;
                                 if (mapping.Concurrent)
-                                    ThreadPool.QueueUserWorkItem(threadProc => mapping.Callback(1 - state));
+                                    ThreadPool.QueueUserWorkItem(threadProc => mapping.Callback(state));
                                 else if (_workerThreads.ContainsKey(i) && _workerThreads[i].ContainsKey(code))
-                                    _workerThreads[i][code]?.Actions.Add(() => mapping.Callback(1 - state));
+                                    _workerThreads[i][code]?.Actions.Add(() => mapping.Callback(state));
                             }
                         }
 
