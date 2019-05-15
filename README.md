@@ -182,7 +182,7 @@ Each Subscribe endpont also has a corresponding Unsubscribe endpoint, which remo
 
 #### Subscribing to Keyboard keys
 Subscribe to a key on a specific keyboard  
-`SubscribeKey(<deviceId>, <scanCode>, <block>, <callback>, <concurrent>)`
+`SubscribeKey(<deviceId>, <scanCode>, <block>, <callback>, <concurrent>)`  
 `UnsubscribeKey(<deviceId>, <scanCode>)`
 ```
 Interception.SubscribeKey(keyboardId, GetKeySC("1"), true, Func("KeyEvent"))
