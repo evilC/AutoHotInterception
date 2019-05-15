@@ -5,6 +5,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 ### Added
+### Changed
+### Deprecated
+### Removed
+### Fixed
+
+## [0.4.1] - 2019-05-15
+### Fixed
+- Button state is no longer inverted as it was in 0.4.0
+
+## [0.4.0] - 2019-05-14
+### Added
 - Concurrency switch for executing subscription callback functions. Was implicitly executing on a new thread from the pool, now there is an option to execute each callback on a single thread (one worker per subscription).
 - UnsubscribeKey, UnsubscribeMouseButton, UnsubscribeMouseMove, UnsubscribeMouseMoveRelative, UnsubscribeMouseMoveAbsolute methods added to Subscription Mode
 - "Unsubscription Example.ahk" to demo Subscribe / Unsubscribe
@@ -19,4 +30,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 - SubscribeMouseMove endpoint fixed to not return bool (Fix "Can not implicitly convert type Void to object" error)
 - Pause button now works
 - UnsubscribeMouseButton now correctly checks if the device is a mouse
-- Button state is no longer inverted as it was in 0.4.0
+
+## [0.3.7] - 2019-02-10
+### Added
+- UnsubscribeKey, UnsubscribeMouseButton, UnsubscribeMouseMove, UnsubscribeMouseMoveRelative, UnsubscribeMouseMoveAbsolute methods added to Subscription Mode
+- Added "Unsubscription Example.ahk" to demo Subscribe / Unsubscribe
+### Changed 
+- Fixed Build Event to copy Interception dll
+### Fixed
+- SubscribeMouseMove endpoint fixed to not return bool (Fix "Can not implicitly convert type Void to object" error)
