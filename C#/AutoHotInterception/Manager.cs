@@ -1,13 +1,6 @@
 ﻿using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
-using System.Runtime.InteropServices;
-using System.Text;
-using System.Text.RegularExpressions;
 using System.Threading;
-using System.Threading.Tasks;
 using AutoHotInterception.Helpers;
 using static AutoHotInterception.Helpers.HelperFunctions;
 
@@ -15,21 +8,34 @@ namespace AutoHotInterception
 {
     public class Manager : IDisposable
     {
+        private readonly ConcurrentDictionary<int, dynamic>
+            _contextCallbacks = new ConcurrentDictionary<int, dynamic>();
+
         private readonly IntPtr _deviceContext;
-        private Thread _pollThread;
-        private bool _pollThreadRunning = false;
 
-        private bool _filterState = false;
-
-        private readonly ConcurrentDictionary<int, ConcurrentDictionary<ushort, MappingOptions>> _keyboardMappings = new ConcurrentDictionary<int, ConcurrentDictionary<ushort, MappingOptions>>();
-        private readonly ConcurrentDictionary<int, ConcurrentDictionary<ushort, MappingOptions>> _mouseButtonMappings = new ConcurrentDictionary<int, ConcurrentDictionary<ushort, MappingOptions>>();
-        private readonly ConcurrentDictionary<int, MappingOptions> _mouseMoveRelativeMappings = new ConcurrentDictionary<int, MappingOptions>();
-        private readonly ConcurrentDictionary<int, MappingOptions> _mouseMoveAbsoluteMappings = new ConcurrentDictionary<int, MappingOptions>();
-        private readonly ConcurrentDictionary<int, dynamic> _contextCallbacks = new ConcurrentDictionary<int, dynamic>();
-
-        // If a the ID of a device exists as a key in this Dictionary, then that device is filtered.
+        // If a device ID exists as a key in this Dictionary then that device is filtered.
         // Used by IsMonitoredDevice, which is handed to Interception as a "Predicate".
         private readonly ConcurrentDictionary<int, bool> _filteredDevices = new ConcurrentDictionary<int, bool>();
+
+        private readonly ConcurrentDictionary<int, ConcurrentDictionary<ushort, MappingOptions>> _keyboardMappings =
+            new ConcurrentDictionary<int, ConcurrentDictionary<ushort, MappingOptions>>();
+
+        private readonly ConcurrentDictionary<int, ConcurrentDictionary<ushort, MappingOptions>> _mouseButtonMappings =
+            new ConcurrentDictionary<int, ConcurrentDictionary<ushort, MappingOptions>>();
+
+        private readonly ConcurrentDictionary<int, MappingOptions> _mouseMoveAbsoluteMappings =
+            new ConcurrentDictionary<int, MappingOptions>();
+
+        private readonly ConcurrentDictionary<int, MappingOptions> _mouseMoveRelativeMappings =
+            new ConcurrentDictionary<int, MappingOptions>();
+
+        // If an event is subscribed to with concurrent set to false then use a single worker thread to process each event.
+        // Makes sure the events are handled synchronously and with a FIFO order.
+        private readonly ConcurrentDictionary<int, ConcurrentDictionary<ushort, WorkerThread>> _workerThreads =
+            new ConcurrentDictionary<int, ConcurrentDictionary<ushort, WorkerThread>>();
+
+        private Thread _pollThread;
+        private volatile bool _pollThreadRunning;
 
         #region Public
 
@@ -38,6 +44,11 @@ namespace AutoHotInterception
         public Manager()
         {
             _deviceContext = ManagedWrapper.CreateContext();
+        }
+
+        public void Dispose()
+        {
+            SetThreadState(false);
         }
 
         public string OkCheck()
@@ -50,26 +61,35 @@ namespace AutoHotInterception
         #region Subscription Mode
 
         /// <summary>
-        /// Subscribes to a Keyboard key
+        ///     Subscribes to a Keyboard key
         /// </summary>
         /// <param name="id">The ID of the Keyboard</param>
         /// <param name="code">The ScanCode of the key</param>
         /// <param name="block">Whether or not to block the key</param>
         /// <param name="callback">The callback to fire when the key changes state</param>
+        /// <param name="concurrent">Whether or not to execute callbacks concurrently</param>
         /// <returns></returns>
-        public void SubscribeKey(int id, ushort code, bool block, dynamic callback)
+        public void SubscribeKey(int id, ushort code, bool block, dynamic callback, bool concurrent = false)
         {
             IsValidDeviceId(false, id);
             SetFilterState(false);
 
             if (!_keyboardMappings.ContainsKey(id))
-            {
                 _keyboardMappings.TryAdd(id, new ConcurrentDictionary<ushort, MappingOptions>());
+
+            _keyboardMappings[id].TryAdd(code,
+                new MappingOptions {Block = block, Concurrent = concurrent, Callback = callback});
+
+            if (!concurrent)
+            {
+                if (!_workerThreads.ContainsKey(id))
+                    _workerThreads.TryAdd(id, new ConcurrentDictionary<ushort, WorkerThread>());
+
+                _workerThreads[id].TryAdd(code, new WorkerThread());
+                _workerThreads[id][code].Start();
             }
 
-            _keyboardMappings[id].TryAdd(code, new MappingOptions() { Block = block, Callback = callback });
             SetDeviceFilterState(id, true);
-
             SetFilterState(true);
             SetThreadState(true);
         }
@@ -94,31 +114,41 @@ namespace AutoHotInterception
         }
 
         /// <summary>
-        /// Subscribe to a Mouse button
+        ///     Subscribe to a Mouse button
         /// </summary>
         /// <param name="id">The ID of the mouse</param>
-        /// <param name="btn">The button number (LMB = 0, RMB = 1, MMB = 2, X1 = 3, X2 = 4</param>
+        /// <param name="btn">The button number (LMB = 0, RMB = 1, MMB = 2, X1 = 3, X2 = 4, WV = 5, WH = 6)</param>
         /// <param name="block">Whether or not to block the button</param>
         /// <param name="callback">The callback to fire when the button changes state</param>
+        /// <param name="concurrent">Whether or not to execute callbacks concurrently</param>
         /// <returns></returns>
-        public void SubscribeMouseButton(int id, ushort btn, bool block, dynamic callback)
+        public void SubscribeMouseButton(int id, ushort btn, bool block, dynamic callback, bool concurrent = false)
         {
             IsValidDeviceId(true, id);
 
             if (!_mouseButtonMappings.ContainsKey(id))
-            {
                 _mouseButtonMappings.TryAdd(id, new ConcurrentDictionary<ushort, MappingOptions>());
-            }
-            _mouseButtonMappings[id].TryAdd(btn, new MappingOptions() { Block = block, Callback = callback });
-            SetDeviceFilterState(id, true);
 
+            _mouseButtonMappings[id].TryAdd(btn,
+                new MappingOptions {Block = block, Concurrent = concurrent, Callback = callback});
+
+            if (!concurrent)
+            {
+                if (!_workerThreads.ContainsKey(id))
+                    _workerThreads.TryAdd(id, new ConcurrentDictionary<ushort, WorkerThread>());
+
+                _workerThreads[id].TryAdd(btn, new WorkerThread());
+                _workerThreads[id][btn].Start();
+            }
+
+            SetDeviceFilterState(id, true);
             SetFilterState(true);
             SetThreadState(true);
         }
 
         public void UnsubscribeMouseButton(int id, ushort btn)
         {
-            IsValidDeviceId(false, id);
+            IsValidDeviceId(true, id);
             SetFilterState(false);
 
             if (_mouseButtonMappings.TryGetValue(id, out var thisDevice))
@@ -135,10 +165,47 @@ namespace AutoHotInterception
             SetThreadState(true);
         }
 
-        //Shorthand for SubscribeMouseMoveRelative
-        public void SubscribeMouseMove(int id, bool block, dynamic callback)
+        /// <summary>
+        ///     Subscribes to Absolute mouse movement
+        /// </summary>
+        /// <param name="id">The id of the Mouse</param>
+        /// <param name="block">Whether or not to block the movement</param>
+        /// <param name="callback">The callback to fire when the mouse moves</param>
+        /// <param name="concurrent">Whether or not to execute callbacks concurrently</param>
+        /// <returns></returns>
+        public void SubscribeMouseMoveAbsolute(int id, bool block, dynamic callback, bool concurrent = false)
         {
-            SubscribeMouseMoveRelative(id, block, callback);
+            IsValidDeviceId(true, id);
+
+            _mouseMoveAbsoluteMappings[id] = new MappingOptions
+                {Block = block, Concurrent = concurrent, Callback = callback};
+
+            if (!concurrent)
+            {
+                if (!_workerThreads.ContainsKey(id))
+                    _workerThreads.TryAdd(id, new ConcurrentDictionary<ushort, WorkerThread>());
+
+                _workerThreads[id].TryAdd(7, new WorkerThread()); // Use 7 as second index for MouseMoveAbsolute
+                _workerThreads[id][7].Start();
+            }
+
+            SetDeviceFilterState(id, true);
+            SetFilterState(true);
+            SetThreadState(true);
+        }
+
+        public void UnsubscribeMouseMoveAbsolute(int id)
+        {
+            IsValidDeviceId(true, id);
+            if (_mouseMoveAbsoluteMappings.TryRemove(id, out _))
+                if (!DeviceHasBindings(id))
+                    SetDeviceFilterState(id, false);
+        }
+
+        //Shorthand for SubscribeMouseMoveRelative
+        public void SubscribeMouseMove(int id, bool block, dynamic callback, bool concurrent = false)
+        {
+            SubscribeMouseMoveRelative(id, block, callback, concurrent);
         }
 
         public void UnsubscribeMouseMove(int id)
@@ -147,17 +214,29 @@ namespace AutoHotInterception
         }
 
         /// <summary>
-        /// Subscribes to Relative mouse movement
+        ///     Subscribes to Relative mouse movement
         /// </summary>
         /// <param name="id">The id of the Mouse</param>
         /// <param name="block">Whether or not to block the movement</param>
         /// <param name="callback">The callback to fire when the mouse moves</param>
+        /// <param name="concurrent">Whether or not to execute callbacks concurrently</param>
         /// <returns></returns>
-        public void SubscribeMouseMoveRelative(int id, bool block, dynamic callback)
+        public void SubscribeMouseMoveRelative(int id, bool block, dynamic callback, bool concurrent = false)
         {
             IsValidDeviceId(true, id);
 
-            _mouseMoveRelativeMappings[id] = new MappingOptions() { Block = block, Callback = callback };
+            _mouseMoveRelativeMappings[id] = new MappingOptions
+                {Block = block, Concurrent = concurrent, Callback = callback};
+
+            if (!concurrent)
+            {
+                if (!_workerThreads.ContainsKey(id))
+                    _workerThreads.TryAdd(id, new ConcurrentDictionary<ushort, WorkerThread>());
+
+                _workerThreads[id].TryAdd(8, new WorkerThread()); // Use 8 as second index for MouseMoveRelative
+                _workerThreads[id][8].Start();
+            }
+
             SetDeviceFilterState(id, true);
             SetFilterState(true);
             SetThreadState(true);
@@ -168,44 +247,11 @@ namespace AutoHotInterception
             IsValidDeviceId(true, id);
 
             if (_mouseMoveRelativeMappings.TryRemove(id, out _))
-            {
                 if (!DeviceHasBindings(id))
-                {
                     SetDeviceFilterState(id, false);
-                }
-            }
+
             SetFilterState(true);
             SetThreadState(true);
-        }
-
-        /// <summary>
-        /// 
-        /// Subscribes to Absolute mouse movement
-        /// </summary>
-        /// <param name="id">The id of the Mouse</param>
-        /// <param name="block">Whether or not to block the movement</param>
-        /// <param name="callback">The callback to fire when the mouse moves</param>
-        /// <returns></returns>
-        public void SubscribeMouseMoveAbsolute(int id, bool block, dynamic callback)
-        {
-            IsValidDeviceId(true, id);
-
-            _mouseMoveAbsoluteMappings[id] = new MappingOptions() { Block = block, Callback = callback };
-            SetDeviceFilterState(id, true);
-            SetFilterState(true);
-            SetThreadState(true);
-        }
-
-        public void UnsubscribeMouseMoveAbsolute(int id)
-        {
-            IsValidDeviceId(true, id);
-            if (_mouseMoveAbsoluteMappings.TryRemove(id, out _))
-            {
-                if (!DeviceHasBindings(id))
-                {
-                    SetDeviceFilterState(id, false);
-                }
-            }
         }
 
         #endregion
@@ -213,7 +259,7 @@ namespace AutoHotInterception
         #region Context Mode
 
         /// <summary>
-        /// Sets a callback for Context Mode for a given device
+        ///     Sets a callback for Context Mode for a given device
         /// </summary>
         /// <param name="id">The ID of the device</param>
         /// <param name="callback">The callback to fire before and after each key or button press</param>
@@ -222,13 +268,11 @@ namespace AutoHotInterception
         {
             SetFilterState(false);
             if (id < 1 || id > 20)
-            {
                 throw new ArgumentOutOfRangeException(nameof(id), "DeviceIds must be between 1 and 20");
-            }
 
             _contextCallbacks[id] = callback;
-            SetDeviceFilterState(id, true);
 
+            SetDeviceFilterState(id, true);
             SetFilterState(true);
             SetThreadState(true);
         }
@@ -238,7 +282,7 @@ namespace AutoHotInterception
         #region Input Synthesis
 
         /// <summary>
-        /// Sends a keyboard key event
+        ///     Sends a keyboard key event
         /// </summary>
         /// <param name="id">The ID of the Keyboard to send as</param>
         /// <param name="code">The ScanCode to send</param>
@@ -252,17 +296,16 @@ namespace AutoHotInterception
             {
                 code -= 256;
                 if (code != 54) // RShift has > 256 code, but state is 0/1
-                {
                     st += 2;
-                }
             }
+
             stroke.key.code = code;
-            stroke.key.state = (ushort)st;
+            stroke.key.state = (ushort) st;
             ManagedWrapper.Send(_deviceContext, id, ref stroke, 1);
         }
 
         /// <summary>
-        /// Sends Mouse button events
+        ///     Sends Mouse button events
         /// </summary>
         /// <param name="id"></param>
         /// <param name="btn"></param>
@@ -277,7 +320,7 @@ namespace AutoHotInterception
         }
 
         /// <summary>
-        /// Same as <see cref="SendMouseButtonEvent"/>, but sends button events in Absolute mode (with coordinates)
+        ///     Same as <see cref="SendMouseButtonEvent" />, but sends button events in Absolute mode (with coordinates)
         /// </summary>
         /// <param name="id"></param>
         /// <param name="btn"></param>
@@ -299,7 +342,7 @@ namespace AutoHotInterception
         }
 
         /// <summary>
-        /// Sends Relative Mouse Movement
+        ///     Sends Relative Mouse Movement
         /// </summary>
         /// <param name="id"></param>
         /// <param name="x"></param>
@@ -309,14 +352,15 @@ namespace AutoHotInterception
         {
             IsValidDeviceId(true, id);
 
-            var stroke = new ManagedWrapper.Stroke { mouse = { x = x, y = y, flags = (ushort)ManagedWrapper.MouseFlag.MouseMoveRelative } };
+            var stroke = new ManagedWrapper.Stroke
+                {mouse = {x = x, y = y, flags = (ushort) ManagedWrapper.MouseFlag.MouseMoveRelative}};
             ManagedWrapper.Send(_deviceContext, id, ref stroke, 1);
         }
 
         /// <summary>
-        /// Sends Absolute  Mouse Movement
-        /// Note: Newing up a stroke seems to make Absolute input be relative to main monitor
-        /// Calling Send on an actual stroke from an Absolute device results in input relative to all monitors
+        ///     Sends Absolute Mouse Movement
+        ///     Note: Creating a new stroke seems to make Absolute input become relative to main monitor
+        ///     Calling Send on an actual stroke from an Absolute device results in input relative to all monitors
         /// </summary>
         /// <param name="id"></param>
         /// <param name="x"></param>
@@ -326,7 +370,8 @@ namespace AutoHotInterception
         {
             IsValidDeviceId(true, id);
 
-            var stroke = new ManagedWrapper.Stroke { mouse = { x = x, y = y, flags = (ushort)ManagedWrapper.MouseFlag.MouseMoveAbsolute } };
+            var stroke = new ManagedWrapper.Stroke
+                {mouse = {x = x, y = y, flags = (ushort) ManagedWrapper.MouseFlag.MouseMoveAbsolute}};
             ManagedWrapper.Send(_deviceContext, id, ref stroke, 1);
         }
 
@@ -355,7 +400,7 @@ namespace AutoHotInterception
         }
 
         /// <summary>
-        /// Tries to get Device ID from VID/PID
+        ///     Tries to get Device ID from VID/PID
         /// </summary>
         /// <param name="isMouse">Whether the device is a mouse or a keyboard</param>
         /// <param name="vid">The VID of the device</param>
@@ -372,10 +417,7 @@ namespace AutoHotInterception
                 int foundVid = 0, foundPid = 0;
                 GetVidPid(hardwareStr, ref foundVid, ref foundPid);
                 if (foundVid != vid || foundPid != pid) continue;
-                if (instance == 1)
-                {
-                    return i;
-                }
+                if (instance == 1) return i;
                 instance--;
             }
 
@@ -384,7 +426,7 @@ namespace AutoHotInterception
         }
 
         /// <summary>
-        /// Tries to get Device ID from Hardware String
+        ///     Tries to get Device ID from Hardware String
         /// </summary>
         /// <param name="isMouse">Whether the device is a mouse or a keyboard</param>
         /// <param name="handle">The Hardware String (handle) of the device</param>
@@ -399,10 +441,7 @@ namespace AutoHotInterception
                 var hardwareStr = ManagedWrapper.GetHardwareStr(_deviceContext, i, 1000);
                 if (hardwareStr != handle) continue;
 
-                if (instance == 1)
-                {
-                    return i;
-                }
+                if (instance == 1) return i;
                 instance--;
             }
 
@@ -411,9 +450,9 @@ namespace AutoHotInterception
         }
 
         /// <summary>
-        /// Gets a list of connected devices
-        /// Intended to be used called via the AHK wrapper...
-        /// ... so it can convert the return value into an AHK array
+        ///     Gets a list of connected devices
+        ///     Intended to be used called via the AHK wrapper...
+        ///     ... so it can convert the return value into an AHK array
         /// </summary>
         /// <returns></returns>
         public DeviceInfo[] GetDeviceList()
@@ -431,26 +470,24 @@ namespace AutoHotInterception
         {
             if (state)
             {
-                if (!_pollThreadRunning)
-                {
-                    _pollThreadRunning = true;
-                    _pollThread = new Thread(PollThread);
-                    _pollThread.Start();
-                }
+                if (_pollThreadRunning) return;
+                _pollThreadRunning = true;
+                _pollThread = new Thread(PollThread);
+                _pollThread.Start();
             }
             else
             {
-                _pollThread.Abort();
+                _pollThreadRunning = false;
                 _pollThread.Join();
                 _pollThread = null;
             }
         }
 
         /// <summary>
-        /// Predicate used by Interception to decide whether to filter this device or not.
-        /// WARNING! Setting this to always return true is RISKY, as you could lock yourself out of Windows...
-        /// ... requiring a reboot.
-        /// When working with AHI, it's generally best to keep this matching as little as possible....
+        ///     Predicate used by Interception to decide whether to filter this device or not.
+        ///     WARNING! Setting this to always return true is RISKY, as you could lock yourself out of Windows...
+        ///     ... requiring a reboot.
+        ///     When working with AHI, it's generally best to keep this matching as little as possible....
         /// </summary>
         /// <param name="device"></param>
         /// <returns></returns>
@@ -463,41 +500,32 @@ namespace AutoHotInterception
         {
             ManagedWrapper.SetFilter(_deviceContext, IsMonitoredDevice,
                 state ? ManagedWrapper.Filter.All : ManagedWrapper.Filter.None);
-
-            _filterState = state;
         }
 
         private void SetDeviceFilterState(int device, bool state)
         {
             if (state && !_filteredDevices.ContainsKey(device))
-            {
                 _filteredDevices[device] = true;
-            }
             else if (!state && _filteredDevices.ContainsKey(device))
-            {
                 _filteredDevices.TryRemove(device, out _);
-            }
         }
 
         private bool DeviceHasBindings(int id)
         {
             if (id < 11)
-            {
                 return _keyboardMappings.ContainsKey(id);
-            }
 
             return _mouseButtonMappings.ContainsKey(id)
                    || _mouseMoveRelativeMappings.ContainsKey(id)
                    || _mouseMoveAbsoluteMappings.ContainsKey(id);
-
         }
 
         // ScanCode notes: https://www.win.tue.nl/~aeb/linux/kbd/scancodes-1.html
         private void PollThread()
         {
-            ManagedWrapper.Stroke stroke = new ManagedWrapper.Stroke();
+            var stroke = new ManagedWrapper.Stroke();
 
-            while (true)
+            while (_pollThreadRunning)
             {
                 // Iterate through all Keyboards
                 for (var i = 1; i < 11; i++)
@@ -518,9 +546,11 @@ namespace AutoHotInterception
                             // Process Subscription Mode
 
                             #region KeyCode, State, Extended Flag translation
+
                             // Begin translation of incoming key code, state, extended flag etc...
                             var processMappings = true;
                             var processedState = KeyboardStrokeToKeyboardState(stroke);
+
                             #endregion
 
                             if (processedState.Ignore)
@@ -539,12 +569,11 @@ namespace AutoHotInterception
                             {
                                 hasSubscription = true;
                                 var mapping = _keyboardMappings[i][code];
-                                if (mapping.Block)
-                                {
-                                    block = true;
-                                }
-
-                                ThreadPool.QueueUserWorkItem(threadProc => mapping.Callback(state));
+                                if (mapping.Block) block = true;
+                                if (mapping.Concurrent)
+                                    ThreadPool.QueueUserWorkItem(threadProc => mapping.Callback(state));
+                                else if (_workerThreads.ContainsKey(i) && _workerThreads[i].ContainsKey(code))
+                                    _workerThreads[i][code]?.Actions.Add(() => mapping.Callback(state));
                             }
                         }
 
@@ -553,19 +582,13 @@ namespace AutoHotInterception
 
                         // If this key had no subscriptions, but Context Mode is set for this keyboard...
                         // ... then set the Context before sending the key
-                        if (!hasSubscription && hasContext)
-                        {
-                            _contextCallbacks[i](1);
-                        }
+                        if (!hasSubscription && hasContext) _contextCallbacks[i](1);
 
                         // Pass the key through to the OS.
                         ManagedWrapper.Send(_deviceContext, i, ref stroke, 1);
 
                         // If we are processing Context Mode, then Unset the context variable after sending the key
-                        if (!hasSubscription && hasContext)
-                        {
-                            _contextCallbacks[i](0);
-                        }
+                        if (!hasSubscription && hasContext) _contextCallbacks[i](0);
                     }
                 }
 
@@ -591,14 +614,18 @@ namespace AutoHotInterception
                                 {
                                     hasSubscription = true;
                                     var mapping = _mouseButtonMappings[i][btnState.Button];
-                                    if (mapping.Block)
-                                    {
-                                        block = true;
-                                    }
+                                    if (mapping.Block) block = true;
 
                                     var state = btnState;
-                                    ThreadPool.QueueUserWorkItem(threadProc => mapping.Callback(state.State));
+
+                                    if (mapping.Concurrent)
+                                        ThreadPool.QueueUserWorkItem(threadProc => mapping.Callback(state.State));
+                                    else if (_workerThreads.ContainsKey(i) &&
+                                             _workerThreads[i].ContainsKey(btnState.Button))
+                                        _workerThreads[i][btnState.Button]?.Actions
+                                            .Add(() => mapping.Callback(state.State));
                                 }
+
                                 //Console.WriteLine($"AHK| Mouse {i} seen - button {btnState.Button}, state: {stroke.mouse.state}, rolling: {stroke.mouse.rolling}");
                             }
                             else if ((stroke.mouse.flags & (ushort) ManagedWrapper.MouseFlag.MouseMoveAbsolute) ==
@@ -608,51 +635,42 @@ namespace AutoHotInterception
                                 // Absolute Mouse Move
                                 hasSubscription = true;
                                 var mapping = _mouseMoveAbsoluteMappings[i];
-                                if (mapping.Block)
-                                {
-                                    block = true;
-                                }
+                                if (mapping.Block) block = true;
 
                                 var x = stroke.mouse.x;
                                 var y = stroke.mouse.y;
-                                ThreadPool.QueueUserWorkItem(threadProc => mapping.Callback(x, y));
+                                if (mapping.Concurrent)
+                                    ThreadPool.QueueUserWorkItem(threadProc => mapping.Callback(x, y));
+                                else if (_workerThreads.ContainsKey(i) && _workerThreads[i].ContainsKey(7))
+                                    _workerThreads[i][7]?.Actions.Add(() => mapping.Callback(x, y));
                             }
-                            else if ((stroke.mouse.flags & (ushort)ManagedWrapper.MouseFlag.MouseMoveRelative) == 
-                                     (ushort)ManagedWrapper.MouseFlag.MouseMoveRelative
+                            else if ((stroke.mouse.flags & (ushort) ManagedWrapper.MouseFlag.MouseMoveRelative) ==
+                                     (ushort) ManagedWrapper.MouseFlag.MouseMoveRelative
                                      && _mouseMoveRelativeMappings.ContainsKey(i))
                             {
                                 // Relative Mouse Move
                                 hasSubscription = true;
                                 var mapping = _mouseMoveRelativeMappings[i];
-                                if (mapping.Block)
-                                {
-                                    block = true;
-                                }
+                                if (mapping.Block) block = true;
 
                                 var x = stroke.mouse.x;
                                 var y = stroke.mouse.y;
-                                ThreadPool.QueueUserWorkItem(threadProc => mapping.Callback(x, y));
+                                if (mapping.Concurrent)
+                                    ThreadPool.QueueUserWorkItem(threadProc => mapping.Callback(x, y));
+                                else if (_workerThreads.ContainsKey(i) && _workerThreads[i].ContainsKey(8))
+                                    _workerThreads[i][8]?.Actions.Add(() => mapping.Callback(x, y));
                             }
                         }
+
                         // If this key had no subscriptions, but Context Mode is set for this mouse...
                         // ... then set the Context before sending the button
-                        if (!hasSubscription && hasContext)
-                        {
-                            // Set Context
-                            _contextCallbacks[i](1);
-                        }
-                        if (!(block))
-                        {
-                            ManagedWrapper.Send(_deviceContext, i, ref stroke, 1);
-                        }
+                        if (!hasSubscription && hasContext) _contextCallbacks[i](1); // Set Context
+                        if (!block) ManagedWrapper.Send(_deviceContext, i, ref stroke, 1);
                         // If we are processing Context Mode, then Unset the context variable after sending the button
-                        if (!hasSubscription && hasContext)
-                        {
-                            // Unset Context
-                            _contextCallbacks[i](0);
-                        }
+                        if (!hasSubscription && hasContext) _contextCallbacks[i](0);
                     }
                 }
+
                 Thread.Sleep(10);
             }
         }
@@ -660,15 +678,48 @@ namespace AutoHotInterception
         private class MappingOptions
         {
             public bool Block { get; set; }
+            public bool Concurrent { get; set; }
             public dynamic Callback { get; set; }
         }
-        #endregion
 
-
-        public void Dispose()
+        private class WorkerThread : IDisposable
         {
-            SetThreadState(false);
+            private readonly Thread _worker;
+            private volatile bool _running;
+
+            public WorkerThread()
+            {
+                Actions = new BlockingCollection<Action>();
+                _worker = new Thread(Run);
+                _running = false;
+            }
+
+            public BlockingCollection<Action> Actions { get; }
+
+            public void Dispose()
+            {
+                if (!_running) return;
+                _running = false;
+                _worker.Join();
+            }
+
+            public void Start()
+            {
+                if (_running) return;
+                _running = true;
+                _worker.Start();
+            }
+
+            private void Run()
+            {
+                while (_running)
+                {
+                    var action = Actions.Take();
+                    action.Invoke();
+                }
+            }
         }
 
+        #endregion
     }
 }

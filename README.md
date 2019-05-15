@@ -6,7 +6,7 @@
 
 # AutoHotInterception
 
-AutoHotInterception (AHI) allows you to execute AutoHotkey code in response to events from a *specific* keyboard or mouse, whilst (optionally) blocking the native functionality (ie stopping Windows from seeing that keyboard or mouse event).  
+AutoHotInterception (AHI) allows you to execute AutoHotkey code in response to events from a *specific* keyboard or mouse, whilst (optionally) blocking the native functionality (i.e. stopping Windows from seeing that keyboard or mouse event).  
 In other words, you can use a key on a second (or third, or fourth...) keyboard to trigger AHK code, and that key will not be seen by applications. You can use the *same key* on multiple keyboards for individual actions.  
 Keyboard Keys, Mouse Buttons and Mouse movement (Both Relative and Absolute modes) are supported.
 
@@ -50,18 +50,32 @@ You will need to know the VID / PID of at least one of your devices in order to 
 2. Download an AHI release from the [releases page](https://github.com/evilC/AutoHotInterception/releases) and extract it to a folder.  
 DO NOT use the "Clone or Download" link on the main page.  
 This is the folder where (at least initially) you will be running scripts from.  
-It contains a number of sample `.ahk` scripts and a `lib` folder, which contains all the libraries and files needed for AHI.  
-AHI comes with the latest x86 Interception dll, so as long as you are running x86 AHK (x86 Unicode is recommended), then you can probably skip step 3.  
+It contains a number of sample `.ahk` scripts and a `lib` folder, which contains all the AHI libraries.  
 3. In the Interception installer zip, there is a `library` folder containing `x86` and `x64` folders.  
-From the folder that matches the bitness of AHK you have installed, take `interception.dll` and copy it to the AHI `lib` folder that was created in step (2).  
+Copy both of these folders into the AHI `lib` folder that you created in step (3) - the folder structure should end up looking like:  
+```
+AHI Root Folder
+	Monitor.ahk
+	etc...
+	Lib
+		AutoHotInterception.ahk
+		AutoHotInterception.dll
+		CLR.ahk
+		Unblocker.ps1
+		etc..
+		x86
+			interception.dll
+		x64
+			interception.dll
+```
 4. Right-click `Unblocker.ps1` in the lib folder and select `Run as Admin`.  
-  This is because downloaded DLLs are often blocked and will not work.  
-  This can be done manually by right clicking the DLLs, selecting Properties, and checking a "Block" box if it exists.  
+This is because downloaded DLLs are often blocked and will not work.  
+This can be done manually by right clicking the DLLs, selecting Properties, and checking a "Block" box if it exists.  
 5. If you do not know the VID/PID of your device, use the included Monitor app to find it.
-  When using the monitor app, **DO NOT** tick all devices at once, as if it crashes, it will lock up all devices.
-  Instead, tick one at a time and see if it your device.  
+When using the monitor app, **DO NOT** tick all devices at once, as if it crashes, it will lock up all devices.
+Instead, tick one at a time and see if it your device.  
 6. Edit one of the example remapping scripts, replacing the VID/PID(s) with that of your device and run it to make sure it works.  
-6. (Optional) The contents of the `lib` folder can actually be placed in one of the AutoHotkey lib folders (eg `My Documents\AutoHotkey\lib` - make it if it does not exist), and the `#include` lines of the sample scripts changed to `#include <AutoHotInterception>`, to enable your AHI scripts to be in any folder, without each needing it's own copy of the library files.  
+7. (Optional) The contents of the `lib` folder can actually be placed in one of the AutoHotkey lib folders (eg `My Documents\AutoHotkey\lib` - make it if it does not exist), and the `#include` lines of the sample scripts changed to `#include <AutoHotInterception>`, to enable your AHI scripts to be in any folder, without each needing it's own copy of the library files.  
 
 ------
 
@@ -75,7 +89,7 @@ Include the library
 
 Initialize the library
 ```
-global AHI := InterceptionWrapper()
+global AHI := new AutoHotInterception()
 ```
 
 *Note*  
@@ -168,7 +182,7 @@ Each Subscribe endpont also has a corresponding Unsubscribe endpoint, which remo
 
 #### Subscribing to Keyboard keys
 Subscribe to a key on a specific keyboard  
-`SubscribeKey(<deviceId>, <scanCode>, <block>, <callback>)`  
+`SubscribeKey(<deviceId>, <scanCode>, <block>, <callback>, <concurrent>)`
 `UnsubscribeKey(<deviceId>, <scanCode>)`
 ```
 Interception.SubscribeKey(keyboardId, GetKeySC("1"), true, Func("KeyEvent"))
@@ -182,8 +196,9 @@ KeyEvent(state){
 }
 ```
 
+Parameter `<concurrent>` is optional and is <b>false</b> by default meaning that all the events raised for that key will be handled sequentially (i.e. callback function will be called on a single thread). If set to <b>true</b>, a new thread will be created for each event and the callback function will be called on it.
 #### Subscribing to Mouse Buttons
-`SubscribeMouseButton(<deviceId>, <button>, <block>, <callback>)`  
+`SubscribeMouseButton(<deviceId>, <button>, <block>, <callback>, <concurrent>)`  
 `UnsubscribeMouseButton(<deviceId>, <button>)`  
 Where `button` is one of:  
 ```
@@ -210,8 +225,8 @@ Relative mode is for normal mice and most trackpads.
 Coordinates will be delta (change)  
 Each endpoint has two naming variants for convenience, they both do the same.  
 
-`SubscribeMouseMove(<deviceId>, <block>, <callback>)`  
-`SubscribeMouseMoveRelative(<deviceId>, <block>, <callback>)`  
+`SubscribeMouseMove(<deviceId>, <block>, <callback>, <concurrent>)`  
+`SubscribeMouseMoveRelative(<deviceId>, <block>, <callback>, <concurrent>)`  
 `UnsubscribeMouseMove(<deviceId>)`  
 `UnsubscribeMouseMoveRelative(<deviceId>)`  
 For Mouse Movement, the callback is passed two ints - x and y.  
@@ -226,8 +241,9 @@ MouseEvent(x, y){
 ##### Absolute Mode
 Absolute mode is used for Graphics Tablets, Light Guns etc.  
 Coordinates will be in the range 0..65535  
-`SubscribeMouseMoveAbsolute(<deviceId>, <block>, <callback>)`  
+`SubscribeMouseMoveAbsolute(<deviceId>, <block>, <callback>, <concurrent>)`  
 `UnsubscribeMouseMoveAbsolute(<deviceId>)`  
+Again, the callback is passed two ints - x and y.  
 ```
 Interception.SubscribeMouseMoveAbsolute(mouseId, false, Func("MouseEvent"))
 
