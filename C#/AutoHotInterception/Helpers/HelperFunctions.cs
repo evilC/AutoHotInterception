@@ -61,13 +61,14 @@ namespace AutoHotInterception.Helpers
             ushort btn = 0;
             if (state < 0x400)
             {
-                while (state > 2)
-                {
-                    state >>= 2;
-                    btn++;
-                }
+                //while (state > 2)
+                //{
+                //    state >>= 2;
+                //    btn++;
+                //}
 
-                state = 2 - state; // 1 = Pressed, 0 = Released
+                //state = 2 - state; // 1 = Pressed, 0 = Released
+                btn = 0;
             }
             else
             {

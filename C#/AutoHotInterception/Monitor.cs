@@ -125,8 +125,8 @@ namespace AutoHotInterception
                     while (ManagedWrapper.Receive(_deviceContext, i, ref stroke, 1) > 0)
                     {
                         ManagedWrapper.Send(_deviceContext, i, ref stroke, 1);
-                        if (stroke.mouse.state != 0)
-                        {
+                        //if (stroke.mouse.state != 0)
+                        //{
                             // Mouse Button
                             var btnState = MouseStrokeToButtonState(stroke);
                             FireMouseCallback(new MouseCallback
@@ -136,32 +136,32 @@ namespace AutoHotInterception
                                 State = btnState.State,
                                 Info = "Mouse Button"
                             });
-                        }
-                        else if ((stroke.mouse.flags & (ushort) ManagedWrapper.MouseFlag.MouseMoveAbsolute) ==
-                                 (ushort) ManagedWrapper.MouseFlag.MouseMoveAbsolute)
-                        {
-                            // Absolute Mouse Move
-                            FireMouseCallback(new MouseCallback
-                            {
-                                Id = i,
-                                X = stroke.mouse.x,
-                                Y = stroke.mouse.y,
-                                Info = "Absolute Move"
-                            });
-                        }
-                        else if ((stroke.mouse.flags & (ushort) ManagedWrapper.MouseFlag.MouseMoveRelative) ==
-                                 (ushort) ManagedWrapper.MouseFlag.MouseMoveRelative)
+                        //}
+                        //else if ((stroke.mouse.flags & (ushort) ManagedWrapper.MouseFlag.MouseMoveAbsolute) ==
+                        //         (ushort) ManagedWrapper.MouseFlag.MouseMoveAbsolute)
+                        //{
+                        //    // Absolute Mouse Move
+                        //    FireMouseCallback(new MouseCallback
+                        //    {
+                        //        Id = i,
+                        //        X = stroke.mouse.x,
+                        //        Y = stroke.mouse.y,
+                        //        Info = "Absolute Move"
+                        //    });
+                        //}
+                        //else if ((stroke.mouse.flags & (ushort) ManagedWrapper.MouseFlag.MouseMoveRelative) ==
+                        //         (ushort) ManagedWrapper.MouseFlag.MouseMoveRelative)
 
-                        {
-                            // Relative Mouse Move
-                            FireMouseCallback(new MouseCallback
-                            {
-                                Id = i,
-                                X = stroke.mouse.x,
-                                Y = stroke.mouse.y,
-                                Info = "Relative Move"
-                            });
-                        }
+                        //{
+                        //    // Relative Mouse Move
+                        //    FireMouseCallback(new MouseCallback
+                        //    {
+                        //        Id = i,
+                        //        X = stroke.mouse.x,
+                        //        Y = stroke.mouse.y,
+                        //        Info = "Relative Move"
+                        //    });
+                        //}
 
                         //FireMouseCallback(i, stroke);
                     }
