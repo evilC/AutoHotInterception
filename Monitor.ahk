@@ -3,12 +3,13 @@ Script to show data flowing from Interception
 */
 #SingleInstance force
 #Persistent
-#include Lib\AutoHotInterception.ahk
+#include <AutoHotInterception>
 
 OutputDebug DBGVIEWCLEAR
 
 global DeviceList := {}
 filterMouseMove := 1
+filterKeyPress := 0
 
 ;~ global Monitor := AutoHotInterception_Init("InterceptionMonitor")
 MonitorWrapper := new AutoHotInterception("Monitor")
@@ -41,6 +42,9 @@ Loop 2 {
 Gui, Add, CheckBox, w%colWidth% y+20 hwndhCbFilterMove Checked, Filter Movement (Warning: Turning off can cause crashes)
 fn := Func("FilterMove")
 GuiControl, +g, % hCbFilterMove, % fn
+Gui, Add, CheckBox, w%colWidth% x10 y52 hwndhCbFilterPress, Show Presses instead of ups and downs
+fnn := Func("FilterPress")
+GuiControl, +g, % hCbFilterPress, % fnn
 Gui, Add, Button, xm w%colWidth% Center gClearKeyboard, Clear
 Gui, Add, Button, x+5 yp w%colWidth% gClearMouse Center, Clear
 
@@ -67,6 +71,12 @@ FilterMove(hwnd){
 	filterMouseMove := state
 }
 
+FilterPress(hwnd){
+	global filterKeyPress
+	GuiControlGet, state, , % hwnd
+	filterKeyPress := state
+}
+
 ClearKeyboard:
 	Gui, ListView, % hLvKeyboard
 	LV_Delete()
@@ -82,7 +92,9 @@ FormatHex(num){
 }
 
 KeyboardEvent(id, code, state, info){
-	global hLvKeyboard
+	global hLvKeyboard, filterKeyPress
+    if (filterKeyPress && state)
+        return
 	Gui, ListView, % hLvKeyboard
 	scanCode := Format("{:x}", code)
 	keyName := GetKeyName("SC" scanCode)
