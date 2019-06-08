@@ -99,6 +99,7 @@ namespace AutoHotInterception
             while (_pollThreadRunning)
             {
                 for (var i = 1; i < 11; i++)
+                {
                     while (ManagedWrapper.Receive(_deviceContext, i, ref stroke, 1) > 0)
                     {
                         ManagedWrapper.Send(_deviceContext, i, ref stroke, 1);
@@ -120,51 +121,55 @@ namespace AutoHotInterception
                                 Info = stroke.key.code > 255 ? "Extended" : ""
                             });
                     }
+                }
 
                 for (var i = 11; i < 21; i++)
+                {
                     while (ManagedWrapper.Receive(_deviceContext, i, ref stroke, 1) > 0)
                     {
                         ManagedWrapper.Send(_deviceContext, i, ref stroke, 1);
-                        //if (stroke.mouse.state != 0)
-                        //{
+                        if (stroke.mouse.state != 0)
+                        {
                             // Mouse Button
-                            var btnState = MouseStrokeToButtonState(stroke);
+                            var btnStates = MouseStrokeToButtonStates(stroke);
+                            foreach (var btnState in btnStates)
+                            {
+                                FireMouseCallback(new MouseCallback
+                                {
+                                    Id = i,
+                                    Code = btnState.Button,
+                                    State = btnState.State,
+                                    Info = "Mouse Button"
+                                });
+                            }
+                        }
+                        else if ((stroke.mouse.flags & (ushort)ManagedWrapper.MouseFlag.MouseMoveAbsolute) ==
+                                 (ushort)ManagedWrapper.MouseFlag.MouseMoveAbsolute)
+                        {
+                            // Absolute Mouse Move
                             FireMouseCallback(new MouseCallback
                             {
                                 Id = i,
-                                Code = btnState.Button,
-                                State = btnState.State,
-                                Info = "Mouse Button"
+                                X = stroke.mouse.x,
+                                Y = stroke.mouse.y,
+                                Info = "Absolute Move"
                             });
-                        //}
-                        //else if ((stroke.mouse.flags & (ushort) ManagedWrapper.MouseFlag.MouseMoveAbsolute) ==
-                        //         (ushort) ManagedWrapper.MouseFlag.MouseMoveAbsolute)
-                        //{
-                        //    // Absolute Mouse Move
-                        //    FireMouseCallback(new MouseCallback
-                        //    {
-                        //        Id = i,
-                        //        X = stroke.mouse.x,
-                        //        Y = stroke.mouse.y,
-                        //        Info = "Absolute Move"
-                        //    });
-                        //}
-                        //else if ((stroke.mouse.flags & (ushort) ManagedWrapper.MouseFlag.MouseMoveRelative) ==
-                        //         (ushort) ManagedWrapper.MouseFlag.MouseMoveRelative)
+                        }
+                        else if ((stroke.mouse.flags & (ushort)ManagedWrapper.MouseFlag.MouseMoveRelative) ==
+                                 (ushort)ManagedWrapper.MouseFlag.MouseMoveRelative)
 
-                        //{
-                        //    // Relative Mouse Move
-                        //    FireMouseCallback(new MouseCallback
-                        //    {
-                        //        Id = i,
-                        //        X = stroke.mouse.x,
-                        //        Y = stroke.mouse.y,
-                        //        Info = "Relative Move"
-                        //    });
-                        //}
-
-                        //FireMouseCallback(i, stroke);
+                        {
+                            // Relative Mouse Move
+                            FireMouseCallback(new MouseCallback
+                            {
+                                Id = i,
+                                X = stroke.mouse.x,
+                                Y = stroke.mouse.y,
+                                Info = "Relative Move"
+                            });
+                        }
                     }
+                }
 
                 Thread.Sleep(10);
             }

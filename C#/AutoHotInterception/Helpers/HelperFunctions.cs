@@ -55,29 +55,57 @@ namespace AutoHotInterception.Helpers
             return stroke;
         }
 
-        public static ButtonState MouseStrokeToButtonState(ManagedWrapper.Stroke stroke)
+        private static readonly Dictionary<int, ButtonState> ButtonStateLookupTable = new Dictionary<int, ButtonState>()
+        {
+            { 1, new ButtonState{Button = 0, State = 1} },
+            { 2, new ButtonState{Button = 0, State = 0} },
+            { 4, new ButtonState{Button = 1, State = 1} },
+            { 8, new ButtonState{Button = 1, State = 0} },
+            { 16, new ButtonState{Button = 2, State = 1} },
+            { 32, new ButtonState{Button = 2, State = 0} },
+            { 64, new ButtonState{Button = 3, State = 1} },
+            { 128, new ButtonState{Button = 3, State = 0} },
+            { 256, new ButtonState{Button = 4, State = 1} },
+            { 512, new ButtonState{Button = 4, State = 0} },
+        };
+
+        public static ButtonState[] MouseStrokeToButtonStates(ManagedWrapper.Stroke stroke)
         {
             int state = stroke.mouse.state;
-            ushort btn = 0;
-            if (state < 0x400)
-            {
-                //while (state > 2)
-                //{
-                //    state >>= 2;
-                //    btn++;
-                //}
 
-                //state = 2 - state; // 1 = Pressed, 0 = Released
-                btn = 0;
-            }
-            else
+            // Buttons
+            var buttonStates = new List<ButtonState>();
+            foreach (var buttonState in ButtonStateLookupTable)
             {
-                if (state == 0x400) btn = 5; // Vertical mouse wheel
-                else if (state == 0x800) btn = 6; // Horizontal mouse wheel
-                state = stroke.mouse.rolling < 0 ? -1 : 1;
+                if (state < buttonState.Key) break;
+                if ((state & buttonState.Key) != buttonState.Key) continue;
+
+                buttonStates.Add(buttonState.Value);
+                state -= buttonState.Key;
             }
 
-            return new ButtonState {Button = btn, State = state};
+            // Wheel
+            if ((state & 0x400) == 0x400) // Wheel up / down
+            {
+                buttonStates.Add(
+                    new ButtonState
+                    {
+                        Button = 5,
+                        State = (stroke.mouse.rolling < 0 ? -1 : 1)
+                    }
+                );
+            }
+            else if ((state & 0x800) == 0x800) // Wheel left / right
+            {
+                buttonStates.Add(
+                    new ButtonState
+                    {
+                        Button = 6,
+                        State = (stroke.mouse.rolling < 0 ? -1 : 1)
+                    }
+                );
+            }
+            return buttonStates.ToArray();
         }
 
         public static KeyboardState KeyboardStrokeToKeyboardState(ManagedWrapper.Stroke stroke)

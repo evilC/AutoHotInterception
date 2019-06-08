@@ -609,21 +609,24 @@ namespace AutoHotInterception
                             {
                                 // Mouse Button
                                 //Debug.WriteLine($"AHK| Mouse {i} seen - flags: {stroke.mouse.flags}, raw state: {stroke.mouse.state}");
-                                var btnState = MouseStrokeToButtonState(stroke);
-                                if (_mouseButtonMappings[i].ContainsKey(btnState.Button))
+                                var btnStates = MouseStrokeToButtonStates(stroke);
+                                foreach (var btnState in btnStates)
                                 {
-                                    hasSubscription = true;
-                                    var mapping = _mouseButtonMappings[i][btnState.Button];
-                                    if (mapping.Block) block = true;
+                                    if (_mouseButtonMappings[i].ContainsKey(btnState.Button))
+                                    {
+                                        hasSubscription = true;
+                                        var mapping = _mouseButtonMappings[i][btnState.Button];
+                                        if (mapping.Block) block = true;
 
-                                    var state = btnState;
+                                        var state = btnState;
 
-                                    if (mapping.Concurrent)
-                                        ThreadPool.QueueUserWorkItem(threadProc => mapping.Callback(state.State));
-                                    else if (_workerThreads.ContainsKey(i) &&
-                                             _workerThreads[i].ContainsKey(btnState.Button))
-                                        _workerThreads[i][btnState.Button]?.Actions
-                                            .Add(() => mapping.Callback(state.State));
+                                        if (mapping.Concurrent)
+                                            ThreadPool.QueueUserWorkItem(threadProc => mapping.Callback(state.State));
+                                        else if (_workerThreads.ContainsKey(i) &&
+                                                 _workerThreads[i].ContainsKey(btnState.Button))
+                                            _workerThreads[i][btnState.Button]?.Actions
+                                                .Add(() => mapping.Callback(state.State));
+                                    }
                                 }
 
                                 //Console.WriteLine($"AHK| Mouse {i} seen - button {btnState.Button}, state: {stroke.mouse.state}, rolling: {stroke.mouse.rolling}");
