@@ -5,10 +5,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 ### Added
+- Add option to filter key presses and only show key releases
 ### Changed
 ### Deprecated
 ### Removed
 ### Fixed
+- GUI layout made more robust
 
 ## [0.4.2] - 2019-06-08
 - Fixed issue #37  
