@@ -55,18 +55,18 @@ namespace AutoHotInterception.Helpers
             return stroke;
         }
 
-        private static readonly Dictionary<int, ButtonState> ButtonStateLookupTable = new Dictionary<int, ButtonState>()
+        private static readonly Dictionary<int, ButtonState> StrokeFlagToButtonState = new Dictionary<int, ButtonState>()
         {
-            { 1, new ButtonState{Button = 0, State = 1} },
-            { 2, new ButtonState{Button = 0, State = 0} },
-            { 4, new ButtonState{Button = 1, State = 1} },
-            { 8, new ButtonState{Button = 1, State = 0} },
-            { 16, new ButtonState{Button = 2, State = 1} },
-            { 32, new ButtonState{Button = 2, State = 0} },
-            { 64, new ButtonState{Button = 3, State = 1} },
-            { 128, new ButtonState{Button = 3, State = 0} },
-            { 256, new ButtonState{Button = 4, State = 1} },
-            { 512, new ButtonState{Button = 4, State = 0} },
+            { 1, new ButtonState{Button = 0, State = 1, Flag = 1} },        // LMB Press
+            { 2, new ButtonState{Button = 0, State = 0, Flag = 2} },        // LMB Release
+            { 4, new ButtonState{Button = 1, State = 1, Flag = 4} },        // RMB Press
+            { 8, new ButtonState{Button = 1, State = 0, Flag = 8} },        // RMB Release
+            { 16, new ButtonState{Button = 2, State = 1, Flag = 16} },      // MMB Press
+            { 32, new ButtonState{Button = 2, State = 0, Flag = 32} },      // MMB Release
+            { 64, new ButtonState{Button = 3, State = 1, Flag = 64} },      // XB1 Press
+            { 128, new ButtonState{Button = 3, State = 0, Flag = 128} },    // XB1 Release
+            { 256, new ButtonState{Button = 4, State = 1, Flag = 256} },    // XB2 Press
+            { 512, new ButtonState{Button = 4, State = 0, Flag = 512} }     // XB2 Release
         };
 
         public static ButtonState[] MouseStrokeToButtonStates(ManagedWrapper.Stroke stroke)
@@ -75,7 +75,7 @@ namespace AutoHotInterception.Helpers
 
             // Buttons
             var buttonStates = new List<ButtonState>();
-            foreach (var buttonState in ButtonStateLookupTable)
+            foreach (var buttonState in StrokeFlagToButtonState)
             {
                 if (state < buttonState.Key) break;
                 if ((state & buttonState.Key) != buttonState.Key) continue;
@@ -91,7 +91,8 @@ namespace AutoHotInterception.Helpers
                     new ButtonState
                     {
                         Button = 5,
-                        State = (stroke.mouse.rolling < 0 ? -1 : 1)
+                        State = (stroke.mouse.rolling < 0 ? -1 : 1),
+                        Flag = 0x400
                     }
                 );
             }
@@ -101,7 +102,8 @@ namespace AutoHotInterception.Helpers
                     new ButtonState
                     {
                         Button = 6,
-                        State = (stroke.mouse.rolling < 0 ? -1 : 1)
+                        State = (stroke.mouse.rolling < 0 ? -1 : 1),
+                        Flag = 0x800
                     }
                 );
             }
@@ -165,6 +167,7 @@ namespace AutoHotInterception.Helpers
         {
             public ushort Button { get; set; }
             public int State { get; set; }
+            public ushort Flag { get; set; } // Preserve original flag, so it can be removed from stroke
         }
 
         public class KeyboardState
