@@ -100,6 +100,12 @@ AHI := new AutoHotInterception()
 AHI.Instance.SendMouseMove(...)
 ```
 
+## Misc Commands
+### SetStatus
+`SetStatus(true|false)`  
+Turns on or off all subscriptions (Starts on)  
+Where `true` is on, `false` is off.  
+eg `AHI.SetStatus(false)`  
 
 ## Finding Device IDs  
 ### USB Devices
