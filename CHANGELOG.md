@@ -10,6 +10,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 ### Removed
 ### Fixed
 
+## [0.4.4] - 2019-07-09
+- Added SetState to allow toggling on/off of bindings
+
 ## [0.4.3] - 2019-06-10 **EXPERIMENTAL TEST RELEASE**
 - Fixed issue #39
 Almost complete rewrite of mouse polling code  

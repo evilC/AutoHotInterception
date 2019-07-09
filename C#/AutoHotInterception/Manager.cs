@@ -57,6 +57,11 @@ namespace AutoHotInterception
             return "OK";
         }
 
+        public void SetState(bool state)
+        {
+            SetFilterState(state);
+            SetThreadState(state);
+        }
         #endregion
 
         #region Subscription Mode

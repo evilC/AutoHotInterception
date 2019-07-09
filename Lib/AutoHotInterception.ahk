@@ -71,7 +71,10 @@ class AutoHotInterception {
 	SendMouseMoveAbsolute(id, x, y) {
 		this.Instance.SendMouseMoveAbsolute(id, x, y)
 	}
-	*/
+
+	SetState(state){
+		this.Instance.SetState(state)
+	}
 	; --------------- Querying ------------------------
 	GetDeviceId(IsMouse, VID, PID, instance := 1) {
 		static devType := {0: "Keyboard", 1: "Mouse"}
