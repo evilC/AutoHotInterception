@@ -655,41 +655,12 @@ namespace AutoHotInterception
                             }
                         }
 
-                        // Process Relative Mouse Move
-                        if ((stroke.mouse.flags & (ushort) ManagedWrapper.MouseFlag.MouseMoveRelative) == (ushort) ManagedWrapper.MouseFlag.MouseMoveRelative)
+                        if (x != 0 || y != 0)
                         {
-                            if (x != 0 || y != 0)
+                            hasMove = true;
+                            // Process Absolute Mouse Move
+                            if ((stroke.mouse.flags & (ushort)ManagedWrapper.MouseFlag.MouseMoveAbsolute) == (ushort)ManagedWrapper.MouseFlag.MouseMoveAbsolute)
                             {
-                                hasMove = true;
-                                if (_mouseMoveRelativeMappings.ContainsKey(i))
-                                {
-                                    var mapping = _mouseMoveRelativeMappings[i];
-                                    hasSubscription = true;
-                                    //var debugStr = $"AHK| Mouse stroke has relative move of {x}, {y}...";
-
-                                    if (mapping.Concurrent)
-                                        ThreadPool.QueueUserWorkItem(threadProc => mapping.Callback(x, y));
-                                    else if (_workerThreads.ContainsKey(i) && _workerThreads[i].ContainsKey(8))
-                                        _workerThreads[i][8]?.Actions.Add(() => mapping.Callback(x, y));
-                                    if (mapping.Block)
-                                    {
-                                        moveRemoved = true;
-                                        //debugStr += "Blocking";
-                                    }
-                                    else
-                                    {
-                                        //debugStr += "Not Blocking";
-                                    }
-                                    //Debug.WriteLine(debugStr);
-                                }
-                            }
-                        }
-                        // Process Absolute Mouse Move
-                        else if ((stroke.mouse.flags & (ushort)ManagedWrapper.MouseFlag.MouseMoveAbsolute) == (ushort)ManagedWrapper.MouseFlag.MouseMoveAbsolute)
-                        {
-                            if (x != 0 || y != 0)
-                            {
-                                hasMove = true;
                                 if (_mouseMoveAbsoluteMappings.ContainsKey(i))
                                 {
                                     var mapping = _mouseMoveAbsoluteMappings[i];
@@ -703,6 +674,8 @@ namespace AutoHotInterception
                                     if (mapping.Block)
                                     {
                                         moveRemoved = true;
+                                        stroke.mouse.x = 0;
+                                        stroke.mouse.y = 0;
                                         //debugStr += "Blocking";
                                     }
                                     else
@@ -712,6 +685,36 @@ namespace AutoHotInterception
                                     //Debug.WriteLine(debugStr);
                                 }
                             }
+
+                            // Process Relative Mouse Move
+                            //else if ((stroke.mouse.flags & (ushort) ManagedWrapper.MouseFlag.MouseMoveRelative) == (ushort) ManagedWrapper.MouseFlag.MouseMoveRelative) / flag is 0, so always true!
+                            else
+                            {
+                                if (_mouseMoveRelativeMappings.ContainsKey(i))
+                                {
+                                    var mapping = _mouseMoveRelativeMappings[i];
+                                    hasSubscription = true;
+                                    //var debugStr = $"AHK| Mouse stroke has relative move of {x}, {y}...";
+
+                                    if (mapping.Concurrent)
+                                        ThreadPool.QueueUserWorkItem(threadProc => mapping.Callback(x, y));
+                                    else if (_workerThreads.ContainsKey(i) && _workerThreads[i].ContainsKey(8))
+                                        _workerThreads[i][8]?.Actions.Add(() => mapping.Callback(x, y));
+                                    if (mapping.Block)
+                                    {
+                                        moveRemoved = true;
+                                        stroke.mouse.x = 0;
+                                        stroke.mouse.y = 0;
+                                        //debugStr += "Blocking";
+                                    }
+                                    else
+                                    {
+                                        //debugStr += "Not Blocking";
+                                    }
+                                    //Debug.WriteLine(debugStr);
+                                }
+                            }
+
                         }
 
                         // Forward on the stroke if required

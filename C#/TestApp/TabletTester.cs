@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -7,21 +8,22 @@ using AutoHotInterception;
 
 namespace TestApp
 {
-    public class MouseTester
+    public class TabletTester
     {
-        public MouseTester()
+        public TabletTester()
         {
             var im = new Manager();
 
-            //var devs = im.GetDeviceList();
-            //var mouseHandle = "HID\\VID_046D&PID_C52B&REV_2407&MI_02&Qid_1028&WI_01&Class_00000004";
-            var mouseHandle = "HID\\VID_046D&PID_C00C&REV_0620"; // Logitech USB
-            var devId = im.GetMouseIdFromHandle(mouseHandle);
-
+            var devId = im.GetMouseIdFromHandle("HID\\VID_0B57&PID_9091&REV_0101&Col01");
             var counter = 0;
 
             if (devId != 0)
             {
+                Console.WriteLine($"Testing Absolute device with ID of {devId}");
+                im.SubscribeMouseButton(devId, 0, true, new Action<int>(value =>
+                {
+                    Console.WriteLine("LButton Button Value: " + value);
+                }));
                 im.SubscribeMouseButton(devId, 1, true, new Action<int>(value =>
                 {
                     Console.WriteLine("RButton Button Value: " + value);
@@ -42,9 +44,10 @@ namespace TestApp
                     Console.WriteLine(" Counter: " + mycounter);
                     counter = mycounter;
                 }));
-                im.SubscribeMouseMove(devId, true, new Action<int, int>((x, y) =>
+
+                im.SubscribeMouseMoveAbsolute(devId, true, new Action<int, int>((x, y) =>
                 {
-                    Console.WriteLine($"Mouse Move: x: {x}, y: {y}");
+                    Console.WriteLine($"x: {x}, y: {y}");
                 }));
             }
         }
