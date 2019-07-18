@@ -5,11 +5,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 ### Added
+- Added TabletButtons demo for converting a graphics tablet into a button box
 ### Changed
 ### Deprecated
 ### Removed
 ### Fixed
-- Absolute Mode mouse movement subscriptions now work again
+- Absolute Mode mouse movement subscriptions now work again  
 
 ## [0.4.4] - 2019-07-09
 - Added SetState to allow toggling on/off of bindings
