@@ -101,11 +101,11 @@ AHI.Instance.SendMouseMove(...)
 ```
 
 ## Misc Commands
-### SetStatus
-`SetStatus(true|false)`  
+### SetState
+`SetState(true|false)`  
 Turns on or off all subscriptions (Starts on)  
 Where `true` is on, `false` is off.  
-eg `AHI.SetStatus(false)`  
+eg `AHI.SetState(false)`  
 
 ## Finding Device IDs  
 ### USB Devices
