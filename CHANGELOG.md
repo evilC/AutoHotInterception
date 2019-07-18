@@ -5,26 +5,34 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 ### Added
-- Added TabletButtons demo for converting a graphics tablet into a button box
 ### Changed
 ### Deprecated
 ### Removed
 ### Fixed
+
+## [0.4.5] - 2019-07-09
+### Added
+- Added TabletButtons demo for converting a graphics tablet into a button box
+### Fixed
 - Absolute Mode mouse movement subscriptions now work again  
 
 ## [0.4.4] - 2019-07-09
+### Added
 - Added SetState to allow toggling on/off of bindings
 
 ## [0.4.3] - 2019-06-10 **EXPERIMENTAL TEST RELEASE**
+### Fixed
 - Fixed issue #39
 Almost complete rewrite of mouse polling code  
 Multiple event types (Movement, mouse button events) supported per update ("stroke") of the mouse  
 It is now possible to block a button or movement, but leave unblocked events unblocked  
 Previously, a stroke was either blocked or not - if any one part of the stroke was blocked, it was all blocked  
+### Changed
 - [Monitor script] GUI layout made more robust
 - [Monitor script] Add option to filter key presses and only show key releases
 
 ## [0.4.2] - 2019-06-08
+### Fixed
 - Fixed issue #37  
 When multiple mouse buttons changed state in one update of the mouse, only one event would be fired for one of the buttons
 
