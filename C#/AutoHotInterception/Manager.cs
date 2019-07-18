@@ -614,47 +614,8 @@ namespace AutoHotInterception
                         var x = stroke.mouse.x;
                         var y = stroke.mouse.y;
                         //Debug.WriteLine($"AHK| Stroke Seen. State = {stroke.mouse.state}, Flags = {stroke.mouse.flags}, x={x}, y={y}");
-                        // Process Mouse Buttons
-                        if (stroke.mouse.state != 0 && _mouseButtonMappings.ContainsKey(i))
-                        {
-                            var btnStates = MouseStrokeToButtonStates(stroke);
-                            foreach (var btnState in btnStates)
-                            {
-                                if (!_mouseButtonMappings[i].ContainsKey(btnState.Button)) continue;
 
-                                hasSubscription = true;
-                                var mapping = _mouseButtonMappings[i][btnState.Button];
-
-                                var state = btnState;
-
-                                if (mapping.Concurrent)
-                                    ThreadPool.QueueUserWorkItem(threadProc => mapping.Callback(state.State));
-                                else if (_workerThreads.ContainsKey(i) &&
-                                         _workerThreads[i].ContainsKey(btnState.Button))
-                                    _workerThreads[i][btnState.Button]?.Actions
-                                        .Add(() => mapping.Callback(state.State));
-                                if (mapping.Block)
-                                {
-                                    // Remove the event for this button from the stroke, leaving other button events intact
-                                    stroke.mouse.state -= btnState.Flag;
-                                    // If we are removing a mouse wheel event, then set rolling to 0 if no mouse wheel event left
-                                    if (btnState.Flag == 0x400 || btnState.Flag == 0x800)
-                                    {
-                                        if ((stroke.mouse.state & 0x400) != 0x400 && (stroke.mouse.state & 0x800) != 0x800)
-                                        {
-                                            //Debug.WriteLine("AHK| Removing rolling flag from stroke");
-                                            stroke.mouse.rolling = 0;
-                                        }
-                                    }
-                                    //Debug.WriteLine($"AHK| Removing flag {btnState.Flag} from stoke, leaving state {stroke.mouse.state}");
-                                }
-                                else
-                                {
-                                    //Debug.WriteLine($"AHK| Leaving flag {btnState.Flag} in stroke");
-                                }
-                            }
-                        }
-
+                        // Process mouse movement
                         if (x != 0 || y != 0)
                         {
                             hasMove = true;
@@ -716,6 +677,48 @@ namespace AutoHotInterception
                             }
 
                         }
+
+                        // Process Mouse Buttons - do this AFTER mouse movement, so that absolute mode has coordinates available at the point that the button callback is fired
+                        if (stroke.mouse.state != 0 && _mouseButtonMappings.ContainsKey(i))
+                        {
+                            var btnStates = MouseStrokeToButtonStates(stroke);
+                            foreach (var btnState in btnStates)
+                            {
+                                if (!_mouseButtonMappings[i].ContainsKey(btnState.Button)) continue;
+
+                                hasSubscription = true;
+                                var mapping = _mouseButtonMappings[i][btnState.Button];
+
+                                var state = btnState;
+
+                                if (mapping.Concurrent)
+                                    ThreadPool.QueueUserWorkItem(threadProc => mapping.Callback(state.State));
+                                else if (_workerThreads.ContainsKey(i) &&
+                                         _workerThreads[i].ContainsKey(btnState.Button))
+                                    _workerThreads[i][btnState.Button]?.Actions
+                                        .Add(() => mapping.Callback(state.State));
+                                if (mapping.Block)
+                                {
+                                    // Remove the event for this button from the stroke, leaving other button events intact
+                                    stroke.mouse.state -= btnState.Flag;
+                                    // If we are removing a mouse wheel event, then set rolling to 0 if no mouse wheel event left
+                                    if (btnState.Flag == 0x400 || btnState.Flag == 0x800)
+                                    {
+                                        if ((stroke.mouse.state & 0x400) != 0x400 && (stroke.mouse.state & 0x800) != 0x800)
+                                        {
+                                            //Debug.WriteLine("AHK| Removing rolling flag from stroke");
+                                            stroke.mouse.rolling = 0;
+                                        }
+                                    }
+                                    //Debug.WriteLine($"AHK| Removing flag {btnState.Flag} from stoke, leaving state {stroke.mouse.state}");
+                                }
+                                else
+                                {
+                                    //Debug.WriteLine($"AHK| Leaving flag {btnState.Flag} in stroke");
+                                }
+                            }
+                        }
+
 
                         // Forward on the stroke if required
                         if (hasSubscription)
