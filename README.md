@@ -191,7 +191,7 @@ Subscribe to a key on a specific keyboard
 `SubscribeKey(<deviceId>, <scanCode>, <block>, <callback>, <concurrent>)`  
 `UnsubscribeKey(<deviceId>, <scanCode>)`
 ```
-Interception.SubscribeKey(keyboardId, GetKeySC("1"), true, Func("KeyEvent"))
+AHI.SubscribeKey(keyboardId, GetKeySC("1"), true, Func("KeyEvent"))
 return
 ```
 
@@ -237,7 +237,7 @@ Each endpoint has two naming variants for convenience, they both do the same.
 `UnsubscribeMouseMoveRelative(<deviceId>)`  
 For Mouse Movement, the callback is passed two ints - x and y.  
 ```
-Interception.SubscribeMouseMove(mouseId, false, Func("MouseEvent"))
+AHI.SubscribeMouseMove(mouseId, false, Func("MouseEvent"))
 
 MouseEvent(x, y){
 	[...]
@@ -251,7 +251,7 @@ Coordinates will be in the range 0..65535
 `UnsubscribeMouseMoveAbsolute(<deviceId>)`  
 Again, the callback is passed two ints - x and y.  
 ```
-Interception.SubscribeMouseMoveAbsolute(mouseId, false, Func("MouseEvent"))
+AHI.SubscribeMouseMoveAbsolute(mouseId, false, Func("MouseEvent"))
 
 MouseEvent(x, y){
 	[...]
@@ -263,35 +263,35 @@ Also note that you can send as any device, regardless of whether you have subscr
 
 ### Sending Keyboard Keys
 You can send keys as a specific keyboard using the `SendKeyEvent` method.  
-`Interception.SendKeyEvent(<keyboardId>, <scanCode>, <state>)`  
+`AHI.SendKeyEvent(<keyboardId>, <scanCode>, <state>)`  
 scanCode = the Scan Code of the key  
 state = 1 for press, 0 for release  
 keyboardId = The Interception ID of the keyboard
 
 ```
-Interception.SendKeyEvent(keyboardId, GetKeySC("a"), 1)
+AHI.SendKeyEvent(keyboardId, GetKeySC("a"), 1)
 ```
 
 If you subscribe to a key using Subscription mode with the `block` parameter set to true, then send a different key using `SendKeyEvent`, you are transforming that key in a way which is totally invisible to windows (And all apps running on it), and it will respond as appropriate. For example, AHK `$` prefixed hotkeys **will not** be able to tell that this is synthetic input, and will respond to it.
 
 ### Sending Mouse Buttons
 You can send clicks and other mouse button events with:  
-`Interception.SendMouseButtonEvent(<mouseId>, <button>, <state>)`  
+`AHI.SendMouseButtonEvent(<mouseId>, <button>, <state>)`  
 Where `button` is the button index, as used in `SubscribeMouseButton`  
 
 When Sending Mouse Wheel events, set `<state>` to `1` for Wheel Up / Right and `-1` for Wheel Down / Left.
 
 If you are working in Absolute mode (eg with a graphics tablet or light guns), you can send mouse button events at specific coordinates using:  
-`Interception.SendMouseButtonEventAbsolute(<mouseId>, <button>, <state>, <x>, <y>)`  
+`AHI.SendMouseButtonEventAbsolute(<mouseId>, <button>, <state>, <x>, <y>)`  
 
 ### Sending Mouse Movement
 #### Relative
 To send Relative (Normal) mouse movement, use:  
-`Interception.SendMouseMove(<mouseId>, <x>, <y>)`  
+`AHI.SendMouseMove(<mouseId>, <x>, <y>)`  
 
 #### Absolute
 To sent Absolute mouse movement, use:  
-`Interception.SendMouseMoveAbsolute(<mouseId>, <x>, <y>)`  
+`AHI.SendMouseMoveAbsolute(<mouseId>, <x>, <y>)`  
 Note that Absolute mode will probably not work with FPS style mouse-aim games.  
 
 ## Monitor App
