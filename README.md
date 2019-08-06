@@ -295,7 +295,7 @@ To sent Absolute mouse movement, use:
 Note that Absolute mode will probably not work with FPS style mouse-aim games.  
 
 #### Moving the Mouse Cursor
-To move the mouse cursor to a specific screen position, use:
+To move the mouse cursor to a specific screen or window coordinate, use:
 `AHI.MoveCursor(<x>, <y> [, <coordMode>, <mouseId>])`  
 eg `AHI.MoveCursor(100, 200)`  
 `AHI.MoveCursor(100, 200, "Screen")`  
