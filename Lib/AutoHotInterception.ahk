@@ -76,7 +76,7 @@ class AutoHotInterception {
 		this.Instance.SetState(state)
 	}
 	
-	MoveCursor(x, y, mouseId := -1, cm := "Screen"){
+	MoveCursor(x, y, cm := "Screen", mouseId := -1){
 		if (mouseId == -1)
 			mouseId := 11 ; Use 1st found mouse
 		oldMode := A_CoordModeMouse
