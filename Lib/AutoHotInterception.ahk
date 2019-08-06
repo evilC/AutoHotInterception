@@ -75,6 +75,32 @@ class AutoHotInterception {
 	SetState(state){
 		this.Instance.SetState(state)
 	}
+	
+	MoveCursor(x, y, mouseId := -1, cm := "Screen"){
+		if (mouseId == -1)
+			mouseId := 11 ; Use 1st found mouse
+		oldMode := A_CoordModeMouse
+		CoordMode, Mouse, % cm
+		Loop {
+			MouseGetPos, cx, cy
+			dx := this.GetDirection(cx, x)
+			dy := this.GetDirection(cy, y)
+			if (dx == 0 && dy == 0)
+				break
+			this.SendMouseMove(mouseId, dx, dy)
+		}
+		CoordMode, Mouse, % oldMode
+	}
+	
+	GetDirection(cp, dp){
+		d := dp - cp
+		if (d > 0)
+			return 1
+		if (d < 0)
+			return -1
+		return 0
+	}
+
 	; --------------- Querying ------------------------
 	GetDeviceId(IsMouse, VID, PID, instance := 1) {
 		static devType := {0: "Keyboard", 1: "Mouse"}

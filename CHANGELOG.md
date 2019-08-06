@@ -5,6 +5,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 ### Added
+- Added MoveCursor method to move the cursor to a specific position
 ### Changed
 ### Deprecated
 ### Removed
