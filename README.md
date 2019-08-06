@@ -288,11 +288,15 @@ If you are working in Absolute mode (eg with a graphics tablet or light guns), y
 #### Relative
 To send Relative (Normal) mouse movement, use:  
 `AHI.SendMouseMove(<mouseId>, <x>, <y>)`  
+X and Y are **not** setting the absolute cursor position, they are **altering current position**  
+Note that x and y are **not** in pixels, they are in "Mickeys"  
+
 
 #### Absolute
 To sent Absolute mouse movement, use:  
 `AHI.SendMouseMoveAbsolute(<mouseId>, <x>, <y>)`  
 Note that Absolute mode will probably not work with FPS style mouse-aim games.  
+Note that Absolute mouse move uses coordinates in the range 0..65535 which are NOT screen coordinates. If, for example, you have one 1920x1080 monitor, then divide 65535 by 1920 to find the x position on your screen. This 65535 coordinate space maps to **all** your screens however, so if you have multiple monitors, further maths will be required.
 
 #### Moving the Mouse Cursor
 To move the mouse cursor to a specific screen or window coordinate, use:  
