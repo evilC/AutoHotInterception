@@ -301,9 +301,9 @@ Note that Absolute mouse move uses coordinates in the range 0..65535 which are N
 #### Moving the Mouse Cursor
 To move the mouse cursor to a specific screen or window coordinate, use:  
 `AHI.MoveCursor(<x>, <y> [, <coordMode>, <mouseId>])`  
-eg `AHI.MoveCursor(100, 200)`  
-`AHI.MoveCursor(100, 200, "Screen")`  
-`AHI.MoveCursor(100, 200, "Screen", 12)`  
+eg `AHI.MoveCursor(100, 200)` - move to 100, 200 Screen position using mouse ID 11  
+`AHI.MoveCursor(100, 200, "Window")` - move to 100, 200 Window position using mouse ID 11  
+`AHI.MoveCursor(100, 200, , 12)` - move to 100, 200 Screen position using mouse ID 12  
 `coordMode` is optional and is the [CoordMode](https://www.autohotkey.com/docs/commands/CoordMode.htm) to use (Will switch back to current CoordMode after) - Defaults to "Screen".  
 `mouseId` is optional and the ID of the mouse to use (Defaults to ID 11 - the first mouse)  
 
