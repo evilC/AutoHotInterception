@@ -44,9 +44,17 @@ You will need to know the VID / PID of at least one of your devices in order to 
 
 ------
 
+# Known Issues
+If you unplug / replug a device, or go into hibernate and resume, the Interception ID of a device will increase by 1.  
+If the ID of a device goes above 10 (For keyboards) or 20 (For Mice), **The device will completely cease to function until the next reboot** - not only in AutoHotInterception, but in Windows also.  
+There is nothing I can do to fix this issue, it is a limitation of the Interception driver
+
+------
+
 # Setup
 
 1. Download and install the [Interception Driver](http://www.oblita.com/interception)  
+Note that you **must** run `install-interception.exe` at an admin command prompt (**Not double-click it**) - once you do so, it will instruct you to execute `install-interception.exe /install` to actually perform the install.
 2. Download an AHI release from the [releases page](https://github.com/evilC/AutoHotInterception/releases) and extract it to a folder.  
 DO NOT use the "Clone or Download" link on the main page.  
 This is the folder where (at least initially) you will be running scripts from.  
