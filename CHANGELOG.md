@@ -5,10 +5,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 ### Added
-- Added MoveCursor method to move the cursor to a specific position
 ### Changed
 ### Deprecated
 ### Removed
+### Fixed
+
+## [0.4.6] - 2019-08-15
+### Added
+- Added MoveCursor method to move the cursor to a specific position
 ### Fixed
 - NumLock is now bindable
 
