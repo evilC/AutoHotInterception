@@ -23,6 +23,65 @@ namespace AutoHotInterception.Helpers
             pid = Convert.ToInt32(matches[0].Groups[2].Value, 16);
         }
 
+        #region Device Querying
+        /// <summary>
+        ///     Tries to get Device ID from VID/PID
+        /// </summary>
+        /// <param name="deviceContext">The Interception device context</param>
+        /// <param name="isMouse">Whether the device is a mouse or a keyboard</param>
+        /// <param name="vid">The VID of the device</param>
+        /// <param name="pid">The PID of the device</param>
+        /// <param name="instance">The instance of the VID/PID (Optional)</param>
+        /// <returns></returns>
+        public static int GetDeviceId(IntPtr deviceContext, bool isMouse, int vid, int pid, int instance = 1)
+        {
+            var start = isMouse ? 11 : 0;
+            var max = isMouse ? 21 : 11;
+            for (var i = start; i < max; i++)
+            {
+                var hardwareStr = ManagedWrapper.GetHardwareStr(deviceContext, i, 1000);
+                int foundVid = 0, foundPid = 0;
+                GetVidPid(hardwareStr, ref foundVid, ref foundPid);
+                if (foundVid != vid || foundPid != pid) continue;
+                if (instance == 1) return i;
+                instance--;
+            }
+
+            //ToDo: Should throw here?
+            return 0;
+        }
+
+        /// <summary>
+        ///     Tries to get Device ID from Hardware String
+        /// </summary>
+        /// <param name="deviceContext">The Interception device context</param>
+        /// <param name="isMouse">Whether the device is a mouse or a keyboard</param>
+        /// <param name="handle">The Hardware String (handle) of the device</param>
+        /// <param name="instance">The instance of the VID/PID (Optional)</param>
+        /// <returns></returns>
+        public static int GetDeviceIdFromHandle(IntPtr deviceContext, bool isMouse, string handle, int instance = 1)
+        {
+            var start = isMouse ? 11 : 0;
+            var max = isMouse ? 21 : 11;
+            for (var i = start; i < max; i++)
+            {
+                var hardwareStr = ManagedWrapper.GetHardwareStr(deviceContext, i, 1000);
+                if (hardwareStr != handle) continue;
+
+                if (instance == 1) return i;
+                instance--;
+            }
+
+            //ToDo: Should throw here?
+            return 0;
+        }
+
+        /// <summary>
+        ///     Gets a list of connected devices
+        ///     Intended to be used called via the AHK wrapper...
+        ///     ... so it can convert the return value into an AHK array
+        /// </summary>
+        /// <returns></returns>
         public static DeviceInfo[] GetDeviceList(IntPtr deviceContext)
         {
             var ret = new List<DeviceInfo>();
@@ -39,6 +98,7 @@ namespace AutoHotInterception.Helpers
 
             return ret.ToArray();
         }
+        #endregion
 
         /// <summary>
         ///     Converts a button index plus a state into a State value for a mouse Stroke

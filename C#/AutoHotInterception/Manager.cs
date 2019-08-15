@@ -397,62 +397,17 @@ namespace AutoHotInterception
 
         public int GetKeyboardIdFromHandle(string handle, int instance = 1)
         {
-            return GetDeviceIdFromHandle(false, handle, instance);
+            return GetDeviceIdFromHandle(_deviceContext, false, handle, instance);
         }
 
         public int GetMouseIdFromHandle(string handle, int instance = 1)
         {
-            return GetDeviceIdFromHandle(true, handle, instance);
+            return GetDeviceIdFromHandle(_deviceContext, true, handle, instance);
         }
 
-        /// <summary>
-        ///     Tries to get Device ID from VID/PID
-        /// </summary>
-        /// <param name="isMouse">Whether the device is a mouse or a keyboard</param>
-        /// <param name="vid">The VID of the device</param>
-        /// <param name="pid">The PID of the device</param>
-        /// <param name="instance">The instance of the VID/PID (Optional)</param>
-        /// <returns></returns>
         public int GetDeviceId(bool isMouse, int vid, int pid, int instance = 1)
         {
-            var start = isMouse ? 11 : 0;
-            var max = isMouse ? 21 : 11;
-            for (var i = start; i < max; i++)
-            {
-                var hardwareStr = ManagedWrapper.GetHardwareStr(_deviceContext, i, 1000);
-                int foundVid = 0, foundPid = 0;
-                GetVidPid(hardwareStr, ref foundVid, ref foundPid);
-                if (foundVid != vid || foundPid != pid) continue;
-                if (instance == 1) return i;
-                instance--;
-            }
-
-            //ToDo: Should throw here?
-            return 0;
-        }
-
-        /// <summary>
-        ///     Tries to get Device ID from Hardware String
-        /// </summary>
-        /// <param name="isMouse">Whether the device is a mouse or a keyboard</param>
-        /// <param name="handle">The Hardware String (handle) of the device</param>
-        /// <param name="instance">The instance of the VID/PID (Optional)</param>
-        /// <returns></returns>
-        public int GetDeviceIdFromHandle(bool isMouse, string handle, int instance = 1)
-        {
-            var start = isMouse ? 11 : 0;
-            var max = isMouse ? 21 : 11;
-            for (var i = start; i < max; i++)
-            {
-                var hardwareStr = ManagedWrapper.GetHardwareStr(_deviceContext, i, 1000);
-                if (hardwareStr != handle) continue;
-
-                if (instance == 1) return i;
-                instance--;
-            }
-
-            //ToDo: Should throw here?
-            return 0;
+            return HelperFunctions.GetDeviceId(_deviceContext, isMouse, vid, pid, instance);
         }
 
         /// <summary>
