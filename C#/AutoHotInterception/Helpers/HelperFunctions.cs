@@ -115,7 +115,7 @@ namespace AutoHotInterception.Helpers
             var code = stroke.key.code;
             var state = stroke.key.state;
             var retVal = new KeyboardState();
-            if (code == 54) code = 310;
+            if (code == 54 /* Right Shift */ || code == 69 /* NumLock */) code += 256;
 
             // If state is shifted up by 2 (1 or 2 instead of 0 or 1), then this is an "Extended" key code
             if (state > 1)
