@@ -10,6 +10,7 @@ namespace TestApp
             var mt = new MouseTester();
             //var kt = new KeyboardTester();
             //var tt = new TabletTester();
+            var mon = new MonitorTester();
             Console.ReadLine();
         }
     }

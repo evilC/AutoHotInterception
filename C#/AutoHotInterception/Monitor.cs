@@ -60,6 +60,31 @@ namespace AutoHotInterception
             return HelperFunctions.GetDeviceList(_deviceContext);
         }
 
+        public int GetKeyboardId(int vid, int pid, int instance = 1)
+        {
+            return GetDeviceId(false, vid, pid, instance);
+        }
+
+        public int GetMouseId(int vid, int pid, int instance = 1)
+        {
+            return GetDeviceId(true, vid, pid, instance);
+        }
+
+        public int GetKeyboardIdFromHandle(string handle, int instance = 1)
+        {
+            return GetDeviceIdFromHandle(_deviceContext, false, handle, instance);
+        }
+
+        public int GetMouseIdFromHandle(string handle, int instance = 1)
+        {
+            return GetDeviceIdFromHandle(_deviceContext, true, handle, instance);
+        }
+
+        public int GetDeviceId(bool isMouse, int vid, int pid, int instance = 1)
+        {
+            return HelperFunctions.GetDeviceId(_deviceContext, isMouse, vid, pid, instance);
+        }
+
         #endregion
 
         #region Private
