@@ -54,7 +54,9 @@ There is nothing I can do to fix this issue, it is a limitation of the Intercept
 # Setup
 
 1. Download and install the [Interception Driver](http://www.oblita.com/interception)  
-Note that you **must** run `install-interception.exe` at an admin command prompt (**Not double-click it**) - once you do so, it will instruct you to execute `install-interception.exe /install` to actually perform the install.
+Note that you **must** run `install-interception.exe` at an admin command prompt (**Not double-click it**) - once you do so, it will instruct you to execute `install-interception.exe /install` to actually perform the install.  
+Here is a GIF showing the process:  
+![](https://github.com/evilC/AutoHotInterception/blob/master/InterceptionInstall.gif)
 2. Download an AHI release from the [releases page](https://github.com/evilC/AutoHotInterception/releases) and extract it to a folder.  
 DO NOT use the "Clone or Download" link on the main page.  
 This is the folder where (at least initially) you will be running scripts from.  
