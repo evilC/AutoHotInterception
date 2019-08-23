@@ -40,7 +40,14 @@ On PC, devices are often identified by VendorID (VID) and ProductID (PID). These
 Most AHI functions (eg to Subscribe to a key etc) use an Interception ID, so some handy functions are provided to allow you to find the (current) Interception ID of your device, given a VID / PID.  
 If you are unsure of what the VID / PID of your device is (or even if Interception can see it), you can use the included Monitor script to find it.  
 
-You will need to know the VID / PID of at least one of your devices in order to do anything with AHI.
+You will need to know the VID / PID of at least one of your devices in order to do anything with AHI.  
+
+## Monitor App
+This handy tool allows you to check if AHI is working, and also to find the VID/PID or DeviceHandle of your devices.  
+You can use the handy "Copy" buttons to copy the VID/PID or DeviceHandle of the device to the clipboard.  
+When using the monitor app, **DO NOT** tick all devices at once, as if it crashes, it will lock up all devices.
+Instead, tick one at a time and see if it your device.  
+![](https://github.com/evilC/AutoHotInterception/blob/master/Monitor.png)  
 
 ------
 
@@ -81,11 +88,8 @@ AHI Root Folder
 4. Right-click `Unblocker.ps1` in the lib folder and select `Run as Admin`.  
 This is because downloaded DLLs are often blocked and will not work.  
 This can be done manually by right clicking the DLLs, selecting Properties, and checking a "Block" box if it exists.  
-5. If you do not know the VID/PID of your device, use the included Monitor app to find it.
-When using the monitor app, **DO NOT** tick all devices at once, as if it crashes, it will lock up all devices.
-Instead, tick one at a time and see if it your device.  
-6. Edit one of the example remapping scripts, replacing the VID/PID(s) with that of your device and run it to make sure it works.  
-7. (Optional) The contents of the `lib` folder can actually be placed in one of the AutoHotkey lib folders (eg `My Documents\AutoHotkey\lib` - make it if it does not exist), and the `#include` lines of the sample scripts changed to `#include <AutoHotInterception>`, to enable your AHI scripts to be in any folder, without each needing it's own copy of the library files.  
+5. Edit one of the example remapping scripts, replacing the VID/PID(s) with that of your device (Use the Monitor app to find it) and run it to make sure it works.  
+6. (Optional) The contents of the `lib` folder can actually be placed in one of the AutoHotkey lib folders (eg `My Documents\AutoHotkey\lib` - make it if it does not exist), and the `#include` lines of the sample scripts changed to `#include <AutoHotInterception>`, to enable your AHI scripts to be in any folder, without each needing it's own copy of the library files.  
 
 ------
 
@@ -317,7 +321,3 @@ eg
 `AHI.MoveCursor(100, 200)` - move to 100, 200 Screen position using mouse ID 11  
 `AHI.MoveCursor(100, 200, "Window")` - move to 100, 200 Window position using mouse ID 11  
 `AHI.MoveCursor(100, 200, , 12)` - move to 100, 200 Screen position using mouse ID 12  
-
-
-## Monitor App
-ToDo: Add recording of monitor app
