@@ -201,7 +201,13 @@ MouseEvent(id, code, state, x, y, info){
 
 CopyClipboard(str){
 	Clipboard := str
+	Tooltip Copied to Clipboard
+	SetTimer, ClearTooltip, 1000
 }
+
+ClearTooltip:
+	ToolTip
+	return
 
 ^Esc::
 GuiClose:
