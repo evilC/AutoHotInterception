@@ -68,7 +68,7 @@ Loop 2 {
 			continue
 		}
 		rowY := (marginY * 3) + ((A_Index - 1) * rowH)
-		fn := Func("CopyClipboard").Bind(strings[A_index].vid ", " strings[A_index].pid)
+		fn := Func("CopyClipboard").Bind("0x" strings[A_index].vid ", 0x" strings[A_index].pid)
 		xpos := columnX[devType] + idW + maxWidths[devType]
 		Gui, Add, Button, % "x" xpos " y" rowY - vhOff " h14 w" copyW " hwndhwnd", Copy
 		GuiControl, +g, % hwnd, % fn
