@@ -2,7 +2,6 @@
 using System.Collections.Concurrent;
 using System.Threading;
 using AutoHotInterception.Helpers;
-using static AutoHotInterception.Helpers.HelperFunctions;
 
 namespace AutoHotInterception
 {
@@ -55,7 +54,7 @@ namespace AutoHotInterception
             return true;
         }
 
-        public DeviceInfo[] GetDeviceList()
+        public HelperFunctions.DeviceInfo[] GetDeviceList()
         {
             return HelperFunctions.GetDeviceList(_deviceContext);
         }
@@ -72,12 +71,17 @@ namespace AutoHotInterception
 
         public int GetKeyboardIdFromHandle(string handle, int instance = 1)
         {
-            return GetDeviceIdFromHandle(_deviceContext, false, handle, instance);
+            return HelperFunctions.GetDeviceIdFromHandle(_deviceContext, false, handle, instance);
         }
 
         public int GetMouseIdFromHandle(string handle, int instance = 1)
         {
-            return GetDeviceIdFromHandle(_deviceContext, true, handle, instance);
+            return HelperFunctions.GetDeviceIdFromHandle(_deviceContext, true, handle, instance);
+        }
+
+        public int GetDeviceIdFromHandle(bool isMouse, string handle, int instance = 1)
+        {
+            return HelperFunctions.GetDeviceIdFromHandle(_deviceContext, isMouse, handle, instance);
         }
 
         public int GetDeviceId(bool isMouse, int vid, int pid, int instance = 1)
@@ -128,7 +132,7 @@ namespace AutoHotInterception
                     while (ManagedWrapper.Receive(_deviceContext, i, ref stroke, 1) > 0)
                     {
                         ManagedWrapper.Send(_deviceContext, i, ref stroke, 1);
-                        var processedState = KeyboardStrokeToKeyboardState(stroke);
+                        var processedState = HelperFunctions.KeyboardStrokeToKeyboardState(stroke);
                         if (processedState.Ignore)
                             FireKeyboardCallback(i, new KeyboardCallback
                             {
@@ -156,7 +160,7 @@ namespace AutoHotInterception
                         if (stroke.mouse.state != 0)
                         {
                             // Mouse Button
-                            var btnStates = MouseStrokeToButtonStates(stroke);
+                            var btnStates = HelperFunctions.MouseStrokeToButtonStates(stroke);
                             foreach (var btnState in btnStates)
                             {
                                 FireMouseCallback(new MouseCallback

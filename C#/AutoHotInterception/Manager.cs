@@ -3,7 +3,6 @@ using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Threading;
 using AutoHotInterception.Helpers;
-using static AutoHotInterception.Helpers.HelperFunctions;
 
 namespace AutoHotInterception
 {
@@ -77,7 +76,7 @@ namespace AutoHotInterception
         /// <returns></returns>
         public void SubscribeKey(int id, ushort code, bool block, dynamic callback, bool concurrent = false)
         {
-            IsValidDeviceId(false, id);
+            HelperFunctions.IsValidDeviceId(false, id);
             SetFilterState(false);
 
             if (!_keyboardMappings.ContainsKey(id))
@@ -102,7 +101,7 @@ namespace AutoHotInterception
 
         public void UnsubscribeKey(int id, ushort code)
         {
-            IsValidDeviceId(false, id);
+            HelperFunctions.IsValidDeviceId(false, id);
             SetFilterState(false);
 
             if (_keyboardMappings.TryGetValue(id, out var thisDevice))
@@ -130,7 +129,7 @@ namespace AutoHotInterception
         /// <returns></returns>
         public void SubscribeMouseButton(int id, ushort btn, bool block, dynamic callback, bool concurrent = false)
         {
-            IsValidDeviceId(true, id);
+            HelperFunctions.IsValidDeviceId(true, id);
 
             if (!_mouseButtonMappings.ContainsKey(id))
                 _mouseButtonMappings.TryAdd(id, new ConcurrentDictionary<ushort, MappingOptions>());
@@ -154,7 +153,7 @@ namespace AutoHotInterception
 
         public void UnsubscribeMouseButton(int id, ushort btn)
         {
-            IsValidDeviceId(true, id);
+            HelperFunctions.IsValidDeviceId(true, id);
             SetFilterState(false);
 
             if (_mouseButtonMappings.TryGetValue(id, out var thisDevice))
@@ -181,7 +180,7 @@ namespace AutoHotInterception
         /// <returns></returns>
         public void SubscribeMouseMoveAbsolute(int id, bool block, dynamic callback, bool concurrent = false)
         {
-            IsValidDeviceId(true, id);
+            HelperFunctions.IsValidDeviceId(true, id);
 
             _mouseMoveAbsoluteMappings[id] = new MappingOptions
                 {Block = block, Concurrent = concurrent, Callback = callback};
@@ -202,7 +201,7 @@ namespace AutoHotInterception
 
         public void UnsubscribeMouseMoveAbsolute(int id)
         {
-            IsValidDeviceId(true, id);
+            HelperFunctions.IsValidDeviceId(true, id);
             if (_mouseMoveAbsoluteMappings.TryRemove(id, out _))
                 if (!DeviceHasBindings(id))
                     SetDeviceFilterState(id, false);
@@ -229,7 +228,7 @@ namespace AutoHotInterception
         /// <returns></returns>
         public void SubscribeMouseMoveRelative(int id, bool block, dynamic callback, bool concurrent = false)
         {
-            IsValidDeviceId(true, id);
+            HelperFunctions.IsValidDeviceId(true, id);
 
             _mouseMoveRelativeMappings[id] = new MappingOptions
                 {Block = block, Concurrent = concurrent, Callback = callback};
@@ -250,7 +249,7 @@ namespace AutoHotInterception
 
         public void UnsubscribeMouseMoveRelative(int id)
         {
-            IsValidDeviceId(true, id);
+            HelperFunctions.IsValidDeviceId(true, id);
 
             if (_mouseMoveRelativeMappings.TryRemove(id, out _))
                 if (!DeviceHasBindings(id))
@@ -295,7 +294,7 @@ namespace AutoHotInterception
         /// <param name="state">The State to send (1 = pressed, 0 = released)</param>
         public void SendKeyEvent(int id, ushort code, int state)
         {
-            IsValidDeviceId(false, id);
+            HelperFunctions.IsValidDeviceId(false, id);
             var st = 1 - state;
             var stroke = new ManagedWrapper.Stroke();
             if (code > 255)
@@ -319,9 +318,9 @@ namespace AutoHotInterception
         /// <returns></returns>
         public void SendMouseButtonEvent(int id, int btn, int state)
         {
-            IsValidDeviceId(true, id);
+            HelperFunctions.IsValidDeviceId(true, id);
 
-            var stroke = MouseButtonAndStateToStroke(btn, state);
+            var stroke = HelperFunctions.MouseButtonAndStateToStroke(btn, state);
             ManagedWrapper.Send(_deviceContext, id, ref stroke, 1);
         }
 
@@ -335,7 +334,7 @@ namespace AutoHotInterception
         /// <param name="y"></param>
         public void SendMouseButtonEventAbsolute(int id, int btn, int state, int x, int y)
         {
-            var stroke = MouseButtonAndStateToStroke(btn, state);
+            var stroke = HelperFunctions.MouseButtonAndStateToStroke(btn, state);
             stroke.mouse.x = x;
             stroke.mouse.y = y;
             stroke.mouse.flags = (ushort) ManagedWrapper.MouseFlag.MouseMoveAbsolute;
@@ -356,7 +355,7 @@ namespace AutoHotInterception
         /// <returns></returns>
         public void SendMouseMoveRelative(int id, int x, int y)
         {
-            IsValidDeviceId(true, id);
+            HelperFunctions.IsValidDeviceId(true, id);
 
             var stroke = new ManagedWrapper.Stroke
                 {mouse = {x = x, y = y, flags = (ushort) ManagedWrapper.MouseFlag.MouseMoveRelative}};
@@ -374,7 +373,7 @@ namespace AutoHotInterception
         /// <returns></returns>
         public void SendMouseMoveAbsolute(int id, int x, int y)
         {
-            IsValidDeviceId(true, id);
+            HelperFunctions.IsValidDeviceId(true, id);
 
             var stroke = new ManagedWrapper.Stroke
                 {mouse = {x = x, y = y, flags = (ushort) ManagedWrapper.MouseFlag.MouseMoveAbsolute}};
@@ -397,12 +396,17 @@ namespace AutoHotInterception
 
         public int GetKeyboardIdFromHandle(string handle, int instance = 1)
         {
-            return GetDeviceIdFromHandle(_deviceContext, false, handle, instance);
+            return HelperFunctions.GetDeviceIdFromHandle(_deviceContext, false, handle, instance);
         }
 
         public int GetMouseIdFromHandle(string handle, int instance = 1)
         {
-            return GetDeviceIdFromHandle(_deviceContext, true, handle, instance);
+            return HelperFunctions.GetDeviceIdFromHandle(_deviceContext, true, handle, instance);
+        }
+
+        public int GetDeviceIdFromHandle(bool isMouse, string handle, int instance = 1)
+        {
+            return HelperFunctions.GetDeviceIdFromHandle(_deviceContext, isMouse, handle, instance);
         }
 
         public int GetDeviceId(bool isMouse, int vid, int pid, int instance = 1)
@@ -416,7 +420,7 @@ namespace AutoHotInterception
         ///     ... so it can convert the return value into an AHK array
         /// </summary>
         /// <returns></returns>
-        public DeviceInfo[] GetDeviceList()
+        public HelperFunctions.DeviceInfo[] GetDeviceList()
         {
             return HelperFunctions.GetDeviceList(_deviceContext);
         }
@@ -510,7 +514,7 @@ namespace AutoHotInterception
 
                             // Begin translation of incoming key code, state, extended flag etc...
                             var processMappings = true;
-                            var processedState = KeyboardStrokeToKeyboardState(stroke);
+                            var processedState = HelperFunctions.KeyboardStrokeToKeyboardState(stroke);
 
                             #endregion
 
@@ -636,7 +640,7 @@ namespace AutoHotInterception
                         // Process Mouse Buttons - do this AFTER mouse movement, so that absolute mode has coordinates available at the point that the button callback is fired
                         if (stroke.mouse.state != 0 && _mouseButtonMappings.ContainsKey(i))
                         {
-                            var btnStates = MouseStrokeToButtonStates(stroke);
+                            var btnStates = HelperFunctions.MouseStrokeToButtonStates(stroke);
                             foreach (var btnState in btnStates)
                             {
                                 if (!_mouseButtonMappings[i].ContainsKey(btnState.Button)) continue;

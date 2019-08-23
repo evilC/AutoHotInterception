@@ -9,6 +9,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 ### Deprecated
 ### Removed
 ### Fixed
+- GetDeviceIdFromHandle now works again
 
 ## [0.4.6] - 2019-08-15
 ### Added
