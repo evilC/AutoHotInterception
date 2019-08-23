@@ -50,6 +50,7 @@ Loop 2 {
 		}
 		rowY := (marginY * 3) + ((A_Index - 1) * rowH)
 		Gui, Add, Checkbox, % "hwndhwnd x" columnX[devType] " y" rowY " w" idW, % "ID: " dev.id
+		fn := Func("CheckboxChanged").Bind(dev.id)
 		GuiControl, +g, % hwnd, % fn
 		lowest := UpdateLowest(hwnd)
 		strings[A_index] := {vid:FormatHex(dev.VID), pid: FormatHex(dev.PID), handle: StrReplace(dev.Handle, "&", "&&")}
@@ -57,7 +58,6 @@ Loop 2 {
 		maxWidths[devType] := UpdateWidth(hwnd)
 		Gui, Add, Text, % "hwndhwnd x" columnX[devType] + idW " y" rowY + vhOff, % "Handle:`t`t" strings[A_index].handle
 		maxWidths[devType] := UpdateWidth(hwnd)
-		fn := Func("CheckboxChanged").Bind(dev.id)
 	}
 
 	; Add copy buttons
