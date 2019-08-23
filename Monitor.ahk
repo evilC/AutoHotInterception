@@ -7,6 +7,7 @@ Script to show data flowing from Interception
 
 OutputDebug DBGVIEWCLEAR
 
+Gui, Margin, 0, 0
 DeviceList := {}
 filterMouseMove := 1
 filterKeyPress := 0
@@ -17,65 +18,132 @@ Monitor := MonitorWrapper.Instance
 ; Device List
 DeviceList := MonitorWrapper.GetDeviceList()
 
-colWidth := 350
-Gui, Add, Text, w%colWidth% Center Section, Keyboards
-Loop 10 {
-	i := A_Index
-	dev := DeviceList[i]
-	if (!IsObject(dev)){
-		continue
+marginX := 10
+marginY := 10
+idW := 50		; Width of the ID text
+vhOff := 7		; Width to space VIDPID / Handle above/below ID row
+copyW := 40		; Width of the Copy buttons
+outputH := 400	; Height of the Output boxes
+rowH := 35		; Distance between each row of devices
+
+maxWidths := {K: 0, M: 0}						; Max Width of device entries for each column
+totalWidths := {K: 0, M: 0}						; Total Width of each column
+devTypes := ["K", "M"]							; Lookup table for device type
+starts := {K: 0, M: 10}							; Start IDs for each device type
+columnTitles := {K: "Keyboards", M: "Mice"}		; Column Titles
+columnX := {K: 0, M: 0}
+
+Loop 2 {
+	strings := {}
+	devType := devTypes[A_Index]
+	columnX[devType] := GetColX(devType)
+
+	start := starts[devType]
+	UpdateWidth(0, 1) ; Reset max width
+	
+	; Add device entries
+	Loop 10 {
+		i := start + A_Index
+		dev := DeviceList[i]
+		if (!IsObject(dev)){
+			continue
+		}
+		rowY := (marginY * 4) + ((A_Index - 1) * rowH)
+		Gui, Add, Checkbox, % "hwndhwnd x" columnX[devType] " y" rowY " w" idW, % "ID: " dev.id
+		lowest := UpdateLowest(hwnd)
+		strings[A_index] := {vid:FormatHex(dev.VID), pid: FormatHex(dev.PID), handle: StrReplace(dev.Handle, "&", "&&")}
+		Gui, Add, Text, % "hwndhwnd x" columnX[devType] + idW " y" rowY - vhOff, % "VID / PID:`t0x" strings[A_index].vid ", 0x" strings[A_index].pid
+		maxWidths[devType] := UpdateWidth(hwnd)
+		Gui, Add, Text, % "hwndhwnd x" columnX[devType] + idW " y" rowY + vhOff, % "Handle:`t`t" strings[A_index].handle
+		maxWidths[devType] := UpdateWidth(hwnd)
+		fn := Func("CheckboxChanged").Bind(dev.id)
+		GuiControl, +g, % hCb, % fn
 	}
-	Gui, Add, Checkbox, % "hwndhCb w" colWidth, % "ID: " dev.id ", VID: 0x" FormatHex(dev.VID) ", PID: 0x" FormatHex(dev.PID) "`nHandle: " StrReplace(dev.Handle, "&", "&&")
-	fn := Func("CheckboxChanged").Bind(dev.id)
-	GuiControl, +g, % hCb, % fn
-	lowest := UpdateLowest(hCb)
+
+	; Add copy buttons
+	Loop 10 {
+		i := start + A_Index
+		dev := DeviceList[i]
+		if (!IsObject(dev)){
+			continue
+		}
+		rowY := 40 + ((A_Index - 1) * rowH)
+		fn := Func("CopyClipboard").Bind(strings[A_index].vid ", " strings[A_index].pid)
+		xpos := columnX[devType] + idW + maxWidths[devType]
+		Gui, Add, Button, % "x" xpos " y" rowY - vhOff " h14 w" copyW " hwndhwnd", Copy
+		GuiControl, +g, % hwnd, % fn
+		
+		fn := Func("CopyClipboard").Bind(strings[A_index].handle)
+		Gui, Add, Button, % "x" xpos " y" rowY + vhOff " h14 w" copyW " hwndhwnd", Copy
+		GuiControl, +g, % hwnd, % fn
+	}
+
+	totalWidths[devType] := idW + maxWidths[devType] + copyW
+	Gui, Add, Text, % "x" columnX[devType] " y5 w" totalWidths[devType] " Center", % columnTitles[devType]
 }
 
-Gui, Add, Text, x+5 ym w%colWidth% Center Section, Mice
-Loop 10 {
-	i := A_Index + 10
-	dev := DeviceList[i]
-	if (!IsObject(dev)){
-		continue
-	}
-	Gui, Add, Checkbox, % "hwndhCb w" colWidth, % "ID: " dev.id ", VID: 0x" FormatHex(dev.VID) ", PID: 0x" FormatHex(dev.PID) "`nHandle: " StrReplace(dev.Handle, "&", "&&")
-	fn := Func("CheckboxChanged").Bind(dev.id)
-	GuiControl, +g, % hCb, % fn
-	lowest := UpdateLowest(hCb)
-}
+lowest += 2 * MarginY
 
 ; Options
-Gui, Add, CheckBox, % "w" colWidth " x10 y" lowest + 20 " hwndhCbFilterPress", Only show key releases
+Gui, Add, CheckBox, % "x" columnX.K " y" lowest " hwndhCbFilterPress", Only show key releases
 fn := Func("FilterPress")
 GuiControl, +g, % hCbFilterPress, % fn
 
-Gui, Add, CheckBox, % "x+5 w" colWidth " y" lowest + 20 " hwndhCbFilterMove Checked", Filter Movement (Warning: Turning off can cause crashes)
+Gui, Add, CheckBox, % "x" columnX.M " w" totalWidths[devType] " yp hwndhCbFilterMove Checked", Filter Movement (Warning: Turning off can cause crashes)
 fn := Func("FilterMove")
 GuiControl, +g, % hCbFilterMove, % fn
 
-Gui, Add, Button, xm w%colWidth% Center gClearKeyboard, Clear
-Gui, Add, Button, x+5 yp w%colWidth% gClearMouse Center, Clear
+lowest += 2 * MarginY
+
+Gui, Add, Button, % "x" columnX.K " y" lowest " w" totalWidths.K " Center gClearKeyboard", Clear
+Gui, Add, Button, % "x" columnX.M " yp w" totalWidths.M " gClearMouse Center", Clear
+
+lowest += 30
 
 ; Output
-Gui, Add, ListView, xm w%colWidth% h400 hwndhLvKeyboard, ID|Code|State|Key Name|Info
+Gui, Add, ListView, % "x" columnX.K " y" lowest " w" totalWidths.K " h" outputH " hwndhLvKeyboard", ID|Code|State|Key Name|Info
 LV_ModifyCol(4, 100)
 LV_ModifyCol(5, 150)
-Gui, Add, ListView, x+5 yp w%colWidth% h400 hwndhLvMouse, ID|Code|State|X|Y|Info
+Gui, Add, ListView, % "x" columnX.M " yp w" totalWidths.M " h" outputH " hwndhLvMouse", ID|Code|State|X|Y|Info
 LV_ModifyCol(6, 200)
-Gui, Show
+
+lowest += outputH
+
+Gui, Show, % "w" (marginX * 3) + totalWidths.K + totalWidths.M " h" marginY + lowest, AutoHotInterception Monitor
 
 
 Monitor.Subscribe(Func("KeyboardEvent"), Func("MouseEvent"))
 return
 
+GetColX(devType){
+	global marginX, idW, maxWidths, copyW
+	if (devType == "K")
+		return marginX
+	else
+		return (marginX * 2) + idW + maxWidths["K"] + copyW
+}
+
 UpdateLowest(hwnd){
-	static lowest := 0
+	static max := 0
 	GuiControlGet, cp, pos, % hwnd
-	low := cpY + cpH
-	if (low > lowest){
-		lowest := low
+	pos := cpY + cpH
+	if (pos > max){
+		max := pos
 	}
-	return lowest
+	return max
+}
+
+UpdateWidth(hwnd, reset := 0){
+	static max := 0
+	if (reset){
+		max := 0
+		return
+	}
+	GuiControlGet, cp, pos, % hwnd
+	if (cpW > max){
+		max := cpW
+	}
+	return max
 }
 
 CheckboxChanged(id, hwnd){
@@ -120,7 +188,6 @@ KeyboardEvent(id, code, state, info){
 	keyName := GetKeyName("SC" scanCode)
 	row := LV_Add(, id, code, state, keyName, info)
 	LV_Modify(row, "Vis")
-	;~ ToolTip % "Keybd: " id "`nState: " state ", Code: " code
 }
 
 MouseEvent(id, code, state, x, y, info){
@@ -130,7 +197,10 @@ MouseEvent(id, code, state, x, y, info){
 	Gui, ListView, % hLvMouse
 	row := LV_Add(, id, code, state, x, y, info)
 	LV_Modify(row, "Vis")
-	;~ ToolTip % "Mouse: " id "`nX: " x ", Y: " y
+}
+
+CopyClipboard(str){
+	Clipboard := str
 }
 
 ^Esc::
