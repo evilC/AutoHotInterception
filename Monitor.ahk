@@ -23,7 +23,7 @@ marginY := 10
 idW := 50		; Width of the ID text
 vhOff := 7		; Width to space VIDPID / Handle above/below ID row
 copyW := 40		; Width of the Copy buttons
-outputH := 400	; Height of the Output boxes
+outputH := 350	; Height of the Output boxes
 rowH := 35		; Distance between each row of devices
 
 maxWidths := {K: 0, M: 0}						; Max Width of device entries for each column
@@ -48,7 +48,7 @@ Loop 2 {
 		if (!IsObject(dev)){
 			continue
 		}
-		rowY := (marginY * 4) + ((A_Index - 1) * rowH)
+		rowY := (marginY * 3) + ((A_Index - 1) * rowH)
 		Gui, Add, Checkbox, % "hwndhwnd x" columnX[devType] " y" rowY " w" idW, % "ID: " dev.id
 		lowest := UpdateLowest(hwnd)
 		strings[A_index] := {vid:FormatHex(dev.VID), pid: FormatHex(dev.PID), handle: StrReplace(dev.Handle, "&", "&&")}
@@ -67,7 +67,7 @@ Loop 2 {
 		if (!IsObject(dev)){
 			continue
 		}
-		rowY := 40 + ((A_Index - 1) * rowH)
+		rowY := (marginY * 3) + ((A_Index - 1) * rowH)
 		fn := Func("CopyClipboard").Bind(strings[A_index].vid ", " strings[A_index].pid)
 		xpos := columnX[devType] + idW + maxWidths[devType]
 		Gui, Add, Button, % "x" xpos " y" rowY - vhOff " h14 w" copyW " hwndhwnd", Copy
