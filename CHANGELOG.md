@@ -5,12 +5,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 ### Added
-- Monitor script now has Copy buttons to copy VID/PID or handle
 ### Changed
 ### Deprecated
 ### Removed
 ### Fixed
+
+## [0.4.7] - 2019-08-23
+### Added
+- Monitor script now has Copy buttons to copy VID/PID or handle
+### Fixed
 - GetDeviceIdFromHandle now works again
+
 
 ## [0.4.6] - 2019-08-15
 ### Added
