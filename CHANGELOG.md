@@ -10,6 +10,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 ### Removed
 ### Fixed
 
+## [0.4.9] - 2019-08-24
+### Fixed
+- The clipboard now correctly has & instead of && when using the Copy button for Handle in the Monitor
+
 ## [0.4.8] - 2019-08-23
 ### Added
 - Monitor script now has Copy buttons to copy VID/PID or handle
