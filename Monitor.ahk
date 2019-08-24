@@ -53,10 +53,10 @@ Loop 2 {
 		fn := Func("CheckboxChanged").Bind(dev.id)
 		GuiControl, +g, % hwnd, % fn
 		lowest := UpdateLowest(hwnd)
-		strings[A_index] := {vid:FormatHex(dev.VID), pid: FormatHex(dev.PID), handle: StrReplace(dev.Handle, "&", "&&")}
+		strings[A_index] := {vid:FormatHex(dev.VID), pid: FormatHex(dev.PID), handle: dev.Handle}
 		Gui, Add, Text, % "hwndhwnd x" columnX[devType] + idW " y" rowY - vhOff, % "VID / PID:`t0x" strings[A_index].vid ", 0x" strings[A_index].pid
 		maxWidths[devType] := UpdateWidth(hwnd)
-		Gui, Add, Text, % "hwndhwnd x" columnX[devType] + idW " y" rowY + vhOff, % "Handle:`t`t" strings[A_index].handle
+		Gui, Add, Text, % "hwndhwnd x" columnX[devType] + idW " y" rowY + vhOff, % "Handle:`t`t" StrReplace(strings[A_index].Handle, "&", "&&")
 		maxWidths[devType] := UpdateWidth(hwnd)
 	}
 
