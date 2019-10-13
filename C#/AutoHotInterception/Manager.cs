@@ -34,7 +34,8 @@ namespace AutoHotInterception
         private readonly ConcurrentDictionary<int, ConcurrentDictionary<ushort, WorkerThread>> _workerThreads =
             new ConcurrentDictionary<int, ConcurrentDictionary<ushort, WorkerThread>>();
 
-        private Thread _pollThread;
+        private readonly MultimediaTimer _timer;
+        private readonly int _pollRate = 1;
         private volatile bool _pollThreadRunning;
 
         #region Public
@@ -44,6 +45,8 @@ namespace AutoHotInterception
         public Manager()
         {
             _deviceContext = ManagedWrapper.CreateContext();
+            _timer = new MultimediaTimer() { Interval = _pollRate };
+            _timer.Elapsed += DoPoll;
         }
 
         public void Dispose()
@@ -433,18 +436,19 @@ namespace AutoHotInterception
 
         private void SetThreadState(bool state)
         {
-            if (state)
+            if (state && !_timer.IsRunning)
             {
-                if (_pollThreadRunning) return;
-                _pollThreadRunning = true;
-                _pollThread = new Thread(PollThread);
-                _pollThread.Start();
+                SetFilterState(true);
+                _timer.Start();
             }
-            else
+            else if (!state && _timer.IsRunning)
             {
-                _pollThreadRunning = false;
-                _pollThread.Join();
-                _pollThread = null;
+                SetFilterState(false);
+                _timer.Stop();
+                while (_pollThreadRunning) // Are we mid-poll?
+                {
+                    Thread.Sleep(10); // Wait until poll ends
+                }
             }
         }
 
@@ -486,235 +490,232 @@ namespace AutoHotInterception
         }
 
         // ScanCode notes: https://www.win.tue.nl/~aeb/linux/kbd/scancodes-1.html
-        private void PollThread()
+        private void DoPoll(object sender, EventArgs e)
         {
+            _pollThreadRunning = true;
             var stroke = new ManagedWrapper.Stroke();
 
-            while (_pollThreadRunning)
+            // Iterate through all Keyboards
+            for (var i = 1; i < 11; i++)
             {
-                // Iterate through all Keyboards
-                for (var i = 1; i < 11; i++)
+                var isMonitoredKeyboard = IsMonitoredDevice(i) == 1;
+                var hasSubscription = false;
+                var hasContext = _contextCallbacks.ContainsKey(i);
+
+                // Process any waiting input for this keyboard
+                while (ManagedWrapper.Receive(_deviceContext, i, ref stroke, 1) > 0)
                 {
-                    var isMonitoredKeyboard = IsMonitoredDevice(i) == 1;
-                    var hasSubscription = false;
-                    var hasContext = _contextCallbacks.ContainsKey(i);
-
-                    // Process any waiting input for this keyboard
-                    while (ManagedWrapper.Receive(_deviceContext, i, ref stroke, 1) > 0)
+                    var block = false;
+                    // If this is not a monitored keyboard, skip.
+                    // This check should not really be needed as the IsMonitoredDevice() predicate should only match monitored keyboards...
+                    // ... but in case it does, we want to ignore this bit and pass the input through
+                    if (isMonitoredKeyboard && _keyboardMappings.ContainsKey(i))
                     {
-                        var block = false;
-                        // If this is not a monitored keyboard, skip.
-                        // This check should not really be needed as the IsMonitoredDevice() predicate should only match monitored keyboards...
-                        // ... but in case it does, we want to ignore this bit and pass the input through
-                        if (isMonitoredKeyboard && _keyboardMappings.ContainsKey(i))
+                        // Process Subscription Mode
+
+                        #region KeyCode, State, Extended Flag translation
+
+                        // Begin translation of incoming key code, state, extended flag etc...
+                        var processMappings = true;
+                        var processedState = HelperFunctions.KeyboardStrokeToKeyboardState(stroke);
+
+                        #endregion
+
+                        if (processedState.Ignore)
                         {
-                            // Process Subscription Mode
-
-                            #region KeyCode, State, Extended Flag translation
-
-                            // Begin translation of incoming key code, state, extended flag etc...
-                            var processMappings = true;
-                            var processedState = HelperFunctions.KeyboardStrokeToKeyboardState(stroke);
-
-                            #endregion
-
-                            if (processedState.Ignore)
-                            {
-                                // Set flag to stop Context Mode from firing
-                                hasSubscription = true;
-                                // Set flag to indicate disable mapping processing
-                                processMappings = false;
-                            }
-
-                            var code = processedState.Code;
-                            var state = processedState.State;
-
-                            // Code and state now normalized, proceed with checking for subscriptions...
-                            if (processMappings && _keyboardMappings[i].ContainsKey(code))
-                            {
-                                hasSubscription = true;
-                                var mapping = _keyboardMappings[i][code];
-                                if (mapping.Block) block = true;
-                                if (mapping.Concurrent)
-                                    ThreadPool.QueueUserWorkItem(threadProc => mapping.Callback(state));
-                                else if (_workerThreads.ContainsKey(i) && _workerThreads[i].ContainsKey(code))
-                                    _workerThreads[i][code]?.Actions.Add(() => mapping.Callback(state));
-                            }
+                            // Set flag to stop Context Mode from firing
+                            hasSubscription = true;
+                            // Set flag to indicate disable mapping processing
+                            processMappings = false;
                         }
 
-                        // If the key was blocked by Subscription Mode, then move on to next key...
-                        if (block) continue;
+                        var code = processedState.Code;
+                        var state = processedState.State;
 
-                        // If this key had no subscriptions, but Context Mode is set for this keyboard...
-                        // ... then set the Context before sending the key
-                        if (!hasSubscription && hasContext) _contextCallbacks[i](1);
-
-                        // Pass the key through to the OS.
-                        ManagedWrapper.Send(_deviceContext, i, ref stroke, 1);
-
-                        // If we are processing Context Mode, then Unset the context variable after sending the key
-                        if (!hasSubscription && hasContext) _contextCallbacks[i](0);
+                        // Code and state now normalized, proceed with checking for subscriptions...
+                        if (processMappings && _keyboardMappings[i].ContainsKey(code))
+                        {
+                            hasSubscription = true;
+                            var mapping = _keyboardMappings[i][code];
+                            if (mapping.Block) block = true;
+                            if (mapping.Concurrent)
+                                ThreadPool.QueueUserWorkItem(threadProc => mapping.Callback(state));
+                            else if (_workerThreads.ContainsKey(i) && _workerThreads[i].ContainsKey(code))
+                                _workerThreads[i][code]?.Actions.Add(() => mapping.Callback(state));
+                        }
                     }
+
+                    // If the key was blocked by Subscription Mode, then move on to next key...
+                    if (block) continue;
+
+                    // If this key had no subscriptions, but Context Mode is set for this keyboard...
+                    // ... then set the Context before sending the key
+                    if (!hasSubscription && hasContext) _contextCallbacks[i](1);
+
+                    // Pass the key through to the OS.
+                    ManagedWrapper.Send(_deviceContext, i, ref stroke, 1);
+
+                    // If we are processing Context Mode, then Unset the context variable after sending the key
+                    if (!hasSubscription && hasContext) _contextCallbacks[i](0);
                 }
+            }
 
-                // Process Mice
-                for (var i = 11; i < 21; i++)
+            // Process Mice
+            for (var i = 11; i < 21; i++)
+            {
+                var isMonitoredMouse = IsMonitoredDevice(i) == 1;
+                var hasSubscription = false;
+                var hasContext = _contextCallbacks.ContainsKey(i);
+
+                while (ManagedWrapper.Receive(_deviceContext, i, ref stroke, 1) > 0)
                 {
-                    var isMonitoredMouse = IsMonitoredDevice(i) == 1;
-                    var hasSubscription = false;
-                    var hasContext = _contextCallbacks.ContainsKey(i);
+                    if (!isMonitoredMouse) continue;
 
-                    while (ManagedWrapper.Receive(_deviceContext, i, ref stroke, 1) > 0)
+                    var moveRemoved = false;
+                    var hasMove = false;
+                    var x = stroke.mouse.x;
+                    var y = stroke.mouse.y;
+                    //Debug.WriteLine($"AHK| Stroke Seen. State = {stroke.mouse.state}, Flags = {stroke.mouse.flags}, x={x}, y={y}");
+
+                    // Process mouse movement
+                    if (x != 0 || y != 0)
                     {
-                        if (!isMonitoredMouse) continue;
-
-                        var moveRemoved = false;
-                        var hasMove = false;
-                        var x = stroke.mouse.x;
-                        var y = stroke.mouse.y;
-                        //Debug.WriteLine($"AHK| Stroke Seen. State = {stroke.mouse.state}, Flags = {stroke.mouse.flags}, x={x}, y={y}");
-
-                        // Process mouse movement
-                        if (x != 0 || y != 0)
+                        hasMove = true;
+                        // Process Absolute Mouse Move
+                        if ((stroke.mouse.flags & (ushort)ManagedWrapper.MouseFlag.MouseMoveAbsolute) == (ushort)ManagedWrapper.MouseFlag.MouseMoveAbsolute)
                         {
-                            hasMove = true;
-                            // Process Absolute Mouse Move
-                            if ((stroke.mouse.flags & (ushort)ManagedWrapper.MouseFlag.MouseMoveAbsolute) == (ushort)ManagedWrapper.MouseFlag.MouseMoveAbsolute)
+                            if (_mouseMoveAbsoluteMappings.ContainsKey(i))
                             {
-                                if (_mouseMoveAbsoluteMappings.ContainsKey(i))
-                                {
-                                    var mapping = _mouseMoveAbsoluteMappings[i];
-                                    hasSubscription = true;
-                                    //var debugStr = $"AHK| Mouse stroke has absolute move of {x}, {y}...";
-
-                                    if (mapping.Concurrent)
-                                        ThreadPool.QueueUserWorkItem(threadProc => mapping.Callback(x, y));
-                                    else if (_workerThreads.ContainsKey(i) && _workerThreads[i].ContainsKey(7))
-                                        _workerThreads[i][7]?.Actions.Add(() => mapping.Callback(x, y));
-                                    if (mapping.Block)
-                                    {
-                                        moveRemoved = true;
-                                        stroke.mouse.x = 0;
-                                        stroke.mouse.y = 0;
-                                        //debugStr += "Blocking";
-                                    }
-                                    else
-                                    {
-                                        //debugStr += "Not Blocking";
-                                    }
-                                    //Debug.WriteLine(debugStr);
-                                }
-                            }
-
-                            // Process Relative Mouse Move
-                            //else if ((stroke.mouse.flags & (ushort) ManagedWrapper.MouseFlag.MouseMoveRelative) == (ushort) ManagedWrapper.MouseFlag.MouseMoveRelative) / flag is 0, so always true!
-                            else
-                            {
-                                if (_mouseMoveRelativeMappings.ContainsKey(i))
-                                {
-                                    var mapping = _mouseMoveRelativeMappings[i];
-                                    hasSubscription = true;
-                                    //var debugStr = $"AHK| Mouse stroke has relative move of {x}, {y}...";
-
-                                    if (mapping.Concurrent)
-                                        ThreadPool.QueueUserWorkItem(threadProc => mapping.Callback(x, y));
-                                    else if (_workerThreads.ContainsKey(i) && _workerThreads[i].ContainsKey(8))
-                                        _workerThreads[i][8]?.Actions.Add(() => mapping.Callback(x, y));
-                                    if (mapping.Block)
-                                    {
-                                        moveRemoved = true;
-                                        stroke.mouse.x = 0;
-                                        stroke.mouse.y = 0;
-                                        //debugStr += "Blocking";
-                                    }
-                                    else
-                                    {
-                                        //debugStr += "Not Blocking";
-                                    }
-                                    //Debug.WriteLine(debugStr);
-                                }
-                            }
-
-                        }
-
-                        // Process Mouse Buttons - do this AFTER mouse movement, so that absolute mode has coordinates available at the point that the button callback is fired
-                        if (stroke.mouse.state != 0 && _mouseButtonMappings.ContainsKey(i))
-                        {
-                            var btnStates = HelperFunctions.MouseStrokeToButtonStates(stroke);
-                            foreach (var btnState in btnStates)
-                            {
-                                if (!_mouseButtonMappings[i].ContainsKey(btnState.Button)) continue;
-
+                                var mapping = _mouseMoveAbsoluteMappings[i];
                                 hasSubscription = true;
-                                var mapping = _mouseButtonMappings[i][btnState.Button];
-
-                                var state = btnState;
+                                //var debugStr = $"AHK| Mouse stroke has absolute move of {x}, {y}...";
 
                                 if (mapping.Concurrent)
-                                    ThreadPool.QueueUserWorkItem(threadProc => mapping.Callback(state.State));
-                                else if (_workerThreads.ContainsKey(i) &&
-                                         _workerThreads[i].ContainsKey(btnState.Button))
-                                    _workerThreads[i][btnState.Button]?.Actions
-                                        .Add(() => mapping.Callback(state.State));
+                                    ThreadPool.QueueUserWorkItem(threadProc => mapping.Callback(x, y));
+                                else if (_workerThreads.ContainsKey(i) && _workerThreads[i].ContainsKey(7))
+                                    _workerThreads[i][7]?.Actions.Add(() => mapping.Callback(x, y));
                                 if (mapping.Block)
                                 {
-                                    // Remove the event for this button from the stroke, leaving other button events intact
-                                    stroke.mouse.state -= btnState.Flag;
-                                    // If we are removing a mouse wheel event, then set rolling to 0 if no mouse wheel event left
-                                    if (btnState.Flag == 0x400 || btnState.Flag == 0x800)
-                                    {
-                                        if ((stroke.mouse.state & 0x400) != 0x400 && (stroke.mouse.state & 0x800) != 0x800)
-                                        {
-                                            //Debug.WriteLine("AHK| Removing rolling flag from stroke");
-                                            stroke.mouse.rolling = 0;
-                                        }
-                                    }
-                                    //Debug.WriteLine($"AHK| Removing flag {btnState.Flag} from stoke, leaving state {stroke.mouse.state}");
+                                    moveRemoved = true;
+                                    stroke.mouse.x = 0;
+                                    stroke.mouse.y = 0;
+                                    //debugStr += "Blocking";
                                 }
                                 else
                                 {
-                                    //Debug.WriteLine($"AHK| Leaving flag {btnState.Flag} in stroke");
+                                    //debugStr += "Not Blocking";
                                 }
+                                //Debug.WriteLine(debugStr);
                             }
                         }
 
-
-                        // Forward on the stroke if required
-                        if (hasSubscription)
+                        // Process Relative Mouse Move
+                        //else if ((stroke.mouse.flags & (ushort) ManagedWrapper.MouseFlag.MouseMoveRelative) == (ushort) ManagedWrapper.MouseFlag.MouseMoveRelative) / flag is 0, so always true!
+                        else
                         {
-                            // Subscription mode
-                            // If the stroke has a move that was not removed, OR it has remaining button events, then forward on the stroke
-                            if ((hasMove && !moveRemoved) || stroke.mouse.state != 0)
+                            if (_mouseMoveRelativeMappings.ContainsKey(i))
                             {
-                                //Debug.WriteLine($"AHK| Sending stroke. State = {stroke.mouse.state}. hasMove={hasMove}, moveRemoved={moveRemoved}");
-                                ManagedWrapper.Send(_deviceContext, i, ref stroke, 1);
+                                var mapping = _mouseMoveRelativeMappings[i];
+                                hasSubscription = true;
+                                //var debugStr = $"AHK| Mouse stroke has relative move of {x}, {y}...";
+
+                                if (mapping.Concurrent)
+                                    ThreadPool.QueueUserWorkItem(threadProc => mapping.Callback(x, y));
+                                else if (_workerThreads.ContainsKey(i) && _workerThreads[i].ContainsKey(8))
+                                    _workerThreads[i][8]?.Actions.Add(() => mapping.Callback(x, y));
+                                if (mapping.Block)
+                                {
+                                    moveRemoved = true;
+                                    stroke.mouse.x = 0;
+                                    stroke.mouse.y = 0;
+                                    //debugStr += "Blocking";
+                                }
+                                else
+                                {
+                                    //debugStr += "Not Blocking";
+                                }
+                                //Debug.WriteLine(debugStr);
+                            }
+                        }
+
+                    }
+
+                    // Process Mouse Buttons - do this AFTER mouse movement, so that absolute mode has coordinates available at the point that the button callback is fired
+                    if (stroke.mouse.state != 0 && _mouseButtonMappings.ContainsKey(i))
+                    {
+                        var btnStates = HelperFunctions.MouseStrokeToButtonStates(stroke);
+                        foreach (var btnState in btnStates)
+                        {
+                            if (!_mouseButtonMappings[i].ContainsKey(btnState.Button)) continue;
+
+                            hasSubscription = true;
+                            var mapping = _mouseButtonMappings[i][btnState.Button];
+
+                            var state = btnState;
+
+                            if (mapping.Concurrent)
+                                ThreadPool.QueueUserWorkItem(threadProc => mapping.Callback(state.State));
+                            else if (_workerThreads.ContainsKey(i) &&
+                                     _workerThreads[i].ContainsKey(btnState.Button))
+                                _workerThreads[i][btnState.Button]?.Actions
+                                    .Add(() => mapping.Callback(state.State));
+                            if (mapping.Block)
+                            {
+                                // Remove the event for this button from the stroke, leaving other button events intact
+                                stroke.mouse.state -= btnState.Flag;
+                                // If we are removing a mouse wheel event, then set rolling to 0 if no mouse wheel event left
+                                if (btnState.Flag == 0x400 || btnState.Flag == 0x800)
+                                {
+                                    if ((stroke.mouse.state & 0x400) != 0x400 && (stroke.mouse.state & 0x800) != 0x800)
+                                    {
+                                        //Debug.WriteLine("AHK| Removing rolling flag from stroke");
+                                        stroke.mouse.rolling = 0;
+                                    }
+                                }
+                                //Debug.WriteLine($"AHK| Removing flag {btnState.Flag} from stoke, leaving state {stroke.mouse.state}");
                             }
                             else
                             {
-                                // Everything removed from stroke, do not forward
-                                //Debug.WriteLine("AHK| Mouse stroke now empty, not forwarding");
+                                //Debug.WriteLine($"AHK| Leaving flag {btnState.Flag} in stroke");
                             }
                         }
-                        else if (hasContext)
+                    }
+
+
+                    // Forward on the stroke if required
+                    if (hasSubscription)
+                    {
+                        // Subscription mode
+                        // If the stroke has a move that was not removed, OR it has remaining button events, then forward on the stroke
+                        if ((hasMove && !moveRemoved) || stroke.mouse.state != 0)
                         {
-                            // Context Mode - forward stroke with context wrapping
-                            _contextCallbacks[i](1);
-                            ManagedWrapper.Send(_deviceContext, i, ref stroke, 1);
-                            _contextCallbacks[i](0);
-                        }
-                        else
-                        {
-                            // No subscription or context mode - forward on
                             //Debug.WriteLine($"AHK| Sending stroke. State = {stroke.mouse.state}. hasMove={hasMove}, moveRemoved={moveRemoved}");
                             ManagedWrapper.Send(_deviceContext, i, ref stroke, 1);
                         }
-                        //Debug.WriteLine($"AHK| ");
+                        else
+                        {
+                            // Everything removed from stroke, do not forward
+                            //Debug.WriteLine("AHK| Mouse stroke now empty, not forwarding");
+                        }
                     }
+                    else if (hasContext)
+                    {
+                        // Context Mode - forward stroke with context wrapping
+                        _contextCallbacks[i](1);
+                        ManagedWrapper.Send(_deviceContext, i, ref stroke, 1);
+                        _contextCallbacks[i](0);
+                    }
+                    else
+                    {
+                        // No subscription or context mode - forward on
+                        //Debug.WriteLine($"AHK| Sending stroke. State = {stroke.mouse.state}. hasMove={hasMove}, moveRemoved={moveRemoved}");
+                        ManagedWrapper.Send(_deviceContext, i, ref stroke, 1);
+                    }
+                    //Debug.WriteLine($"AHK| ");
                 }
-
-                // ToDo: Can this sleep be removed? Will removing it consume a lot of CPU? It will certainly make updates only happen once every ~10ms, which is too slow for mice polling @ 1khz
-                Thread.Sleep(10);
             }
+
+            _pollThreadRunning = false;
         }
 
         private class MappingOptions

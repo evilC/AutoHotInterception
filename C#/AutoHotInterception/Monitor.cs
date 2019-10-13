@@ -14,7 +14,8 @@ namespace AutoHotInterception
         private dynamic _keyboardCallback;
         private dynamic _mouseCallback;
 
-        private Thread _pollThread;
+        private readonly MultimediaTimer _timer;
+        private readonly int _pollRate = 1;
         private volatile bool _pollThreadRunning;
 
         #region Public
@@ -22,6 +23,8 @@ namespace AutoHotInterception
         public Monitor()
         {
             _deviceContext = ManagedWrapper.CreateContext();
+            _timer = new MultimediaTimer() { Interval = _pollRate };
+            _timer.Elapsed += DoPoll;
             SetThreadState(true);
         }
 
@@ -95,18 +98,19 @@ namespace AutoHotInterception
 
         private void SetThreadState(bool state)
         {
-            if (state)
+            if (state && !_timer.IsRunning)
             {
-                if (_pollThreadRunning) return;
-                _pollThreadRunning = true;
-                _pollThread = new Thread(PollThread);
-                _pollThread.Start();
+                SetFilterState(true);
+                _timer.Start();
             }
-            else
+            else if (!state && _timer.IsRunning)
             {
-                _pollThreadRunning = true;
-                _pollThread.Join();
-                _pollThread = null;
+                SetFilterState(false);
+                _timer.Stop();
+                while (_pollThreadRunning) // Are we mid-poll?
+                {
+                    Thread.Sleep(10); // Wait until poll ends
+                }
             }
         }
 
@@ -121,87 +125,87 @@ namespace AutoHotInterception
                 state ? ManagedWrapper.Filter.All : ManagedWrapper.Filter.None);
         }
 
-        private void PollThread()
+        private void DoPoll(object sender, EventArgs e)
         {
+            _pollThreadRunning = true;
+
             var stroke = new ManagedWrapper.Stroke();
 
-            while (_pollThreadRunning)
+            for (var i = 1; i < 11; i++)
             {
-                for (var i = 1; i < 11; i++)
+                while (ManagedWrapper.Receive(_deviceContext, i, ref stroke, 1) > 0)
                 {
-                    while (ManagedWrapper.Receive(_deviceContext, i, ref stroke, 1) > 0)
-                    {
-                        ManagedWrapper.Send(_deviceContext, i, ref stroke, 1);
-                        var processedState = HelperFunctions.KeyboardStrokeToKeyboardState(stroke);
-                        if (processedState.Ignore)
-                            FireKeyboardCallback(i, new KeyboardCallback
-                            {
-                                Id = i,
-                                Code = stroke.key.code,
-                                State = stroke.key.state,
-                                Info = "Ignored - showing raw values"
-                            });
-                        else
-                            FireKeyboardCallback(i, new KeyboardCallback
-                            {
-                                Id = i,
-                                Code = processedState.Code,
-                                State = processedState.State,
-                                Info = stroke.key.code > 255 ? "Extended" : ""
-                            });
-                    }
+                    ManagedWrapper.Send(_deviceContext, i, ref stroke, 1);
+                    var processedState = HelperFunctions.KeyboardStrokeToKeyboardState(stroke);
+                    if (processedState.Ignore)
+                        FireKeyboardCallback(i, new KeyboardCallback
+                        {
+                            Id = i,
+                            Code = stroke.key.code,
+                            State = stroke.key.state,
+                            Info = "Ignored - showing raw values"
+                        });
+                    else
+                        FireKeyboardCallback(i, new KeyboardCallback
+                        {
+                            Id = i,
+                            Code = processedState.Code,
+                            State = processedState.State,
+                            Info = stroke.key.code > 255 ? "Extended" : ""
+                        });
                 }
-
-                for (var i = 11; i < 21; i++)
-                {
-                    while (ManagedWrapper.Receive(_deviceContext, i, ref stroke, 1) > 0)
-                    {
-                        ManagedWrapper.Send(_deviceContext, i, ref stroke, 1);
-                        if (stroke.mouse.state != 0)
-                        {
-                            // Mouse Button
-                            var btnStates = HelperFunctions.MouseStrokeToButtonStates(stroke);
-                            foreach (var btnState in btnStates)
-                            {
-                                FireMouseCallback(new MouseCallback
-                                {
-                                    Id = i,
-                                    Code = btnState.Button,
-                                    State = btnState.State,
-                                    Info = "Mouse Button"
-                                });
-                            }
-                        }
-                        else if ((stroke.mouse.flags & (ushort)ManagedWrapper.MouseFlag.MouseMoveAbsolute) ==
-                                 (ushort)ManagedWrapper.MouseFlag.MouseMoveAbsolute)
-                        {
-                            // Absolute Mouse Move
-                            FireMouseCallback(new MouseCallback
-                            {
-                                Id = i,
-                                X = stroke.mouse.x,
-                                Y = stroke.mouse.y,
-                                Info = "Absolute Move"
-                            });
-                        }
-                        else if ((stroke.mouse.flags & (ushort)ManagedWrapper.MouseFlag.MouseMoveRelative) ==
-                                 (ushort)ManagedWrapper.MouseFlag.MouseMoveRelative)
-
-                        {
-                            // Relative Mouse Move
-                            FireMouseCallback(new MouseCallback
-                            {
-                                Id = i,
-                                X = stroke.mouse.x,
-                                Y = stroke.mouse.y,
-                                Info = "Relative Move"
-                            });
-                        }
-                    }
-                }
-
-                Thread.Sleep(10);
             }
+
+            for (var i = 11; i < 21; i++)
+            {
+                while (ManagedWrapper.Receive(_deviceContext, i, ref stroke, 1) > 0)
+                {
+                    ManagedWrapper.Send(_deviceContext, i, ref stroke, 1);
+                    if (stroke.mouse.state != 0)
+                    {
+                        // Mouse Button
+                        var btnStates = HelperFunctions.MouseStrokeToButtonStates(stroke);
+                        foreach (var btnState in btnStates)
+                        {
+                            FireMouseCallback(new MouseCallback
+                            {
+                                Id = i,
+                                Code = btnState.Button,
+                                State = btnState.State,
+                                Info = "Mouse Button"
+                            });
+                        }
+                    }
+                    else if ((stroke.mouse.flags & (ushort)ManagedWrapper.MouseFlag.MouseMoveAbsolute) ==
+                             (ushort)ManagedWrapper.MouseFlag.MouseMoveAbsolute)
+                    {
+                        // Absolute Mouse Move
+                        FireMouseCallback(new MouseCallback
+                        {
+                            Id = i,
+                            X = stroke.mouse.x,
+                            Y = stroke.mouse.y,
+                            Info = "Absolute Move"
+                        });
+                    }
+                    else if ((stroke.mouse.flags & (ushort)ManagedWrapper.MouseFlag.MouseMoveRelative) ==
+                             (ushort)ManagedWrapper.MouseFlag.MouseMoveRelative)
+
+                    {
+                        // Relative Mouse Move
+                        FireMouseCallback(new MouseCallback
+                        {
+                            Id = i,
+                            X = stroke.mouse.x,
+                            Y = stroke.mouse.y,
+                            Info = "Relative Move"
+                        });
+                    }
+                }
+            }
+
+
+            _pollThreadRunning = false;
         }
 
         private void FireKeyboardCallback(int id, KeyboardCallback data)

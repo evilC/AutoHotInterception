@@ -16,14 +16,16 @@ namespace TestApp
                 {
                     Console.WriteLine($"Keyboard: ID={id}, Code={code}, Value={value}, Info={info}");
                 }),
-                new Action<int, int, int, string>((id, code, value, info) =>
+                new Action<int, int, int, int, int, string>((id, code, value, x, y, info) =>
                 {
-                    Console.WriteLine($"Mouse: ID={id}, Code={code}, Value={value}, Info={info}");
+                    Console.WriteLine($"Mouse: ID={id}, Code={code}, Value={value}, X={x}, Y={y}, Info={info}");
                 })
             );
-            var devId = mon.GetKeyboardId(0x04F2, 0x0112);
-            mon.SetDeviceFilterState(devId, true);
+            var keyboardId = mon.GetKeyboardId(0x04F2, 0x0112);
+            mon.SetDeviceFilterState(keyboardId, true);
 
+            var mouseId = mon.GetMouseIdFromHandle(@"HID\VID_046D&PID_C00C&REV_0620");
+            mon.SetDeviceFilterState(mouseId, true);
         }
     }
 }

@@ -42,6 +42,7 @@
   <ItemGroup>
     <Compile Include="Helpers\HelperFunctions.cs" />
     <Compile Include="Helpers\ManagedWrapper.cs" />
+    <Compile Include="Helpers\MultimediaTimer.cs" />
     <Compile Include="Manager.cs" />
     <Compile Include="Monitor.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
