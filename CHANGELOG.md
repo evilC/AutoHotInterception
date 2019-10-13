@@ -11,6 +11,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 ### Fixed
 
 ## [0.4.10] - 2019-10-13
+### Changed
 - Devices now polled at 1ms using Multimedia Timers (Was ~15ms)
 
 ## [0.4.9] - 2019-08-24
