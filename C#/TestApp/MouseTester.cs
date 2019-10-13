@@ -14,7 +14,7 @@ namespace TestApp
             var im = new Manager();
 
             //var devs = im.GetDeviceList();
-            //var mouseHandle = "HID\\VID_046D&PID_C52B&REV_2407&MI_02&Qid_1028&WI_01&Class_00000004";
+            //var mouseHandle = @"HID\VID_046D&PID_C539&REV_3904&MI_01&Col01";
             var mouseHandle = "HID\\VID_046D&PID_C00C&REV_0620"; // Logitech USB
             var devId = im.GetMouseIdFromHandle(mouseHandle);
 
