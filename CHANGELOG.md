@@ -6,6 +6,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 ## [Unreleased]
 ### Added
 ### Changed
+- Devices now polled at 1ms using Multimedia Timers (Was ~15ms)
 ### Deprecated
 ### Removed
 ### Fixed
