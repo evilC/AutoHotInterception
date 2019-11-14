@@ -5,9 +5,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 ### Added
+- SubscribeKeyboard and SubscribeMouseButtons can now be used to subscribe to all keys / buttons on a device
 ### Changed
+- Monitor.ahk now uses SubscribeKeyboard and SubscribeMouseButtons
 ### Deprecated
 ### Removed
+- Old Monitor C# class removed
 ### Fixed
 
 ## [0.4.10] - 2019-10-13
