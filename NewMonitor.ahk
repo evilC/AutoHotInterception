@@ -151,9 +151,11 @@ CheckboxChanged(id, hwnd){
 	;~ ret := Monitor.SetDeviceFilterState(id, state)
 	if (state){
 		if (id < 11){
-			AHI.SubscribeKeyboard(id, true, Func("KeyboardEvent").Bind(id))
+			AHI.SubscribeKeyboard(id, false, Func("KeyboardEvent").Bind(id))
 		} else {
-			;~ AHI.SubscribeMouseButtons(id, true, Func("MouseEvent").Bind(id, ""))
+			AHI.SubscribeMouseButtons(id, false, Func("MouseButtonEvent").Bind(id))
+			AHI.SubscribeMouseMoveRelative(id, false, Func("MouseAxisEvent").Bind(id, "Relative Move"))
+			AHI.SubscribeMouseMoveAbsolute(id, false, Func("MouseAxisEvent").Bind(id, "Absolute Move"))
 		}
 	} else {
 		if (id < 11){
@@ -163,6 +165,10 @@ CheckboxChanged(id, hwnd){
 		}
 	}
 	;~ ToolTip % "Changed " id " to " state ". Return value: " ret
+}
+
+Foo(code, state){
+	Tooltip % code ", " state
 }
 
 FilterMove(hwnd){
@@ -202,12 +208,21 @@ KeyboardEvent(id, code, state){
 	LV_Modify(row, "Vis")
 }
 
-MouseEvent(id, code, state, x, y, info){
+MouseButtonEvent(id, code, state){
 	global hLvMouse, filterMouseMove
 	if (filterMouseMove && (x != 0 || y != 0))
 		return
 	Gui, ListView, % hLvMouse
-	row := LV_Add(, id, code, state, x, y, info)
+	row := LV_Add(, id, code, state, x, y, "Button")
+	LV_Modify(row, "Vis")
+}
+
+MouseAxisEvent(id, info, x, y){
+	global hLvMouse, filterMouseMove
+	if (filterMouseMove)
+		return
+	Gui, ListView, % hLvMouse
+	row := LV_Add(, id, "", "", x, y, info)
 	LV_Modify(row, "Vis")
 }
 
