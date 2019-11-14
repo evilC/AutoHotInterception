@@ -13,14 +13,11 @@ namespace TestApp
         {
             var im = new Manager();
 
-            var devId = im.GetKeyboardId(0x03EB, 0xFF02);
+            var devId = im.GetKeyboardId(0x04F2, 0x0112);
 
             if (devId == 0) return;
 
-            im.SubscribeKey(devId, 0x1, false, new Action<int>(value =>
-            {
-                Console.WriteLine($"State: {value}");
-            }));
+            im.SubscribeKey(devId, 0x2, false, new Action<int>(OnKeyEvent));
         }
 
         public void OnKeyEvent(int value)

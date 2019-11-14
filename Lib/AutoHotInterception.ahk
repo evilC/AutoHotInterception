@@ -152,6 +152,10 @@ class AutoHotInterception {
 		this.Instance.SubscribeKey(id, code, block, callback, concurrent)
 	}
 
+	SubscribeKeyboard(id, block, callback, concurrent := false) {
+		this.Instance.SubscribeKeyboard(id, block, callback, concurrent)
+	}
+
 	UnsubscribeKey(id, code){
 		this.Instance.UnsubscribeKey(id, code)
 	}

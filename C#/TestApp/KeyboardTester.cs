@@ -17,15 +17,12 @@ namespace TestApp
 
             if (devId == 0) return;
 
-            im.SubscribeKey(devId, 0x2, false, new Action<int>(value =>
-            {
-                Console.WriteLine($"State: {value}");
-            }));
+            im.SubscribeKeyboard(devId, false, new Action<ushort, int>(OnKeyEvent));
         }
 
-        public void OnKeyEvent(int value)
+        public void OnKeyEvent(ushort code, int value)
         {
-            Console.WriteLine($"State: {value}");
+            Console.WriteLine($"Code: {code}, State: {value}");
         }
     }
 }

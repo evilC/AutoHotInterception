@@ -8,7 +8,8 @@ namespace TestApp
         private static void Main()
         {
             //var mt = new MouseTester();
-            var kt = new KeyboardKeyTester();
+            var kt = new KeyboardTester();
+            //var kt = new KeyboardKeyTester();
             //var tt = new TabletTester();
             //var mon = new MonitorTester();
             Console.ReadLine();
