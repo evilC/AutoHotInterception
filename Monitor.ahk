@@ -12,11 +12,10 @@ DeviceList := {}
 filterMouseMove := 1
 filterKeyPress := 0
 
-MonitorWrapper := new AutoHotInterception("Monitor")
-Monitor := MonitorWrapper.Instance
+AHI := new AutoHotInterception()
 
 ; Device List
-DeviceList := MonitorWrapper.GetDeviceList()
+DeviceList := AHI.GetDeviceList()
 
 marginX := 10
 marginY := 10
@@ -101,9 +100,8 @@ Gui, Add, Button, % "x" columnX.M " yp w" totalWidths.M " gClearMouse Center", C
 lowest += 30
 
 ; Output
-Gui, Add, ListView, % "x" columnX.K " y" lowest " w" totalWidths.K " h" outputH " hwndhLvKeyboard", ID|Code|State|Key Name|Info
+Gui, Add, ListView, % "x" columnX.K " y" lowest " w" totalWidths.K " h" outputH " hwndhLvKeyboard", ID|Code|State|Key Name
 LV_ModifyCol(4, 100)
-LV_ModifyCol(5, 150)
 Gui, Add, ListView, % "x" columnX.M " yp w" totalWidths.M " h" outputH " hwndhLvMouse", ID|Code|State|X|Y|Info
 LV_ModifyCol(6, 200)
 
@@ -112,7 +110,8 @@ lowest += outputH
 Gui, Show, % "w" (marginX * 3) + totalWidths.K + totalWidths.M " h" marginY + lowest, AutoHotInterception Monitor
 
 
-Monitor.Subscribe(Func("KeyboardEvent"), Func("MouseEvent"))
+;~ Monitor.Subscribe(Func("KeyboardEvent"), Func("MouseEvent"))
+
 return
 
 GetColX(devType){
@@ -147,10 +146,30 @@ UpdateWidth(hwnd, reset := 0){
 }
 
 CheckboxChanged(id, hwnd){
-	global Monitor
+	global AHI
 	GuiControlGet, state, , % hwnd
-	ret := Monitor.SetDeviceFilterState(id, state)
+	if (state){
+		if (id < 11){
+			AHI.SubscribeKeyboard(id, false, Func("KeyboardEvent").Bind(id))
+		} else {
+			AHI.SubscribeMouseButtons(id, false, Func("MouseButtonEvent").Bind(id))
+			AHI.SubscribeMouseMoveRelative(id, false, Func("MouseAxisEvent").Bind(id, "Relative Move"))
+			AHI.SubscribeMouseMoveAbsolute(id, false, Func("MouseAxisEvent").Bind(id, "Absolute Move"))
+		}
+	} else {
+		if (id < 11){
+			AHI.UnsubscribeKeyboard(id)
+		} else {
+			AHI.UnsubscribeMouseButtons(id)
+			AHI.UnsubscribeMouseMoveRelative(id)
+			AHI.UnsubscribeMouseMoveAbsolute(id)
+		}
+	}
 	;~ ToolTip % "Changed " id " to " state ". Return value: " ret
+}
+
+Foo(code, state){
+	Tooltip % code ", " state
 }
 
 FilterMove(hwnd){
@@ -179,23 +198,30 @@ FormatHex(num){
 	return Format("{:04X}", num)
 }
 
-KeyboardEvent(id, code, state, info){
+KeyboardEvent(id, code, state){
 	global hLvKeyboard, filterKeyPress
     if (filterKeyPress && state)
         return
 	Gui, ListView, % hLvKeyboard
 	scanCode := Format("{:x}", code)
 	keyName := GetKeyName("SC" scanCode)
-	row := LV_Add(, id, code, state, keyName, info)
+	row := LV_Add(, id, code, state, keyName)
 	LV_Modify(row, "Vis")
 }
 
-MouseEvent(id, code, state, x, y, info){
+MouseButtonEvent(id, code, state){
+	global hLvMouse
+	Gui, ListView, % hLvMouse
+	row := LV_Add(, id, code, state, "", "", "Button")
+	LV_Modify(row, "Vis")
+}
+
+MouseAxisEvent(id, info, x, y){
 	global hLvMouse, filterMouseMove
-	if (filterMouseMove && (x != 0 || y != 0))
+	if (filterMouseMove)
 		return
 	Gui, ListView, % hLvMouse
-	row := LV_Add(, id, code, state, x, y, info)
+	row := LV_Add(, id, "", "", x, y, info)
 	LV_Modify(row, "Vis")
 }
 
