@@ -26,6 +26,9 @@ namespace AutoHotInterception
         private readonly ConcurrentDictionary<int, ConcurrentDictionary<ushort, MappingOptions>> _mouseButtonMappings =
             new ConcurrentDictionary<int, ConcurrentDictionary<ushort, MappingOptions>>();
 
+        private readonly ConcurrentDictionary<int, MappingOptions> _mouseButtonsMappings = 
+            new ConcurrentDictionary<int, MappingOptions>();
+
         private readonly ConcurrentDictionary<int, MappingOptions> _mouseMoveAbsoluteMappings =
             new ConcurrentDictionary<int, MappingOptions>();
 
@@ -168,6 +171,24 @@ namespace AutoHotInterception
 
                 _workerThreads[id].TryAdd(btn, new WorkerThread());
                 _workerThreads[id][btn].Start();
+            }
+
+            SetDeviceFilterState(id, true);
+            SetFilterState(true);
+            SetThreadState(true);
+        }
+
+        public void SubscribeMouseButtons(int id, bool block, dynamic callback, bool concurrent = false)
+        {
+            HelperFunctions.IsValidDeviceId(true, id);
+
+            _mouseButtonsMappings.TryAdd(id,
+                new MappingOptions { Block = block, Concurrent = concurrent, Callback = callback });
+
+            if (!concurrent)
+            {
+                _deviceWorkerThreads.TryAdd(id, new WorkerThread());
+                _deviceWorkerThreads[id].Start();
             }
 
             SetDeviceFilterState(id, true);
@@ -693,25 +714,56 @@ namespace AutoHotInterception
 
                     }
 
+
+                    var isMouseButtonsMapping = _mouseButtonsMappings.ContainsKey(i);
+
                     // Process Mouse Buttons - do this AFTER mouse movement, so that absolute mode has coordinates available at the point that the button callback is fired
-                    if (stroke.mouse.state != 0 && _mouseButtonMappings.ContainsKey(i))
+                    if (stroke.mouse.state != 0 && _mouseButtonMappings.ContainsKey(i) || isMouseButtonsMapping)
                     {
                         var btnStates = HelperFunctions.MouseStrokeToButtonStates(stroke);
                         foreach (var btnState in btnStates)
                         {
-                            if (!_mouseButtonMappings[i].ContainsKey(btnState.Button)) continue;
+                            if (!isMouseButtonsMapping && !_mouseButtonMappings[i].ContainsKey(btnState.Button)) continue;
 
                             hasSubscription = true;
-                            var mapping = _mouseButtonMappings[i][btnState.Button];
+                            MappingOptions mapping = null;
+                            if (isMouseButtonsMapping)
+                            {
+                                mapping = _mouseButtonsMappings[i];
+                            }
+                            else
+                            {
+                                mapping = _mouseButtonMappings[i][btnState.Button];
+                            }
 
                             var state = btnState;
 
                             if (mapping.Concurrent)
-                                ThreadPool.QueueUserWorkItem(threadProc => mapping.Callback(state.State));
-                            else if (_workerThreads.ContainsKey(i) &&
-                                     _workerThreads[i].ContainsKey(btnState.Button))
-                                _workerThreads[i][btnState.Button]?.Actions
-                                    .Add(() => mapping.Callback(state.State));
+                            {
+                                if (isMouseButtonsMapping)
+                                {
+                                    ThreadPool.QueueUserWorkItem(threadProc => mapping.Callback(btnState.Button, state.State));
+                                }
+                                else
+                                {
+                                    ThreadPool.QueueUserWorkItem(threadProc => mapping.Callback(state.State));
+                                }
+                            }
+                            else
+                            {
+                                if (isMouseButtonsMapping)
+                                {
+                                    _deviceWorkerThreads[i]?.Actions
+                                        .Add(() => mapping.Callback(btnState.Button, state.State));
+                                }
+                                else
+                                {
+                                    _workerThreads[i][btnState.Button]?.Actions
+                                        .Add(() => mapping.Callback(state.State));
+                                }
+                            }
+                                
+                                
                             if (mapping.Block)
                             {
                                 // Remove the event for this button from the stroke, leaving other button events intact
