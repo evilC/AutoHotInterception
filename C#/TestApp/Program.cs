@@ -12,7 +12,6 @@ namespace TestApp
             //var kt = new KeyboardTester();
             //var kkt = new KeyboardKeyTester();
             //var tt = new TabletTester();
-            //var mon = new MonitorTester();
             Console.ReadLine();
         }
     }

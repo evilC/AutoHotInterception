@@ -44,7 +44,6 @@
     <Compile Include="Helpers\ManagedWrapper.cs" />
     <Compile Include="Helpers\MultimediaTimer.cs" />
     <Compile Include="Manager.cs" />
-    <Compile Include="Monitor.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

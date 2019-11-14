@@ -44,7 +44,6 @@
   <ItemGroup>
     <Compile Include="KeyboardTester.cs" />
     <Compile Include="KeyboardKeyTester.cs" />
-    <Compile Include="MonitorTester.cs" />
     <Compile Include="MouseButtonsTester.cs" />
     <Compile Include="MouseTester.cs" />
     <Compile Include="Program.cs" />

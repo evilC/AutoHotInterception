@@ -3,7 +3,7 @@
 class AutoHotInterception {
 	_contextManagers := {}
 
-	__New(cls := "Manager") {
+	__New() {
 		bitness := A_PtrSize == 8 ? "x64" : "x86"
 		dllName := "interception.dll"
 		dllFile := A_LineFile "\..\" bitness "\" dllName
@@ -31,7 +31,7 @@ class AutoHotInterception {
 
 		asm := CLR_LoadLibrary(dllFile)
 		try {
-			this.Instance := asm.CreateInstance("AutoHotInterception." cls)
+			this.Instance := asm.CreateInstance("AutoHotInterception.Manager")
 		}
 		catch {
 			MsgBox % dllName " failed to load`n`n" hintMessage
