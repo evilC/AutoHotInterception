@@ -161,7 +161,9 @@ CheckboxChanged(id, hwnd){
 		if (id < 11){
 			AHI.UnsubscribeKeyboard(id)
 		} else {
-			
+			AHI.UnsubscribeMouseButtons(id)
+			AHI.UnsubscribeMouseMoveRelative(id)
+			AHI.UnsubscribeMouseMoveAbsolute(id)
 		}
 	}
 	;~ ToolTip % "Changed " id " to " state ". Return value: " ret

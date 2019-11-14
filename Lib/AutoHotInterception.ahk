@@ -168,12 +168,16 @@ class AutoHotInterception {
 		this.Instance.SubscribeMouseButton(id, btn, block, callback, concurrent)
 	}
 
+	UnsubscribeMouseButton(id, btn){
+		this.Instance.UnsubscribeMouseButton(id, btn)
+	}
+
 	SubscribeMouseButtons(id, block, callback, concurrent := false) {
 		this.Instance.SubscribeMouseButtons(id, block, callback, concurrent)
 	}
-
-	UnsubscribeMouseButton(id, btn){
-		this.Instance.UnsubscribeMouseButton(id, btn)
+	
+	UnsubscribeMouseButtons(id){
+		this.Instance.UnsubscribeMouseButtons(id)
 	}
 
 	SubscribeMouseMove(id, block, callback, concurrent := false) {

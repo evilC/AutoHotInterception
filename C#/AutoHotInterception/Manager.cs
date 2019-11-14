@@ -155,7 +155,7 @@ namespace AutoHotInterception
             SetFilterState(false);
 
             _keyboardMappings.TryRemove(id, out _);
-            if (!_keyboardKeyMappings.TryGetValue(id, out var thisDevice))
+            if (!_keyboardKeyMappings.ContainsKey(id))
             {
                 SetDeviceFilterState(id, false);
             }
@@ -197,6 +197,29 @@ namespace AutoHotInterception
             SetThreadState(true);
         }
 
+        public void UnsubscribeMouseButton(int id, ushort btn)
+        {
+            HelperFunctions.IsValidDeviceId(true, id);
+            SetFilterState(false);
+
+            if (_mouseButtonMappings.TryGetValue(id, out var thisDevice))
+            {
+                thisDevice.TryRemove(btn, out _);
+                if (thisDevice.Count == 0)
+                {
+                    _mouseButtonMappings.TryRemove(id, out _);
+                    if (!_mouseButtonsMappings.ContainsKey(id))
+                    {
+                        // Don't remove filter if all buttons subscribed
+                        SetDeviceFilterState(id, false);
+                    }
+                }
+            }
+
+            SetFilterState(true);
+            SetThreadState(true);
+        }
+
         public void SubscribeMouseButtons(int id, bool block, dynamic callback, bool concurrent = false)
         {
             HelperFunctions.IsValidDeviceId(true, id);
@@ -215,25 +238,19 @@ namespace AutoHotInterception
             SetThreadState(true);
         }
 
-        public void UnsubscribeMouseButton(int id, ushort btn)
+        public void UnsubscribeMouseButtons(int id)
         {
             HelperFunctions.IsValidDeviceId(true, id);
             SetFilterState(false);
 
-            if (_mouseButtonMappings.TryGetValue(id, out var thisDevice))
+            if (!_mouseButtonMappings.ContainsKey(id))
             {
-                thisDevice.TryRemove(btn, out _);
-                if (thisDevice.Count == 0)
-                {
-                    _mouseButtonMappings.TryRemove(id, out _);
-                    SetDeviceFilterState(id, false);
-                }
+                SetDeviceFilterState(id, false);
             }
 
             SetFilterState(true);
             SetThreadState(true);
         }
-
         /// <summary>
         ///     Subscribes to Absolute mouse movement
         /// </summary>
