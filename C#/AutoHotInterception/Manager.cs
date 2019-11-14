@@ -110,6 +110,29 @@ namespace AutoHotInterception
             SetThreadState(true);
         }
 
+        public void UnsubscribeKey(int id, ushort code)
+        {
+            HelperFunctions.IsValidDeviceId(false, id);
+            SetFilterState(false);
+
+            if (_keyboardKeyMappings.TryGetValue(id, out var thisDevice))
+            {
+                thisDevice.TryRemove(code, out _);
+                if (thisDevice.Count == 0)
+                {
+                    _keyboardKeyMappings.TryRemove(id, out _);
+                    // Don't remove filter if all keys subscribed
+                    if (!_keyboardMappings.ContainsKey(id))
+                    {
+                        SetDeviceFilterState(id, false);
+                    }
+                }
+            }
+
+            SetFilterState(true);
+            SetThreadState(true);
+        }
+
         public void SubscribeKeyboard(int id, bool block, dynamic callback, bool concurrent = false)
         {
             HelperFunctions.IsValidDeviceId(false, id);
@@ -126,19 +149,15 @@ namespace AutoHotInterception
             SetThreadState(true);
         }
 
-        public void UnsubscribeKey(int id, ushort code)
+        public void UnsubscribeKeyboard(int id)
         {
             HelperFunctions.IsValidDeviceId(false, id);
             SetFilterState(false);
 
-            if (_keyboardKeyMappings.TryGetValue(id, out var thisDevice))
+            _keyboardMappings.TryRemove(id, out _);
+            if (!_keyboardKeyMappings.TryGetValue(id, out var thisDevice))
             {
-                thisDevice.TryRemove(code, out _);
-                if (thisDevice.Count == 0)
-                {
-                    _keyboardKeyMappings.TryRemove(id, out _);
-                    SetDeviceFilterState(id, false);
-                }
+                SetDeviceFilterState(id, false);
             }
 
             SetFilterState(true);
