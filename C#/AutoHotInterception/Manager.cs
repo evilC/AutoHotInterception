@@ -17,8 +17,11 @@ namespace AutoHotInterception
         // Used by IsMonitoredDevice, which is handed to Interception as a "Predicate".
         private readonly ConcurrentDictionary<int, bool> _filteredDevices = new ConcurrentDictionary<int, bool>();
 
-        private readonly ConcurrentDictionary<int, ConcurrentDictionary<ushort, MappingOptions>> _keyboardMappings =
+        private readonly ConcurrentDictionary<int, ConcurrentDictionary<ushort, MappingOptions>> _keyboardKeyMappings =
             new ConcurrentDictionary<int, ConcurrentDictionary<ushort, MappingOptions>>();
+
+        private readonly ConcurrentDictionary<int, MappingOptions> _keyboardMappings = 
+            new ConcurrentDictionary<int, MappingOptions>();
 
         private readonly ConcurrentDictionary<int, ConcurrentDictionary<ushort, MappingOptions>> _mouseButtonMappings =
             new ConcurrentDictionary<int, ConcurrentDictionary<ushort, MappingOptions>>();
@@ -33,6 +36,8 @@ namespace AutoHotInterception
         // Makes sure the events are handled synchronously and with a FIFO order.
         private readonly ConcurrentDictionary<int, ConcurrentDictionary<ushort, WorkerThread>> _workerThreads =
             new ConcurrentDictionary<int, ConcurrentDictionary<ushort, WorkerThread>>();
+        private readonly ConcurrentDictionary<int, WorkerThread> _deviceWorkerThreads = 
+            new ConcurrentDictionary<int, WorkerThread>();
 
         private readonly MultimediaTimer _timer;
         private readonly int _pollRate = 1;
@@ -82,10 +87,10 @@ namespace AutoHotInterception
             HelperFunctions.IsValidDeviceId(false, id);
             SetFilterState(false);
 
-            if (!_keyboardMappings.ContainsKey(id))
-                _keyboardMappings.TryAdd(id, new ConcurrentDictionary<ushort, MappingOptions>());
+            if (!_keyboardKeyMappings.ContainsKey(id))
+                _keyboardKeyMappings.TryAdd(id, new ConcurrentDictionary<ushort, MappingOptions>());
 
-            _keyboardMappings[id].TryAdd(code,
+            _keyboardKeyMappings[id].TryAdd(code,
                 new MappingOptions {Block = block, Concurrent = concurrent, Callback = callback});
 
             if (!concurrent)
@@ -102,17 +107,33 @@ namespace AutoHotInterception
             SetThreadState(true);
         }
 
+        public void SubscribeKeyboard(int id, bool block, dynamic callback, bool concurrent = false)
+        {
+            HelperFunctions.IsValidDeviceId(false, id);
+            SetFilterState(false);
+
+            _keyboardMappings.TryAdd(id, new MappingOptions { Block = block, Concurrent = concurrent, Callback = callback });
+            if (!concurrent)
+            {
+                _deviceWorkerThreads.TryAdd(id, new WorkerThread());
+                _deviceWorkerThreads[id].Start();
+            }
+            SetDeviceFilterState(id, true);
+            SetFilterState(true);
+            SetThreadState(true);
+        }
+
         public void UnsubscribeKey(int id, ushort code)
         {
             HelperFunctions.IsValidDeviceId(false, id);
             SetFilterState(false);
 
-            if (_keyboardMappings.TryGetValue(id, out var thisDevice))
+            if (_keyboardKeyMappings.TryGetValue(id, out var thisDevice))
             {
                 thisDevice.TryRemove(code, out _);
                 if (thisDevice.Count == 0)
                 {
-                    _keyboardMappings.TryRemove(id, out _);
+                    _keyboardKeyMappings.TryRemove(id, out _);
                     SetDeviceFilterState(id, false);
                 }
             }
@@ -482,7 +503,7 @@ namespace AutoHotInterception
         private bool DeviceHasBindings(int id)
         {
             if (id < 11)
-                return _keyboardMappings.ContainsKey(id);
+                return _keyboardKeyMappings.ContainsKey(id);
 
             return _mouseButtonMappings.ContainsKey(id)
                    || _mouseMoveRelativeMappings.ContainsKey(id)
@@ -509,39 +530,71 @@ namespace AutoHotInterception
                     // If this is not a monitored keyboard, skip.
                     // This check should not really be needed as the IsMonitoredDevice() predicate should only match monitored keyboards...
                     // ... but in case it does, we want to ignore this bit and pass the input through
-                    if (isMonitoredKeyboard && _keyboardMappings.ContainsKey(i))
+                    if (isMonitoredKeyboard)
                     {
-                        // Process Subscription Mode
-
-                        #region KeyCode, State, Extended Flag translation
-
-                        // Begin translation of incoming key code, state, extended flag etc...
-                        var processMappings = true;
+                        var isKeyMapping = false; // True if this is a mapping to a single key, else it would be a mapping to a whole device
                         var processedState = HelperFunctions.KeyboardStrokeToKeyboardState(stroke);
-
-                        #endregion
-
-                        if (processedState.Ignore)
-                        {
-                            // Set flag to stop Context Mode from firing
-                            hasSubscription = true;
-                            // Set flag to indicate disable mapping processing
-                            processMappings = false;
-                        }
-
                         var code = processedState.Code;
                         var state = processedState.State;
+                        MappingOptions mapping = null;
 
-                        // Code and state now normalized, proceed with checking for subscriptions...
-                        if (processMappings && _keyboardMappings[i].ContainsKey(code))
+                        if (_keyboardMappings.ContainsKey(i))
                         {
-                            hasSubscription = true;
-                            var mapping = _keyboardMappings[i][code];
-                            if (mapping.Block) block = true;
-                            if (mapping.Concurrent)
-                                ThreadPool.QueueUserWorkItem(threadProc => mapping.Callback(state));
-                            else if (_workerThreads.ContainsKey(i) && _workerThreads[i].ContainsKey(code))
-                                _workerThreads[i][code]?.Actions.Add(() => mapping.Callback(state));
+                            mapping = _keyboardMappings[i];
+                        }
+                        else if (_keyboardKeyMappings.ContainsKey(i) && _keyboardKeyMappings[i].ContainsKey(code))
+                        {
+                            isKeyMapping = true;
+                            mapping = _keyboardKeyMappings[i][code];
+                        }
+                        if (mapping != null)
+                        {
+                            // Process Subscription Mode
+
+                            #region KeyCode, State, Extended Flag translation
+
+                            // Begin translation of incoming key code, state, extended flag etc...
+                            var processMappings = true;
+
+                            #endregion
+
+                            if (processedState.Ignore)
+                            {
+                                // Set flag to stop Context Mode from firing
+                                hasSubscription = true;
+                                // Set flag to indicate disable mapping processing
+                                processMappings = false;
+                            }
+
+                            // Code and state now normalized, proceed with checking for subscriptions...
+                            if (processMappings)
+                            {
+                                hasSubscription = true;
+                                
+                                if (mapping.Block) block = true;
+                                if (mapping.Concurrent)
+                                {
+                                    if (isKeyMapping)
+                                    {
+                                        ThreadPool.QueueUserWorkItem(threadProc => mapping.Callback(state));
+                                    }
+                                    else
+                                    {
+                                        ThreadPool.QueueUserWorkItem(threadProc => mapping.Callback(code, state));
+                                    }
+                                }
+                                else
+                                {
+                                    if (isKeyMapping)
+                                    {
+                                        _workerThreads[i][code]?.Actions.Add(() => mapping.Callback(state));
+                                    }
+                                    else
+                                    {
+                                        _deviceWorkerThreads[i]?.Actions.Add(() => mapping.Callback(code, state));
+                                    }
+                                }
+                            }
                         }
                     }
 

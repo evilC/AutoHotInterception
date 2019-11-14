@@ -7,17 +7,17 @@ using AutoHotInterception;
 
 namespace TestApp
 {
-    public class KeyboardTester
+    public class KeyboardKeyTester
     {
-        public KeyboardTester()
+        public KeyboardKeyTester()
         {
             var im = new Manager();
 
-            var devId = im.GetKeyboardId(0x04F2, 0x0112);
+            var devId = im.GetKeyboardId(0x03EB, 0xFF02);
 
             if (devId == 0) return;
 
-            im.SubscribeKey(devId, 0x2, false, new Action<int>(value =>
+            im.SubscribeKey(devId, 0x1, false, new Action<int>(value =>
             {
                 Console.WriteLine($"State: {value}");
             }));
@@ -27,5 +27,6 @@ namespace TestApp
         {
             Console.WriteLine($"State: {value}");
         }
+
     }
 }
