@@ -148,7 +148,6 @@ UpdateWidth(hwnd, reset := 0){
 CheckboxChanged(id, hwnd){
 	global AHI
 	GuiControlGet, state, , % hwnd
-	;~ ret := Monitor.SetDeviceFilterState(id, state)
 	if (state){
 		if (id < 11){
 			AHI.SubscribeKeyboard(id, false, Func("KeyboardEvent").Bind(id))
@@ -211,11 +210,9 @@ KeyboardEvent(id, code, state){
 }
 
 MouseButtonEvent(id, code, state){
-	global hLvMouse, filterMouseMove
-	if (filterMouseMove && (x != 0 || y != 0))
-		return
+	global hLvMouse
 	Gui, ListView, % hLvMouse
-	row := LV_Add(, id, code, state, x, y, "Button")
+	row := LV_Add(, id, code, state, "", "", "Button")
 	LV_Modify(row, "Vis")
 }
 
