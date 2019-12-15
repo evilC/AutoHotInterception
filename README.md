@@ -201,13 +201,11 @@ Subscription Mode overrides Context Mode - that is, if a key on a keyboard has b
 Each Subscribe endpont also has a corresponding Unsubscribe endpoint, which removes the subscription and any block associated with it.  
 
 #### Subscribing to Keyboard keys
-Subscribe to a key on a specific keyboard  
+##### Subscribe to a specific key on a specific keyboard  
 `SubscribeKey(<deviceId>, <scanCode>, <block>, <callback>, <concurrent>)`  
 `UnsubscribeKey(<deviceId>, <scanCode>)`
-```
-AHI.SubscribeKey(keyboardId, GetKeySC("1"), true, Func("KeyEvent"))
-return
-```
+eg  
+`AHI.SubscribeKey(keyboardId, GetKeySC("1"), true, Func("KeyEvent"))`
 
 Callback function is passed state `0` (released) or `1` (pressed)
 ```
@@ -215,9 +213,22 @@ KeyEvent(state){
 	ToolTip % "State: " state
 }
 ```
-
 Parameter `<concurrent>` is optional and is <b>false</b> by default meaning that all the events raised for that key will be handled sequentially (i.e. callback function will be called on a single thread). If set to <b>true</b>, a new thread will be created for each event and the callback function will be called on it.
+
+##### Subscribe to all keys on a specific keyboard  
+`SubscribeKeyboard(<deviceId>, <block>, <callback>, <concurrent>)`  
+eg  
+`AHI.SubscribeKeyboard(keyboardId, true, Func("KeyEvent"))`  
+
+Callback function is passed scancode of pressed key and state  
+```
+KeyEvent(code, state){
+	ToolTip % "Keyboard Key - Code: " code ", State: " state
+}
+```
+
 #### Subscribing to Mouse Buttons
+##### Subscribing to a specific button on a specific mouse
 `SubscribeMouseButton(<deviceId>, <button>, <block>, <callback>, <concurrent>)`  
 `UnsubscribeMouseButton(<deviceId>, <button>)`  
 Where `button` is one of:  
@@ -233,6 +244,18 @@ Where `button` is one of:
 For Mouse Wheel events, the `<state>` parameter will be `1` for Wheel Up / Right and `-1` for Wheel Down / Left
 
 Otherwise, usage is identical to `SubscribeKey`  
+
+##### Subscribing to all buttons on a specific mouse
+`SubscribeMouseButtons(<deviceId>, <block>, <callback>, <concurrent>)`  
+eg  
+`AHI.SubscribeMouseButtons(mouseId, true, Func("MouseButtonEvent"))`  
+
+Callback function is passed ID (See above) of pressed button and state  
+```
+MouseButtonEvent(code, state){
+	ToolTip % "Mouse Button - Code: " code ", State: " state	
+}
+```
 
 #### Subscribing to Mouse Movement  
 **Warning!** When Subscribing to mouse movement, you will get **LOTS** of callbacks.  
