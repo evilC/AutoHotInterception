@@ -6,6 +6,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 ## [Unreleased]
 ### Added
 - SubscribeKeyboard and SubscribeMouseButtons can now be used to subscribe to all keys / buttons on a device
+- Added ScanCodeTester Development Tool to investigate differences in AHI / AHK ScanCodes
 ### Changed
 - Monitor.ahk now uses SubscribeKeyboard and SubscribeMouseButtons
 ### Deprecated
