@@ -5,14 +5,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 ### Added
+### Changed
+### Deprecated
+### Removed
+### Fixed
+
+## [0.5.0] - 2019-12-15
+### Added
 - SubscribeKeyboard and SubscribeMouseButtons can now be used to subscribe to all keys / buttons on a device
 - Added ScanCodeTester Development Tool to investigate differences in AHI / AHK ScanCodes
 ### Changed
 - Monitor.ahk now uses SubscribeKeyboard and SubscribeMouseButtons
-### Deprecated
-### Removed
-- Old Monitor C# class removed
-### Fixed
 
 ## [0.4.10] - 2019-10-13
 ### Changed
