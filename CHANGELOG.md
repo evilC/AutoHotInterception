@@ -5,11 +5,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 ### Added
-- AHI now supports scripts being compiled.
-You will still need the DLLs from the Lib folder, but not the AHK scripts
 ### Changed
 ### Deprecated
 ### Removed
+### Fixed
+
+## [0.5.1] - 2020-04-10
+### Added
+- AHI now supports scripts being compiled.
+You will still need the DLLs from the Lib folder, but not the AHK scripts
 ### Fixed
 - Fix issue 62 - x=0/y=0 never reported for Absolute mode mouse move
 
