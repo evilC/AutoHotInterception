@@ -11,6 +11,7 @@ You will still need the DLLs from the Lib folder, but not the AHK scripts
 ### Deprecated
 ### Removed
 ### Fixed
+- Fix issue 62 - x=0/y=0 never reported for Absolute mode mouse move
 
 ## [0.5.0] - 2019-12-15
 ### Added

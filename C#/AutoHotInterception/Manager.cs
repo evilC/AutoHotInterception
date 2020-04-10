@@ -45,6 +45,7 @@ namespace AutoHotInterception
         private readonly MultimediaTimer _timer;
         private readonly int _pollRate = 1;
         private volatile bool _pollThreadRunning;
+        private bool _absoluteMode00Reported;
 
         #region Public
 
@@ -688,11 +689,43 @@ namespace AutoHotInterception
                     //Debug.WriteLine($"AHK| Stroke Seen. State = {stroke.mouse.state}, Flags = {stroke.mouse.flags}, x={x}, y={y}");
 
                     // Process mouse movement
-                    if (x != 0 || y != 0)
+                    var isAbsolute = (stroke.mouse.flags & (ushort) ManagedWrapper.MouseFlag.MouseMoveAbsolute) ==
+                                     (ushort) ManagedWrapper.MouseFlag.MouseMoveAbsolute;
+                    //Determine whether or not to report mouse movement.
+                    // For Relative mode, this is fairly simple - if x and y are both 0, no movement was reported (Since a real mouse never reports x=0/y=0)
+                    // For Absolute mode, x=0/y=0 is reported, but we should limit this to only reporting once...
+                    // ... so when x=0/y=0 is seen in absolute mode, set the flag _absoluteMode00Reported to true and allow it to be reported...
+                    // then on subsequent reports of x=0/y=0 for absolute mode, if _absoluteMode00Reported is already true, then do not report movement...
+                    // ... In absolute mode, when x!=0/y!=0 is received, clear the _absoluteMode00Reported flag
+                    if (isAbsolute)
                     {
-                        hasMove = true;
+                        if (x == 0 && y == 0)
+                        {
+                            if (!_absoluteMode00Reported)
+                            {
+                                hasMove = true;
+                                _absoluteMode00Reported = true;
+                            }
+                            else
+                            {
+                                hasMove = false;
+                            }
+                        }
+                        else
+                        {
+                            hasMove = true;
+                            _absoluteMode00Reported = false;
+                        }
+                    }
+                    else
+                    {
+                        hasMove = (x != 0 || y != 0);
+                    }
+
+                    if (hasMove)
+                    {
                         // Process Absolute Mouse Move
-                        if ((stroke.mouse.flags & (ushort)ManagedWrapper.MouseFlag.MouseMoveAbsolute) == (ushort)ManagedWrapper.MouseFlag.MouseMoveAbsolute)
+                        if (isAbsolute)
                         {
                             if (_mouseMoveAbsoluteMappings.ContainsKey(i))
                             {
