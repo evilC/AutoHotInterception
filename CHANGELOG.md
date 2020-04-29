@@ -6,11 +6,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 ## [Unreleased]
 ### Added
 ### Changed
-- Compiled scripts now pack the required DLLs inside the EXE and unpack them on run
-Both the x86 and the x64 DLL will always be packed in the EXE, but on run, only the required DLLs will be unpacked
 ### Deprecated
 ### Removed
 ### Fixed
+
+## [0.5.2] - 2020-04-29
+- Compiled scripts now pack the required DLLs inside the EXE and unpack them on run
+Both the x86 and the x64 DLL will always be packed in the EXE, but on run, only the required DLLs will be unpacked
 
 ## [0.5.1] - 2020-04-10
 ### Added
