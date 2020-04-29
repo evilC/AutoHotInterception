@@ -344,3 +344,8 @@ eg
 `AHI.MoveCursor(100, 200)` - move to 100, 200 Screen position using mouse ID 11  
 `AHI.MoveCursor(100, 200, "Window")` - move to 100, 200 Window position using mouse ID 11  
 `AHI.MoveCursor(100, 200, , 12)` - move to 100, 200 Screen position using mouse ID 12  
+
+## Compiling scripts
+AHI scripts can be compiled (Right click the script and select "Compile")  
+All required DLLs will be packed inside the EXE, so only the EXE needs to be distributed  
+When the EXE is run, the `Lib` folder will be created with the required DLLs  
