@@ -263,6 +263,7 @@ namespace AutoHotInterception
         public void SubscribeMouseMoveAbsolute(int id, bool block, dynamic callback, bool concurrent = false)
         {
             HelperFunctions.IsValidDeviceId(true, id);
+            SetFilterState(false);
 
             _mouseMoveAbsoluteMappings[id] = new MappingOptions
                 {Block = block, Concurrent = concurrent, Callback = callback};
@@ -284,9 +285,13 @@ namespace AutoHotInterception
         public void UnsubscribeMouseMoveAbsolute(int id)
         {
             HelperFunctions.IsValidDeviceId(true, id);
+            SetFilterState(false);
+
             if (_mouseMoveAbsoluteMappings.TryRemove(id, out _))
                 if (!DeviceHasBindings(id))
                     SetDeviceFilterState(id, false);
+            SetFilterState(true);
+            SetThreadState(true);
         }
 
         //Shorthand for SubscribeMouseMoveRelative
@@ -332,6 +337,7 @@ namespace AutoHotInterception
         public void UnsubscribeMouseMoveRelative(int id)
         {
             HelperFunctions.IsValidDeviceId(true, id);
+            SetFilterState(false);
 
             if (_mouseMoveRelativeMappings.TryRemove(id, out _))
                 if (!DeviceHasBindings(id))
@@ -680,181 +686,187 @@ namespace AutoHotInterception
 
                 while (ManagedWrapper.Receive(_deviceContext, i, ref stroke, 1) > 0)
                 {
-                    if (!isMonitoredMouse) continue;
-
                     var moveRemoved = false;
                     var hasMove = false;
-                    var x = stroke.mouse.x;
-                    var y = stroke.mouse.y;
-                    //Debug.WriteLine($"AHK| Stroke Seen. State = {stroke.mouse.state}, Flags = {stroke.mouse.flags}, x={x}, y={y}");
+                    if (isMonitoredMouse)
+                    {
+                        var x = stroke.mouse.x;
+                        var y = stroke.mouse.y;
+                        //Debug.WriteLine($"AHK| Stroke Seen. State = {stroke.mouse.state}, Flags = {stroke.mouse.flags}, x={x}, y={y}");
 
-                    // Process mouse movement
-                    var isAbsolute = (stroke.mouse.flags & (ushort) ManagedWrapper.MouseFlag.MouseMoveAbsolute) ==
-                                     (ushort) ManagedWrapper.MouseFlag.MouseMoveAbsolute;
-                    //Determine whether or not to report mouse movement.
-                    // For Relative mode, this is fairly simple - if x and y are both 0, no movement was reported (Since a real mouse never reports x=0/y=0)
-                    // For Absolute mode, x=0/y=0 is reported, but we should limit this to only reporting once...
-                    // ... so when x=0/y=0 is seen in absolute mode, set the flag _absoluteMode00Reported to true and allow it to be reported...
-                    // then on subsequent reports of x=0/y=0 for absolute mode, if _absoluteMode00Reported is already true, then do not report movement...
-                    // ... In absolute mode, when x!=0/y!=0 is received, clear the _absoluteMode00Reported flag
-                    if (isAbsolute)
-                    {
-                        if (x == 0 && y == 0)
-                        {
-                            if (!_absoluteMode00Reported)
-                            {
-                                hasMove = true;
-                                _absoluteMode00Reported = true;
-                            }
-                            else
-                            {
-                                hasMove = false;
-                            }
-                        }
-                        else
-                        {
-                            hasMove = true;
-                            _absoluteMode00Reported = false;
-                        }
-                    }
-                    else
-                    {
-                        hasMove = (x != 0 || y != 0);
-                    }
-
-                    if (hasMove)
-                    {
-                        // Process Absolute Mouse Move
+                        // Process mouse movement
+                        var isAbsolute = (stroke.mouse.flags & (ushort) ManagedWrapper.MouseFlag.MouseMoveAbsolute) ==
+                                         (ushort) ManagedWrapper.MouseFlag.MouseMoveAbsolute;
+                        //Determine whether or not to report mouse movement.
+                        // For Relative mode, this is fairly simple - if x and y are both 0, no movement was reported (Since a real mouse never reports x=0/y=0)
+                        // For Absolute mode, x=0/y=0 is reported, but we should limit this to only reporting once...
+                        // ... so when x=0/y=0 is seen in absolute mode, set the flag _absoluteMode00Reported to true and allow it to be reported...
+                        // then on subsequent reports of x=0/y=0 for absolute mode, if _absoluteMode00Reported is already true, then do not report movement...
+                        // ... In absolute mode, when x!=0/y!=0 is received, clear the _absoluteMode00Reported flag
                         if (isAbsolute)
                         {
-                            if (_mouseMoveAbsoluteMappings.ContainsKey(i))
+                            if (x == 0 && y == 0)
                             {
-                                var mapping = _mouseMoveAbsoluteMappings[i];
-                                hasSubscription = true;
-                                //var debugStr = $"AHK| Mouse stroke has absolute move of {x}, {y}...";
-
-                                if (mapping.Concurrent)
-                                    ThreadPool.QueueUserWorkItem(threadProc => mapping.Callback(x, y));
-                                else if (_workerThreads.ContainsKey(i) && _workerThreads[i].ContainsKey(7))
-                                    _workerThreads[i][7]?.Actions.Add(() => mapping.Callback(x, y));
-                                if (mapping.Block)
+                                if (!_absoluteMode00Reported)
                                 {
-                                    moveRemoved = true;
-                                    stroke.mouse.x = 0;
-                                    stroke.mouse.y = 0;
-                                    //debugStr += "Blocking";
+                                    hasMove = true;
+                                    _absoluteMode00Reported = true;
                                 }
                                 else
                                 {
-                                    //debugStr += "Not Blocking";
+                                    hasMove = false;
                                 }
-                                //Debug.WriteLine(debugStr);
+                            }
+                            else
+                            {
+                                hasMove = true;
+                                _absoluteMode00Reported = false;
                             }
                         }
-
-                        // Process Relative Mouse Move
-                        //else if ((stroke.mouse.flags & (ushort) ManagedWrapper.MouseFlag.MouseMoveRelative) == (ushort) ManagedWrapper.MouseFlag.MouseMoveRelative) / flag is 0, so always true!
                         else
                         {
-                            if (_mouseMoveRelativeMappings.ContainsKey(i))
+                            hasMove = (x != 0 || y != 0);
+                        }
+
+                        if (hasMove)
+                        {
+                            // Process Absolute Mouse Move
+                            if (isAbsolute)
                             {
-                                var mapping = _mouseMoveRelativeMappings[i];
+                                if (_mouseMoveAbsoluteMappings.ContainsKey(i))
+                                {
+                                    var mapping = _mouseMoveAbsoluteMappings[i];
+                                    hasSubscription = true;
+                                    //var debugStr = $"AHK| Mouse stroke has absolute move of {x}, {y}...";
+
+                                    if (mapping.Concurrent)
+                                        ThreadPool.QueueUserWorkItem(threadProc => mapping.Callback(x, y));
+                                    else if (_workerThreads.ContainsKey(i) && _workerThreads[i].ContainsKey(7))
+                                        _workerThreads[i][7]?.Actions.Add(() => mapping.Callback(x, y));
+                                    if (mapping.Block)
+                                    {
+                                        moveRemoved = true;
+                                        stroke.mouse.x = 0;
+                                        stroke.mouse.y = 0;
+                                        //debugStr += "Blocking";
+                                    }
+                                    else
+                                    {
+                                        //debugStr += "Not Blocking";
+                                    }
+
+                                    //Debug.WriteLine(debugStr);
+                                }
+                            }
+
+                            // Process Relative Mouse Move
+                            //else if ((stroke.mouse.flags & (ushort) ManagedWrapper.MouseFlag.MouseMoveRelative) == (ushort) ManagedWrapper.MouseFlag.MouseMoveRelative) / flag is 0, so always true!
+                            else
+                            {
+                                if (_mouseMoveRelativeMappings.ContainsKey(i))
+                                {
+                                    var mapping = _mouseMoveRelativeMappings[i];
+                                    hasSubscription = true;
+                                    //var debugStr = $"AHK| Mouse stroke has relative move of {x}, {y}...";
+
+                                    if (mapping.Concurrent)
+                                        ThreadPool.QueueUserWorkItem(threadProc => mapping.Callback(x, y));
+                                    else if (_workerThreads.ContainsKey(i) && _workerThreads[i].ContainsKey(8))
+                                        _workerThreads[i][8]?.Actions.Add(() => mapping.Callback(x, y));
+                                    if (mapping.Block)
+                                    {
+                                        moveRemoved = true;
+                                        stroke.mouse.x = 0;
+                                        stroke.mouse.y = 0;
+                                        //debugStr += "Blocking";
+                                    }
+                                    else
+                                    {
+                                        //debugStr += "Not Blocking";
+                                    }
+
+                                    //Debug.WriteLine(debugStr);
+                                }
+                            }
+
+                        }
+
+
+                        var isMouseButtonsMapping = _mouseButtonsMappings.ContainsKey(i);
+
+                        // Process Mouse Buttons - do this AFTER mouse movement, so that absolute mode has coordinates available at the point that the button callback is fired
+                        if (stroke.mouse.state != 0 && _mouseButtonMappings.ContainsKey(i) || isMouseButtonsMapping)
+                        {
+                            var btnStates = HelperFunctions.MouseStrokeToButtonStates(stroke);
+                            foreach (var btnState in btnStates)
+                            {
+                                if (!isMouseButtonsMapping && !_mouseButtonMappings[i].ContainsKey(btnState.Button))
+                                    continue;
+
                                 hasSubscription = true;
-                                //var debugStr = $"AHK| Mouse stroke has relative move of {x}, {y}...";
+                                MappingOptions mapping = null;
+                                if (isMouseButtonsMapping)
+                                {
+                                    mapping = _mouseButtonsMappings[i];
+                                }
+                                else
+                                {
+                                    mapping = _mouseButtonMappings[i][btnState.Button];
+                                }
+
+                                var state = btnState;
 
                                 if (mapping.Concurrent)
-                                    ThreadPool.QueueUserWorkItem(threadProc => mapping.Callback(x, y));
-                                else if (_workerThreads.ContainsKey(i) && _workerThreads[i].ContainsKey(8))
-                                    _workerThreads[i][8]?.Actions.Add(() => mapping.Callback(x, y));
-                                if (mapping.Block)
                                 {
-                                    moveRemoved = true;
-                                    stroke.mouse.x = 0;
-                                    stroke.mouse.y = 0;
-                                    //debugStr += "Blocking";
-                                }
-                                else
-                                {
-                                    //debugStr += "Not Blocking";
-                                }
-                                //Debug.WriteLine(debugStr);
-                            }
-                        }
-
-                    }
-
-
-                    var isMouseButtonsMapping = _mouseButtonsMappings.ContainsKey(i);
-
-                    // Process Mouse Buttons - do this AFTER mouse movement, so that absolute mode has coordinates available at the point that the button callback is fired
-                    if (stroke.mouse.state != 0 && _mouseButtonMappings.ContainsKey(i) || isMouseButtonsMapping)
-                    {
-                        var btnStates = HelperFunctions.MouseStrokeToButtonStates(stroke);
-                        foreach (var btnState in btnStates)
-                        {
-                            if (!isMouseButtonsMapping && !_mouseButtonMappings[i].ContainsKey(btnState.Button)) continue;
-
-                            hasSubscription = true;
-                            MappingOptions mapping = null;
-                            if (isMouseButtonsMapping)
-                            {
-                                mapping = _mouseButtonsMappings[i];
-                            }
-                            else
-                            {
-                                mapping = _mouseButtonMappings[i][btnState.Button];
-                            }
-
-                            var state = btnState;
-
-                            if (mapping.Concurrent)
-                            {
-                                if (isMouseButtonsMapping)
-                                {
-                                    ThreadPool.QueueUserWorkItem(threadProc => mapping.Callback(btnState.Button, state.State));
-                                }
-                                else
-                                {
-                                    ThreadPool.QueueUserWorkItem(threadProc => mapping.Callback(state.State));
-                                }
-                            }
-                            else
-                            {
-                                if (isMouseButtonsMapping)
-                                {
-                                    _deviceWorkerThreads[i]?.Actions
-                                        .Add(() => mapping.Callback(btnState.Button, state.State));
-                                }
-                                else
-                                {
-                                    _workerThreads[i][btnState.Button]?.Actions
-                                        .Add(() => mapping.Callback(state.State));
-                                }
-                            }
-                                
-                                
-                            if (mapping.Block)
-                            {
-                                // Remove the event for this button from the stroke, leaving other button events intact
-                                stroke.mouse.state -= btnState.Flag;
-                                // If we are removing a mouse wheel event, then set rolling to 0 if no mouse wheel event left
-                                if (btnState.Flag == 0x400 || btnState.Flag == 0x800)
-                                {
-                                    if ((stroke.mouse.state & 0x400) != 0x400 && (stroke.mouse.state & 0x800) != 0x800)
+                                    if (isMouseButtonsMapping)
                                     {
-                                        //Debug.WriteLine("AHK| Removing rolling flag from stroke");
-                                        stroke.mouse.rolling = 0;
+                                        ThreadPool.QueueUserWorkItem(threadProc =>
+                                            mapping.Callback(btnState.Button, state.State));
+                                    }
+                                    else
+                                    {
+                                        ThreadPool.QueueUserWorkItem(threadProc => mapping.Callback(state.State));
                                     }
                                 }
-                                //Debug.WriteLine($"AHK| Removing flag {btnState.Flag} from stoke, leaving state {stroke.mouse.state}");
-                            }
-                            else
-                            {
-                                //Debug.WriteLine($"AHK| Leaving flag {btnState.Flag} in stroke");
+                                else
+                                {
+                                    if (isMouseButtonsMapping)
+                                    {
+                                        _deviceWorkerThreads[i]?.Actions
+                                            .Add(() => mapping.Callback(btnState.Button, state.State));
+                                    }
+                                    else
+                                    {
+                                        _workerThreads[i][btnState.Button]?.Actions
+                                            .Add(() => mapping.Callback(state.State));
+                                    }
+                                }
+
+
+                                if (mapping.Block)
+                                {
+                                    // Remove the event for this button from the stroke, leaving other button events intact
+                                    stroke.mouse.state -= btnState.Flag;
+                                    // If we are removing a mouse wheel event, then set rolling to 0 if no mouse wheel event left
+                                    if (btnState.Flag == 0x400 || btnState.Flag == 0x800)
+                                    {
+                                        if ((stroke.mouse.state & 0x400) != 0x400 &&
+                                            (stroke.mouse.state & 0x800) != 0x800)
+                                        {
+                                            //Debug.WriteLine("AHK| Removing rolling flag from stroke");
+                                            stroke.mouse.rolling = 0;
+                                        }
+                                    }
+
+                                    //Debug.WriteLine($"AHK| Removing flag {btnState.Flag} from stoke, leaving state {stroke.mouse.state}");
+                                }
+                                else
+                                {
+                                    //Debug.WriteLine($"AHK| Leaving flag {btnState.Flag} in stroke");
+                                }
                             }
                         }
                     }
-
 
                     // Forward on the stroke if required
                     if (hasSubscription)

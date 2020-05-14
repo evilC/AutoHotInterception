@@ -9,6 +9,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 ### Deprecated
 ### Removed
 ### Fixed
+- Fix Issue 65: UnsubscribeMouseMoveRelative when subscribed with blocking enabled did not restore mouse movement
 
 ## [0.5.2] - 2020-04-29
 - Compiled scripts now pack the required DLLs inside the EXE and unpack them on run
