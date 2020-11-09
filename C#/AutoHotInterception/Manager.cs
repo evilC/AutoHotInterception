@@ -665,12 +665,15 @@ namespace AutoHotInterception
                     // If the key was blocked by Subscription Mode, then move on to next key...
                     if (block) continue;
 
-                    // If this key had no subscriptions, but Context Mode is set for this keyboard...
-                    // ... then set the Context before sending the key
+
                     if (!hasSubscription && hasContext) _contextCallbacks[i](1);
 
                     // Pass the key through to the OS.
                     ManagedWrapper.Send(_deviceContext, i, ref stroke, 1);
+
+                    // Wait for polling. This is a fix for context mode failing sometimes.
+                    // There is a race condition for the Context Mode state, this fixes that.
+                    Thread.Sleep(1);
 
                     // If we are processing Context Mode, then Unset the context variable after sending the key
                     if (!hasSubscription && hasContext) _contextCallbacks[i](0);
@@ -889,6 +892,7 @@ namespace AutoHotInterception
                         // Context Mode - forward stroke with context wrapping
                         _contextCallbacks[i](1);
                         ManagedWrapper.Send(_deviceContext, i, ref stroke, 1);
+                        Thread.Sleep(1);
                         _contextCallbacks[i](0);
                     }
                     else
