@@ -13,8 +13,10 @@ namespace TestApp
             //var kkt = new KeyboardKeyTester();
             //var tt = new TabletTester();
 
-            var sct = new ScanCodeTester();
-            Console.ReadLine();
+            using (var sct = new ScanCodeTester())
+            {
+                Console.ReadLine();
+            }
         }
     }
 }

@@ -9,15 +9,22 @@ using AutoHotInterception.Helpers;
 
 namespace TestApp
 {
-    public class ScanCodeTester
+    public class ScanCodeTester: IDisposable
     {
-        public ScanCodeTester()
+		private readonly ScanCodeChecker _scc;
+
+		public ScanCodeTester()
         {
-            var scc = new ScanCodeChecker();
-            scc.Subscribe(0x04F2, 0x0112, new Action<KeyEvent[]>(OnKeyEvent));
+            _scc = new ScanCodeChecker();
+            _scc.Subscribe(0x04F2, 0x0112, new Action<KeyEvent[]>(OnKeyEvent));
         }
 
-        public void OnKeyEvent(KeyEvent[] keyEvents)
+		public void Dispose()
+		{
+            _scc.Dispose();
+		}
+
+		public void OnKeyEvent(KeyEvent[] keyEvents)
         {
             var str = "";
             foreach (var keyEvent in keyEvents)
