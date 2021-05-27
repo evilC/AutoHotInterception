@@ -262,7 +262,7 @@ namespace AutoHotInterception.Helpers
         //InterceptionDevice INTERCEPTION_API interception_wait_with_timeout(InterceptionContext context, unsigned long milliseconds);
         [DllImport("interception.dll", EntryPoint = "interception_wait_with_timeout",
             CallingConvention = CallingConvention.Cdecl)]
-        public static extern int WaitWithTimeout(int device, ulong milliseconds);
+        public static extern int WaitWithTimeout(IntPtr context, ulong milliseconds);
 
         // unsigned int INTERCEPTION_API interception_get_hardware_id(InterceptionContext context, InterceptionDevice device, void *hardware_id_buffer, unsigned int buffer_size);
         [DllImport("interception.dll", EntryPoint = "interception_get_hardware_id",
