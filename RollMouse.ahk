@@ -1,8 +1,9 @@
 #SingleInstance force
 #Persistent
 #include Lib\AutoHotInterception.ahk
+OutputDebug, DBGVIEWCLEAR
 
-rm := new RollMouse(0x046D, 0xC531)
+rm := new RollMouse(11)
 return
 
 class RollMouse {
@@ -48,14 +49,10 @@ class RollMouse {
 	; Was an option in old RollMouse
 	Friction := 0
 	
-	__New(vid := "", pid := ""){
+	__New(mouseId){
 		this.TimeOutFunc := this.DoRoll.Bind(this)
 		this.AHI := new AutoHotInterception()
-		if (vid == "" && pid == ""){
-			this.mouseId := 11
-		} else {
-			this.mouseId := this.AHI.GetMouseId(vid, pid)
-		}
+		this.mouseId := mouseId
 		this.AHI.SubscribeMouseMove(this.mouseId, false, this.MouseMove.Bind(this))
 	}
 	
@@ -136,7 +133,7 @@ class RollMouse {
 		}
 		this.ChangeState(this.STATE_ROLLING)
 
-		;~ OutputDebug % "AHK| ROLL DETECTED: `n" s "Rolling x: " this.LastMove.x ", y: " this.LastMove.y "`n`n"
+		this.Debug("ROLL DETECTED: " s "Rolling x: " this.LastMove.x ", y: " this.LastMove.y)
 		fn := this.MoveFunc
 		while (this.State == this.STATE_ROLLING){
 			; Send output
@@ -157,7 +154,7 @@ class RollMouse {
 	ChangeState(newstate){
 		fn := this.TimeOutFunc
 		if (this.State != newstate){
-			;~ OutputDebug, % "AHK| Changing State to : " this.StateNames[newstate]
+			this.Debug("Changing State to : " this.StateNames[newstate])
 			this.State := newstate
 		}
 		
@@ -183,6 +180,9 @@ class RollMouse {
 		this.History := {x: [], y: []}
 	}
 	
+	Debug(text){
+		OutputDebug % "AHK| " text
+	}
 }
 
 ^Esc::
