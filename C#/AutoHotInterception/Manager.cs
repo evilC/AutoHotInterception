@@ -44,7 +44,9 @@ namespace AutoHotInterception
 
         private static bool _absoluteMode00Reported;
 
-        private readonly Thread _pollThread = new Thread(PollThread);
+        private readonly Thread _pollThread;
+        private static bool _pollThreadRunning = false;
+        private CancellationTokenSource _cancellationToken;
 
         #region Public
 
@@ -517,13 +519,15 @@ namespace AutoHotInterception
 
         private void SetThreadState(bool state)
         {
-            if (state && !_pollThread.IsAlive)
+            if (state && !_pollThreadRunning)
             {
-                _pollThread.Start();
+                _cancellationToken = new CancellationTokenSource();
+                ThreadPool.QueueUserWorkItem(PollThread, _cancellationToken.Token);
             }
-            else if (!state && _pollThread.IsAlive)
+            else if (!state && _pollThreadRunning)
             {
-                _pollThread.Join();
+                _cancellationToken.Cancel();
+                _cancellationToken.Dispose();
             }
         }
 
@@ -566,11 +570,13 @@ namespace AutoHotInterception
 
         // ScanCode notes: https://www.win.tue.nl/~aeb/linux/kbd/scancodes-1.html
 
-        private static void PollThread()
+        private static void PollThread(object obj)
         {
+            var token = (CancellationToken)obj;
+            Debug.WriteLine($"AHK| Poll Thread Started");
             var stroke = new ManagedWrapper.Stroke();
             int i;
-            while (ManagedWrapper.Receive(_deviceContext, i = ManagedWrapper.Wait(_deviceContext), ref stroke, 1) > 0)
+            while (!token.IsCancellationRequested && ManagedWrapper.Receive(_deviceContext, i = ManagedWrapper.Wait(_deviceContext), ref stroke, 1) > 0)
             {
                 if (i < 11)
                 {
@@ -883,6 +889,7 @@ namespace AutoHotInterception
                     //Debug.WriteLine($"AHK| ");
                 }
             }
+            Debug.WriteLine($"AHK| Poll Thread Ended");
         }
 
         internal class MappingOptions

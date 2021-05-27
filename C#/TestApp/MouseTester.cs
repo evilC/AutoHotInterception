@@ -1,51 +1,76 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System.Threading;
 using AutoHotInterception;
 
 namespace TestApp
 {
     public class MouseTester
     {
+        private bool _subscribed = false;
+        private const string MouseHandle = "HID\\VID_046D&PID_C00C&REV_0620"; // Logitech USB
+        private readonly Manager _im = new Manager();
+        private readonly int _devId;
+        private int _counter;
+
         public MouseTester()
         {
-            var im = new Manager();
+            _devId = _im.GetMouseIdFromHandle(MouseHandle);
 
-            //var devs = im.GetDeviceList();
-            //var mouseHandle = @"HID\VID_046D&PID_C539&REV_3904&MI_01&Col01";
-            var mouseHandle = "HID\\VID_046D&PID_C00C&REV_0620"; // Logitech USB
-            var devId = im.GetMouseIdFromHandle(mouseHandle);
+            if (_devId == 0) return;
+            Console.WriteLine("Hit S to unsubscribe / subscribe");
 
-            var counter = 0;
+            SetSubscribeState(true);
 
-            if (devId != 0)
+            while (true)
             {
-                im.SubscribeMouseButton(devId, 1, true, new Action<int>(value =>
+                while (Console.KeyAvailable == false)
+                    Thread.Sleep(250);
+                var cki = Console.ReadKey(true);
+                if (cki.Key == ConsoleKey.S)
+                {
+                    SetSubscribeState(!_subscribed);
+                }
+            }
+        }
+
+        private void SetSubscribeState(bool state)
+        {
+            if (state && !_subscribed)
+            {
+                Console.WriteLine("Subscribing...");
+                _subscribed = true;
+                _im.SubscribeMouseButton(_devId, 1, true, new Action<int>(value =>
                 {
                     Console.WriteLine("RButton Button Value: " + value);
                 }));
-                im.SubscribeMouseButton(devId, 3, true, new Action<int>(value =>
+                _im.SubscribeMouseButton(_devId, 3, true, new Action<int>(value =>
                 {
                     Console.WriteLine("XButton1 Button Value: " + value);
                 }));
-                im.SubscribeMouseButton(devId, 4, true, new Action<int>(value =>
+                _im.SubscribeMouseButton(_devId, 4, true, new Action<int>(value =>
                 {
                     Console.WriteLine("XButton2 Button Value: " + value);
                 }));
-                im.SubscribeMouseButton(devId, 5, true, new Action<int>(value =>
+                _im.SubscribeMouseButton(_devId, 5, true, new Action<int>(value =>
                 {
                     Console.Write("WheelVertical Value: " + value);
-                    var mycounter = counter;
+                    var mycounter = _counter;
                     mycounter++;
                     Console.WriteLine(" Counter: " + mycounter);
-                    counter = mycounter;
+                    _counter = mycounter;
                 }));
-                im.SubscribeMouseMove(devId, true, new Action<int, int>((x, y) =>
+                _im.SubscribeMouseMove(_devId, true, new Action<int, int>((x, y) =>
                 {
                     Console.WriteLine($"Mouse Move: x: {x}, y: {y}");
                 }));
+            }
+            else if (!state && _subscribed)
+            {
+                _subscribed = false;
+                Console.WriteLine("Unsubscribing...");
+                _im.UnsubscribeMouseButtons(_devId);
+                _im.UnsubscribeMouseMove(_devId);
+
             }
         }
     }
