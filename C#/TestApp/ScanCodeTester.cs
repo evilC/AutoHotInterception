@@ -14,7 +14,8 @@ namespace TestApp
         public ScanCodeTester()
         {
             var scc = new ScanCodeChecker();
-            scc.Subscribe(0x04F2, 0x0112, new Action<KeyEvent[]>(OnKeyEvent));
+            int vid = 0x04F2, pid = 0x0112; // Wyse Keyboard
+            scc.Subscribe(vid, pid, new Action<KeyEvent[]>(OnKeyEvent));
         }
 
         public void OnKeyEvent(KeyEvent[] keyEvents)

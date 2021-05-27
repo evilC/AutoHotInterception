@@ -1,10 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
 using AutoHotInterception.Helpers;
 
 namespace AutoHotInterception
@@ -14,7 +9,6 @@ namespace AutoHotInterception
      */
     public class ScanCodeChecker
     {
-        private MultimediaTimer _timer;
         private readonly IntPtr _deviceContext;
         private int _filteredDevice;
         private dynamic _callback;
@@ -34,9 +28,15 @@ namespace AutoHotInterception
             }
 
             ManagedWrapper.SetFilter(_deviceContext, IsMonitoredDevice, ManagedWrapper.Filter.All);
-            _timer = new MultimediaTimer() { Interval = 10 };
-            _timer.Elapsed += DoPoll;
-            _timer.Start();
+            int i;
+            var stroke = new ManagedWrapper.Stroke();
+            while (ManagedWrapper.Receive(_deviceContext, i = ManagedWrapper.Wait(_deviceContext), ref stroke, 1) > 0)
+            {
+                var keyEvents = new List<KeyEvent>();
+                keyEvents.Add(new KeyEvent { Code = stroke.key.code, State = stroke.key.state });
+                ManagedWrapper.Send(_deviceContext, _filteredDevice, ref stroke, 1);
+                _callback(keyEvents.ToArray());
+            }
         }
 
         public string OkCheck()
@@ -47,23 +47,6 @@ namespace AutoHotInterception
         private int IsMonitoredDevice(int device)
         {
             return Convert.ToInt32(_filteredDevice == device);
-        }
-
-        public void DoPoll(object sender, EventArgs e)
-        {
-            var stroke = new ManagedWrapper.Stroke();
-            var keyEvents = new List<KeyEvent>();
-
-            while (ManagedWrapper.Receive(_deviceContext, _filteredDevice, ref stroke, 1) > 0)
-            {
-                keyEvents.Add(new KeyEvent{Code = stroke.key.code, State = stroke.key.state});
-                ManagedWrapper.Send(_deviceContext, _filteredDevice, ref stroke, 1);
-            }
-
-            if (keyEvents.Count > 0)
-            {
-                _callback(keyEvents.ToArray());
-            }
         }
     }
 
