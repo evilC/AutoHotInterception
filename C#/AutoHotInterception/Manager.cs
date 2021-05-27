@@ -44,7 +44,6 @@ namespace AutoHotInterception
 
         private static bool _absoluteMode00Reported;
 
-        private readonly Thread _pollThread;
         private static bool _pollThreadRunning = false;
         private CancellationTokenSource _cancellationToken;
 
@@ -573,7 +572,7 @@ namespace AutoHotInterception
         private static void PollThread(object obj)
         {
             var token = (CancellationToken)obj;
-            Debug.WriteLine($"AHK| Poll Thread Started");
+            //Debug.WriteLine($"AHK| Poll Thread Started");
             var stroke = new ManagedWrapper.Stroke();
             int i;
             while (!token.IsCancellationRequested && ManagedWrapper.Receive(_deviceContext, i = ManagedWrapper.Wait(_deviceContext), ref stroke, 1) > 0)
@@ -889,7 +888,7 @@ namespace AutoHotInterception
                     //Debug.WriteLine($"AHK| ");
                 }
             }
-            Debug.WriteLine($"AHK| Poll Thread Ended");
+            //Debug.WriteLine($"AHK| Poll Thread Ended");
         }
 
         internal class MappingOptions
