@@ -75,13 +75,13 @@ namespace AutoHotInterception
             }
         }
 
-		public void Dispose()
-		{
+        public void Dispose()
+        {
             _cancellation.Cancel();
             _thread.Join();
             ManagedWrapper.DestroyContext(_deviceContext);
-		}
-	}
+        }
+    }
 
     public class KeyEvent
     {

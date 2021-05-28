@@ -11,20 +11,20 @@ namespace TestApp
 {
     public class ScanCodeTester: IDisposable
     {
-		private readonly ScanCodeChecker _scc;
+        private readonly ScanCodeChecker _scc;
 
-		public ScanCodeTester()
+        public ScanCodeTester()
         {
             _scc = new ScanCodeChecker();
-            _scc.Subscribe(0x04F2, 0x0112, new Action<KeyEvent[]>(OnKeyEvent));
+            _scc.Subscribe(0x050D, 0x0200, new Action<KeyEvent[]>(OnKeyEvent));
         }
 
-		public void Dispose()
-		{
+        public void Dispose()
+        {
             _scc.Dispose();
-		}
+        }
 
-		public void OnKeyEvent(KeyEvent[] keyEvents)
+        public void OnKeyEvent(KeyEvent[] keyEvents)
         {
             var str = "";
             foreach (var keyEvent in keyEvents)
