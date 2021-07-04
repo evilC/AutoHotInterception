@@ -5,6 +5,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 ### Added
+- AHI now does not use MultiMedia Timers to poll input every 1ms, it processes it immediately
 ### Changed
 ### Deprecated
 ### Removed
