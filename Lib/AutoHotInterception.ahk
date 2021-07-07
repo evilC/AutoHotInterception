@@ -243,7 +243,6 @@ class AutoHotInterception {
 		}
 		
 		OnContextCallback(state) {
-			Sleep 0
 			this.IsActive := state
 		}
 	}
