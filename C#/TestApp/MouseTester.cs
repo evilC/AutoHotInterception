@@ -7,7 +7,9 @@ namespace TestApp
     public class MouseTester
     {
         private bool _subscribed = false;
+        private bool _state = true;
         private const string MouseHandle = "HID\\VID_046D&PID_C00C&REV_0620"; // Logitech USB
+        //private const string MouseHandle = @"HID\VID_045E&PID_00D1&REV_0120&Col02"; // MS Mouse
         private readonly Manager _im = new Manager();
         private readonly int _devId;
         private int _counter;
@@ -18,6 +20,7 @@ namespace TestApp
 
             if (_devId == 0) return;
             Console.WriteLine("Hit S to unsubscribe / subscribe");
+            Console.WriteLine("Hit T to enable / disable state");
 
             SetSubscribeState(true);
 
@@ -26,11 +29,20 @@ namespace TestApp
                 while (Console.KeyAvailable == false)
                     Thread.Sleep(250);
                 var cki = Console.ReadKey(true);
-                if (cki.Key == ConsoleKey.S)
+                switch (cki.Key)
                 {
-                    SetSubscribeState(!_subscribed);
+                    case ConsoleKey.S:
+                        SetSubscribeState(!_subscribed);
+                        break;
+
+                    case ConsoleKey.T:
+						Console.WriteLine(_state ? "Disabling" : "Enabling");
+                        _im.SetState(!_state);
+                        Console.WriteLine(_state ? "Disabled" : "Enabled");
+                        _state = !_state;
+                        break;
                 }
-            }
+			}
         }
 
         private void SetSubscribeState(bool state)

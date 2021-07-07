@@ -1,21 +1,23 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using AutoHotInterception;
+using System;
 using System.Diagnostics;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using AutoHotInterception;
-using AutoHotInterception.Helpers;
 
 namespace TestApp
 {
-    public class ScanCodeTester
+	public class ScanCodeTester: IDisposable
     {
+        private readonly ScanCodeChecker _scc;
+
         public ScanCodeTester()
         {
-            var scc = new ScanCodeChecker();
+            _scc = new ScanCodeChecker();
             int vid = 0x04F2, pid = 0x0112; // Wyse Keyboard
-            scc.Subscribe(vid, pid, new Action<KeyEvent[]>(OnKeyEvent));
+            _scc.Subscribe(vid, pid, new Action<KeyEvent[]>(OnKeyEvent));
+        }
+
+        public void Dispose()
+        {
+            _scc.Dispose();
         }
 
         public void OnKeyEvent(KeyEvent[] keyEvents)
