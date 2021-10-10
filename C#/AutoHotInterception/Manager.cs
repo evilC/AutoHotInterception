@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Threading;
@@ -44,6 +44,7 @@ namespace AutoHotInterception
 
         private readonly MultimediaTimer _timer;
         private readonly int _pollRate = 1;
+        private volatile bool _lctr = false;
         private volatile bool _pollThreadRunning;
         private bool _absoluteMode00Reported;
 
@@ -66,6 +67,11 @@ namespace AutoHotInterception
         public string OkCheck()
         {
             return "OK";
+        }
+
+        public void SetLctrl(bool l)
+        {
+            _lctr = l;
         }
 
         public void SetState(bool state)
@@ -597,10 +603,19 @@ namespace AutoHotInterception
                     if (isMonitoredKeyboard)
                     {
                         var isKeyMapping = false; // True if this is a mapping to a single key, else it would be a mapping to a whole device
-                        var processedState = HelperFunctions.KeyboardStrokeToKeyboardState(stroke);
+                        var processedState = HelperFunctions.KeyboardStrokeToKeyboardState(stroke, _lctr);
                         var code = processedState.Code;
                         var state = processedState.State;
                         MappingOptions mapping = null;
+
+                        if (processedState.ChangeLctrl == 1)
+                        {
+                            _lctr = true;
+                        }
+                        else if (processedState.ChangeLctrl == 2)
+                        {
+                            _lctr = false;
+                        }
 
                         if (_keyboardMappings.ContainsKey(i))
                         {
