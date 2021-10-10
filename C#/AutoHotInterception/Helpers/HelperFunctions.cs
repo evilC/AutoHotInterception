@@ -170,16 +170,21 @@ namespace AutoHotInterception.Helpers
             return buttonStates.ToArray();
         }
 
-        public static KeyboardState KeyboardStrokeToKeyboardState(ManagedWrapper.Stroke stroke)
+        public static KeyboardState KeyboardStrokeToKeyboardState(ManagedWrapper.Stroke stroke, bool lct)
         {
             var code = stroke.key.code;
             var state = stroke.key.state;
             var retVal = new KeyboardState();
+            retVal.ChangeLctrl = 0;
             if (code == 54 /* Right Shift */ || code == 69 /* NumLock */) code += 256;
 
             // If state is shifted up by 2 (1 or 2 instead of 0 or 1), then this is an "Extended" key code
             if (state > 1)
             {
+                if (code == 29 && state == 4)
+                {
+                    retVal.ChangeLctrl = 1;
+                }
                 if (code == 42 || state > 3)
                 {
                     // code == 42
@@ -209,6 +214,15 @@ namespace AutoHotInterception.Helpers
                 }
             }
 
+            if (code == 325 && lct == true)
+            {
+                if (state == 1)
+                {
+                    retVal.ChangeLctrl = 2;
+                }
+                code = 69;
+            }
+
             retVal.Code = code;
             retVal.State = (ushort) (1 - state);
             return retVal;
@@ -235,6 +249,7 @@ namespace AutoHotInterception.Helpers
             public ushort Code { get; set; }
             public ushort State { get; set; }
             public bool Ignore { get; set; }
+            public int ChangeLctrl { get; set; }
         }
     }
 }
