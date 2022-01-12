@@ -398,7 +398,12 @@ namespace AutoHotInterception
                 default:
                     st = state; break;
             }
-
+            if (code > 255)
+            {
+                code -= 256;
+                if (code != 54) // RShift has > 256 code, but state is 0/1
+                    st += 2;
+            }
             stroke.key.code = code;
             stroke.key.state = (ushort) st;
             ManagedWrapper.Send(_deviceContext, id, ref stroke, 1);
