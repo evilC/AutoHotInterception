@@ -390,6 +390,7 @@ namespace AutoHotInterception
         {
             HelperFunctions.IsValidDeviceId(false, id);
             int st;
+            var stroke = new ManagedWrapper.Stroke();
             switch (state) {
                 case 0:
                     st = 1; break;
