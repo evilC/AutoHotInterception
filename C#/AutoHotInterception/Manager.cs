@@ -389,13 +389,14 @@ namespace AutoHotInterception
         public void SendKeyEvent(int id, ushort code, int state)
         {
             HelperFunctions.IsValidDeviceId(false, id);
-            var st = 1 - state;
-            var stroke = new ManagedWrapper.Stroke();
-            if (code > 255)
-            {
-                code -= 256;
-                if (code != 54) // RShift has > 256 code, but state is 0/1
-                    st += 2;
+            int st;
+            switch (state) {
+                case 0:
+                    st = 1; break;
+                case 1:
+                    st = 0; break;
+                default:
+                    st = state; break;
             }
 
             stroke.key.code = code;
