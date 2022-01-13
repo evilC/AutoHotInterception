@@ -9,20 +9,22 @@ namespace TestApp
 {
     public class KeyboardTester
     {
-        public KeyboardTester()
+        public KeyboardTester(TestDevice device)
         {
             var im = new Manager();
 
-            var devId = im.GetKeyboardId(0x04F2, 0x0112);
+            var devId = device.GetDeviceId();
 
             if (devId == 0) return;
 
-            im.SubscribeKeyboard(devId, false, new Action<ushort, int>(OnKeyEvent));
+            im.SubscribeKeyboard(devId, true, new Action<ushort, int>(OnKeyEvent));
         }
 
         public void OnKeyEvent(ushort code, int value)
         {
-            Console.WriteLine($"Code: {code}, State: {value}");
+            var keyObj = AhkKeys.Obj(code);
+
+            Console.WriteLine($"Name: {keyObj.Name}, Code: {keyObj.LogCode()}, State: {value}");
         }
     }
 }

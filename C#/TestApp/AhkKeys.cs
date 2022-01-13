@@ -35,25 +35,27 @@ namespace TestApp
         // Given a Name, get Code
         public static string Name(ushort code)
         {
-            return _keyCodes[code].Name;
+            return Obj(code).Name;
         }
 
         // Given a Code, get Name
         public static int Code(string name)
         {
-            return _keyNames[name].Code;
+            return Obj(name).Code;
         }
 
         // Given a Name, get AhkKey object
         public static AhkKey Obj(string name)
         {
-            return _keyNames[name];
+            var keyObj = _keyNames.ContainsKey(name) ? _keyNames[name] : new AhkKey(0, "UNKNOWN");
+            return keyObj;
         }
 
         // Given a Code, get AhkKey object
         public static AhkKey Obj(ushort code)
         {
-            return _keyCodes[code];
+            var keyObj = _keyCodes.ContainsKey(code) ? _keyCodes[code] : new AhkKey(code, "UNKNOWN");
+            return keyObj;
         }
 
         private static void AddKey(ushort code, string name)
