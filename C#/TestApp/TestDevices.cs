@@ -10,7 +10,7 @@ namespace TestApp
     public static class TestDevices
     {
         public static TestDevice WyseKeyboard { get; } = new TestDevice { IsMouse = false, Vid = 0x04F2, Pid = 0x0112 };
-
+        public static TestDevice LogitechWheelMouse { get; } = new TestDevice { IsMouse = true, Vid = 0x046D, Pid = 0xC00C };
     }
 
     public class TestDevice

@@ -47,7 +47,7 @@
     <Compile Include="KeyboardTester.cs" />
     <Compile Include="KeyboardKeyTester.cs" />
     <Compile Include="MouseButtonsTester.cs" />
-    <Compile Include="MouseTester.cs" />
+    <Compile Include="MouseMoveTester.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="ScanCodeTester.cs" />

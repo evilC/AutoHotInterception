@@ -4,17 +4,16 @@ using AutoHotInterception;
 
 namespace TestApp
 {
-    public class MouseTester
+    public class MouseMoveTester
     {
         private bool _subscribed = false;
-        private const string MouseHandle = "HID\\VID_046D&PID_C00C&REV_0620"; // Logitech USB
         private readonly Manager _im = new Manager();
         private readonly int _devId;
         private int _counter;
 
-        public MouseTester()
+        public MouseMoveTester(TestDevice device)
         {
-            _devId = _im.GetMouseIdFromHandle(MouseHandle);
+            _devId = device.GetDeviceId();
 
             if (_devId == 0) return;
             Console.WriteLine("Hit S to unsubscribe / subscribe");
