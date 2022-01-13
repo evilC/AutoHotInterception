@@ -10,11 +10,12 @@ namespace TestApp
 {
     public class TabletTester
     {
-        public TabletTester()
+        public TabletTester(TestDevice device)
         {
             var im = new Manager();
 
-            var devId = im.GetMouseIdFromHandle("HID\\VID_0B57&PID_9091&REV_0101&Col01");
+            var devId = device.GetDeviceId();
+            if (devId == 0) return;
             var counter = 0;
 
             if (devId != 0)
