@@ -15,17 +15,12 @@ namespace TestApp
         {
             var scc = new ScanCodeChecker();
             int vid = 0x04F2, pid = 0x0112; // Wyse Keyboard
-            scc.Subscribe(vid, pid, new Action<KeyEvent[]>(OnKeyEvent));
+            scc.Subscribe(vid, pid, new Action<KeyEvent>(OnKeyEvent));
         }
 
-        public void OnKeyEvent(KeyEvent[] keyEvents)
+        public void OnKeyEvent(KeyEvent keyEvent)
         {
-            var str = "";
-            foreach (var keyEvent in keyEvents)
-            {
-                str += $"Code: {keyEvent.Code}, State: {keyEvent.State} | ";
-            }
-            Debug.WriteLine(str);
+            Debug.WriteLine($"Code: {keyEvent.Code} (0x{keyEvent.Code.ToString("X")}), State: {keyEvent.State}");
         }
     }
 }
