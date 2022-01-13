@@ -7,7 +7,7 @@ namespace TestApp
     {
         public SetStateTester(TestDevice device, AhkKey key)
         {
-            Console.WriteLine($"Test key: {key.Name} - code");
+            Console.WriteLine($"Test key: {key.Name} - code {key.LogCode()}");
             Console.WriteLine("Enter to toggle Subscription state");
             var im = new Manager();
             var devId = device.GetDeviceId();

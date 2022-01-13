@@ -9,11 +9,12 @@ namespace TestApp
 {
     public class KeyboardKeyTester
     {
-        public KeyboardKeyTester()
+        public KeyboardKeyTester(TestDevice device, AhkKey key)
         {
+            Console.WriteLine($"Test key: {key.Name} - code {key.LogCode()}");
             var im = new Manager();
 
-            var devId = im.GetKeyboardId(0x04F2, 0x0112);
+            var devId = device.GetDeviceId();
 
             if (devId == 0) return;
 

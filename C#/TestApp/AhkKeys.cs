@@ -13,6 +13,11 @@ namespace TestApp
             Name = name;
             Code = code;
         }
+
+        public string LogCode()
+        {
+            return $"{Code}/0x{Code.ToString("X")}";
+        }
     }
 
     public static class AhkKeys
