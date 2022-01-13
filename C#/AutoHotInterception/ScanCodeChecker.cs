@@ -32,10 +32,8 @@ namespace AutoHotInterception
             var stroke = new ManagedWrapper.Stroke();
             while (ManagedWrapper.Receive(_deviceContext, i = ManagedWrapper.Wait(_deviceContext), ref stroke, 1) > 0)
             {
-                var keyEvents = new List<KeyEvent>();
-                keyEvents.Add(new KeyEvent { Code = stroke.key.code, State = stroke.key.state });
                 ManagedWrapper.Send(_deviceContext, _filteredDevice, ref stroke, 1);
-                _callback(keyEvents.ToArray());
+                _callback(new KeyEvent { Code = stroke.key.code, State = stroke.key.state });
             }
         }
 
