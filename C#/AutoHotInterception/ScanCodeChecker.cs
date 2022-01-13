@@ -5,8 +5,9 @@ using AutoHotInterception.Helpers;
 namespace AutoHotInterception
 {
     /*
-     * Tool to check Scan Codes and Press / Release states
-     */
+    Tool to check Scan Codes and Press / Release states
+    Note that these are raw scancodes and states as they come from Interception. Some keys (eg extended code keys) will not match AHK key codes!
+    */
     public class ScanCodeChecker
     {
         private readonly IntPtr _deviceContext;
