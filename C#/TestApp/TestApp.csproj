@@ -42,6 +42,8 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AhkKeys.cs" />
+    <Compile Include="TestDevices.cs" />
     <Compile Include="KeyboardTester.cs" />
     <Compile Include="KeyboardKeyTester.cs" />
     <Compile Include="MouseButtonsTester.cs" />
@@ -49,6 +51,7 @@
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="ScanCodeTester.cs" />
+    <Compile Include="SetStateTester.cs" />
     <Compile Include="TabletTester.cs" />
   </ItemGroup>
   <ItemGroup>

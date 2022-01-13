@@ -14,6 +14,7 @@ namespace TestApp
             //var tt = new TabletTester();
 
             //var sct = new ScanCodeTester();
+            var sst = new SetStateTester(TestDevices.WyseKeyboard, AhkKeys.Obj("1"));
             Console.ReadLine();
         }
     }
