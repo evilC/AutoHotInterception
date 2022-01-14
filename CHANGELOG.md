@@ -5,11 +5,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 ### Added
-- AHI now does not use MultiMedia Timers to poll input every 1ms, it processes it immediately
 ### Changed
 ### Deprecated
 ### Removed
 ### Fixed
+
+## [0.6.0] - 2022-01-14
+### Changed
+- Input is now processed faster. Rather than checking for input every 1ms, we now use Interception's `WaitWithTimeout` function 
+to process input as soon as it happens
 
 ## [0.5.3] - 2020-05-14
 ### Fixed
