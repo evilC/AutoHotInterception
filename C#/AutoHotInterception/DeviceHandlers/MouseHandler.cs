@@ -18,6 +18,23 @@ namespace AutoHotInterception.DeviceHandlers
         }
 
         /// <summary>
+        /// Called when we are removing a Subscription or Context Mode
+        /// If there are no other subscriptions, and Context Mode is disabled, turn the filter off
+        /// </summary>
+        public override void DisableFilterIfNeeded()
+        {
+            if (AllButtonsMapping == null
+                && SingleButtonMappings.Count == 0
+                && ContextCallback == null
+                && _mouseMoveRelativeMapping == null
+                && _mouseMoveAbsoluteMapping == null)
+            {
+                IsFiltered = false;
+            }
+        }
+
+        #region Subscription Mode
+        /// <summary>
         /// Subscribes to Absolute mouse movement
         /// </summary>
         /// <param name="mappingOptions">Options for the subscription (block, callback to fire etc)</param>
@@ -74,23 +91,9 @@ namespace AutoHotInterception.DeviceHandlers
                 WorkerThreads.TryRemove(8, out _);
             }
         }
+        #endregion
 
-        /// <summary>
-        /// Called when we are removing a Subscription or Context Mode
-        /// If there are no other subscriptions, and Context Mode is disabled, turn the filter off
-        /// </summary>
-        public override void DisableFilterIfNeeded()
-        {
-            if (AllButtonsMapping == null 
-                && SingleButtonMappings.Count == 0 
-                && ContextCallback == null 
-                && _mouseMoveRelativeMapping == null 
-                && _mouseMoveAbsoluteMapping == null)
-            {
-                IsFiltered = false;
-            }
-        }
-
+        #region Input Synthesis
         /// <summary>
         /// Sends Mouse button events
         /// </summary>
@@ -146,6 +149,7 @@ namespace AutoHotInterception.DeviceHandlers
             { mouse = { x = x, y = y, flags = (ushort)ManagedWrapper.MouseFlag.MouseMoveRelative } };
             ManagedWrapper.Send(DeviceContext, DeviceId, ref stroke, 1);
         }
+        #endregion
 
         public override void ProcessStroke(ManagedWrapper.Stroke stroke)
         {

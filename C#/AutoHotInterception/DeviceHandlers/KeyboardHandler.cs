@@ -26,6 +26,7 @@ namespace AutoHotInterception.DeviceHandlers
             }
         }
 
+        #region Input Synthesis
         /// <summary>
         /// Sends a keyboard key event
         /// </summary>
@@ -46,6 +47,7 @@ namespace AutoHotInterception.DeviceHandlers
             stroke.key.state = (ushort)st;
             ManagedWrapper.Send(DeviceContext, DeviceId, ref stroke, 1);
         }
+        #endregion
 
         // ScanCode notes: https://www.win.tue.nl/~aeb/linux/kbd/scancodes-1.html
         public override void ProcessStroke(ManagedWrapper.Stroke stroke)
