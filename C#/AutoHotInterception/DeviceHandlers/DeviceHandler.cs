@@ -20,5 +20,15 @@ namespace AutoHotInterception.DeviceHandlers
 
 
         public abstract void ProcessStroke(ManagedWrapper.Stroke stroke);
+
+        int IDeviceHandler.IsFiltered()
+        {
+            return Convert.ToInt32(IsFiltered);
+        }
+
+        public void SetFilterState(bool state)
+        {
+            IsFiltered = state;
+        }
     }
 }

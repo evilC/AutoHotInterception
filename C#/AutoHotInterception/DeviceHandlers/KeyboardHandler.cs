@@ -11,7 +11,7 @@ namespace AutoHotInterception.DeviceHandlers
 
         public KeyboardHandler(IntPtr deviceContext, int deviceId) : base (deviceContext, deviceId)
         {
-            IsFiltered = true;
+            
         }
 
         public override void ProcessStroke(ManagedWrapper.Stroke stroke)

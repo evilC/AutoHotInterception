@@ -16,7 +16,7 @@ namespace AutoHotInterception
 
         // If a device ID exists as a key in this Dictionary then that device is filtered.
         // Used by IsMonitoredDevice, which is handed to Interception as a "Predicate".
-        private static readonly ConcurrentDictionary<int, bool> FilteredDevices = new ConcurrentDictionary<int, bool>();
+        //private static readonly ConcurrentDictionary<int, bool> FilteredDevices = new ConcurrentDictionary<int, bool>();
 
         private static readonly ConcurrentDictionary<int, IDeviceHandler> DeviceHandlers = new ConcurrentDictionary<int, IDeviceHandler>();
 
@@ -562,11 +562,12 @@ namespace AutoHotInterception
         ///     ... requiring a reboot.
         ///     When working with AHI, it's generally best to keep this matching as little as possible....
         /// </summary>
-        /// <param name="device"></param>
+        /// <param name="device">The Interception ID of the device</param>
         /// <returns></returns>
         private static int IsMonitoredDevice(int device)
         {
-            return Convert.ToInt32(FilteredDevices.ContainsKey(device));
+            //return Convert.ToInt32(FilteredDevices.ContainsKey(device));
+            return DeviceHandlers[device].IsFiltered();
         }
 
         private void SetFilterState(bool state)
@@ -577,10 +578,11 @@ namespace AutoHotInterception
 
         private void SetDeviceFilterState(int device, bool state)
         {
-            if (state && !FilteredDevices.ContainsKey(device))
-                FilteredDevices[device] = true;
-            else if (!state && FilteredDevices.ContainsKey(device))
-                FilteredDevices.TryRemove(device, out _);
+            //if (state && !FilteredDevices.ContainsKey(device))
+            //    FilteredDevices[device] = true;
+            //else if (!state && FilteredDevices.ContainsKey(device))
+            //    FilteredDevices.TryRemove(device, out _);
+            DeviceHandlers[device].SetFilterState(state);
         }
 
         private bool DeviceHasBindings(int id)
