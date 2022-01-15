@@ -7,7 +7,6 @@ namespace AutoHotInterception.DeviceHandlers
 {
     class MouseHandler : DeviceHandler
     {
-        dynamic ContextCallback;
         MappingOptions MouseMoveAbsoluteMapping;
         MappingOptions MouseMoveRelativeMapping;
 
