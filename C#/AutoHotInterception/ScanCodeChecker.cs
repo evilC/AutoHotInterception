@@ -13,23 +13,25 @@ namespace AutoHotInterception
         private readonly IntPtr _deviceContext;
         private dynamic _callback;
         private int _deviceId;
+        private bool _block;
 
         public ScanCodeChecker()
         {
             _deviceContext = ManagedWrapper.CreateContext();
         }
 
-        public void Subscribe(int deviceId, dynamic callback)
+        public void Subscribe(int deviceId, dynamic callback, bool block = false)
         {
             _callback = callback;
             _deviceId = deviceId;
+            _block = block;
 
             ManagedWrapper.SetFilter(_deviceContext, IsMonitoredDevice, ManagedWrapper.Filter.All);
             int i;
             var stroke = new ManagedWrapper.Stroke();
             while (ManagedWrapper.Receive(_deviceContext, i = ManagedWrapper.Wait(_deviceContext), ref stroke, 1) > 0)
             {
-                ManagedWrapper.Send(_deviceContext, _deviceId, ref stroke, 1);
+                if (!_block) ManagedWrapper.Send(_deviceContext, _deviceId, ref stroke, 1);
                 _callback(new KeyEvent { Code = stroke.key.code, State = stroke.key.state });
             }
         }
