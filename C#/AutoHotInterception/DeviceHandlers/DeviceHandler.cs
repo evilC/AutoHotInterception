@@ -48,6 +48,7 @@ namespace AutoHotInterception.DeviceHandlers
         /// <param name="code">The ScanCode (keyboard) or Button Code (mouse) for the key or button</param>
         public void UnsubscribeSingleButton(ushort code)
         {
+            if (!SingleButtonMappings.ContainsKey(code)) return;
             SingleButtonMappings.TryRemove(code, out var mappingOptions);
             if (!mappingOptions.Concurrent && WorkerThreads.ContainsKey(code))
             {
