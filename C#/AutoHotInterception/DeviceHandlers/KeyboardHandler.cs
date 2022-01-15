@@ -55,7 +55,7 @@ namespace AutoHotInterception.DeviceHandlers
         }
 
         /// <summary>
-        /// Subscribe to all keys on this keyboard
+        /// Create an AllKeys subscription
         /// </summary>
         /// <param name="mappingOptions">Options for the subscription (block, callback to fire etc)</param>
         public void SubscribeKeyboard(MappingOptions mappingOptions)
@@ -69,6 +69,9 @@ namespace AutoHotInterception.DeviceHandlers
             IsFiltered = true;
         }
 
+        /// <summary>
+        /// Unsubscribes the AllKeys subscription
+        /// </summary>
         public void UnsubscribeKeyboard()
         {
             if (KeyboardMapping == null) return;
