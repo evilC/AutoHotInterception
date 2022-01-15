@@ -45,6 +45,7 @@ namespace AutoHotInterception
         private static bool _absoluteMode00Reported;
 
         private static bool _pollThreadRunning;
+        private volatile bool _lctr = false;
         private CancellationTokenSource _cancellationToken;
 
         #region Public
@@ -63,6 +64,11 @@ namespace AutoHotInterception
         public string OkCheck()
         {
             return "OK";
+        }
+
+        public void SetLctrl(bool l)
+        {
+            _lctr = l;
         }
 
         public void SetState(bool state)
@@ -382,7 +388,15 @@ namespace AutoHotInterception
         public void SendKeyEvent(int id, ushort code, int state)
         {
             HelperFunctions.IsValidDeviceId(false, id);
-            var st = 1 - state;
+            int st;
+            switch (state) {
+                case 0:
+                    st = 1; break;
+                case 1:
+                    st = 0; break;
+                default:
+                    st = state; break;
+            }
             var stroke = new ManagedWrapper.Stroke();
             if (code > 255)
             {
@@ -614,7 +628,14 @@ namespace AutoHotInterception
                             var code = processedState.Code;
                             var state = processedState.State;
                             MappingOptions mapping = null;
-
+                            if (processedState.ChangeLctrl == 1)
+                            {
+                                _lctr = true;
+                            }
+                            else if (processedState.ChangeLctrl == 2)
+                            {
+                                _lctr = false;
+                            }
                             if (KeyboardMappings.ContainsKey(i))
                             {
                                 mapping = KeyboardMappings[i];
@@ -653,7 +674,7 @@ namespace AutoHotInterception
                                     {
                                         if (isKeyMapping)
                                         {
-                                            ThreadPool.QueueUserWorkItem(threadProc => mapping.Callback(state));
+                                            ThreadPool.QueueUserWorkItem(threadProc => mapping.Callback(state, code));
                                         }
                                         else
                                         {
@@ -664,7 +685,7 @@ namespace AutoHotInterception
                                     {
                                         if (isKeyMapping)
                                         {
-                                            WorkerThreads[i][code]?.Actions.Add(() => mapping.Callback(state));
+                                            WorkerThreads[i][code]?.Actions.Add(() => mapping.Callback(state, code));
                                         }
                                         else
                                         {
