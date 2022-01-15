@@ -76,7 +76,7 @@ namespace AutoHotInterception.DeviceHandlers
         {
             if (KeyboardMapping == null) return;
             // Stop DeviceWorkerThread
-            if (KeyboardMapping.Concurrent)
+            if (!KeyboardMapping.Concurrent)
             {
                 if (DeviceWorkerThread != null)
                 {
