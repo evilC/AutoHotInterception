@@ -220,37 +220,40 @@ namespace AutoHotInterception
             SetThreadState(true);
         }
 
+        /// <summary>
+        /// Create am AllButtons subscription for the specified mouse
+        /// </summary>
+        /// <param name="id">The ID of the mouse</param>
+        /// <param name="block">Whether or not to block the button</param>
+        /// <param name="callback">The callback to fire when the button changes state</param>
+        /// <param name="concurrent">Whether or not to execute callbacks concurrently</param>
         public void SubscribeMouseButtons(int id, bool block, dynamic callback, bool concurrent = false)
         {
             HelperFunctions.IsValidDeviceId(true, id);
+            SetFilterState(false);
 
-            MouseButtonsMappings.TryAdd(id,
-                new MappingOptions { Block = block, Concurrent = concurrent, Callback = callback });
-
-            if (!concurrent)
-            {
-                DeviceWorkerThreads.TryAdd(id, new WorkerThread());
-                DeviceWorkerThreads[id].Start();
-            }
-
-            SetDeviceFilterState(id, true);
+            var handler = (MouseHandler)DeviceHandlers[id];
+            handler.SubscribeMouseButtons(new MappingOptions { Block = block, Concurrent = concurrent, Callback = callback });
             SetFilterState(true);
             SetThreadState(true);
         }
 
+        /// <summary>
+        /// Remove an AllButtons subscription for the specified mouse
+        /// </summary>
+        /// <param name="id">The ID of the mouse</param>
         public void UnsubscribeMouseButtons(int id)
         {
             HelperFunctions.IsValidDeviceId(true, id);
             SetFilterState(false);
 
-            if (!MouseButtonMappings.ContainsKey(id))
-            {
-                SetDeviceFilterState(id, false);
-            }
+            var handler = (MouseHandler)DeviceHandlers[id];
+            handler.UnsubscribeMouseButtons();
 
             SetFilterState(true);
             SetThreadState(true);
         }
+
         /// <summary>
         ///     Subscribes to Absolute mouse movement
         /// </summary>
