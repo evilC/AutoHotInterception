@@ -22,7 +22,7 @@ namespace AutoHotInterception.DeviceHandlers
                 && SingleButtonMappings.Count == 0
                 && ContextCallback == null)
             {
-                IsFiltered = false;
+                _isFiltered = false;
             }
         }
 
@@ -59,7 +59,7 @@ namespace AutoHotInterception.DeviceHandlers
             // Process any waiting input for this keyboard
             var block = false;
 
-            if (IsFiltered)
+            if (_isFiltered)
             {
                 var isKeyMapping = false; // True if this is a mapping to a single key, else it would be a mapping to a whole device
                 var processedState = HelperFunctions.KeyboardStrokeToKeyboardState(stroke);

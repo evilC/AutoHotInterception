@@ -29,7 +29,7 @@ namespace AutoHotInterception.DeviceHandlers
                 && _mouseMoveRelativeMapping == null
                 && _mouseMoveAbsoluteMapping == null)
             {
-                IsFiltered = false;
+                _isFiltered = false;
             }
         }
 
@@ -47,7 +47,7 @@ namespace AutoHotInterception.DeviceHandlers
                 WorkerThreads.TryAdd(7, new WorkerThread());
                 WorkerThreads[7].Start();
             }
-            IsFiltered = true;
+            _isFiltered = true;
         }
 
         /// <summary>
@@ -76,7 +76,7 @@ namespace AutoHotInterception.DeviceHandlers
                 WorkerThreads.TryAdd(8, new WorkerThread());
                 WorkerThreads[8].Start();
             }
-            IsFiltered = true;
+            _isFiltered = true;
         }
 
         /// <summary>

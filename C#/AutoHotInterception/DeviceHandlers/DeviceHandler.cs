@@ -10,7 +10,7 @@ namespace AutoHotInterception.DeviceHandlers
 
         protected IntPtr DeviceContext;
         protected int DeviceId;
-        public bool IsFiltered { get; set; }
+        protected bool _isFiltered { get; set; }
 
         // Holds MappingOptions for individual mouse button / keyboard key subscriptions
         protected ConcurrentDictionary<ushort, MappingOptions> SingleButtonMappings = new ConcurrentDictionary<ushort, MappingOptions>();
@@ -39,7 +39,7 @@ namespace AutoHotInterception.DeviceHandlers
                 WorkerThreads.TryAdd(code, new WorkerThread());
                 WorkerThreads[code].Start();
             }
-            IsFiltered = true;
+            _isFiltered = true;
         }
 
         /// <summary>
@@ -70,7 +70,7 @@ namespace AutoHotInterception.DeviceHandlers
                 DeviceWorkerThread = new WorkerThread();
                 DeviceWorkerThread.Start();
             }
-            IsFiltered = true;
+            _isFiltered = true;
         }
 
         /// <summary>
@@ -95,7 +95,7 @@ namespace AutoHotInterception.DeviceHandlers
         public void SetContextCallback(dynamic callback)
         {
             ContextCallback = callback;
-            IsFiltered = true;
+            _isFiltered = true;
         }
 
         /// <summary>
@@ -108,18 +108,9 @@ namespace AutoHotInterception.DeviceHandlers
         }
 
         // ToDo: Why is this IDeviceHandler.IsFiltered() and other Interface methods aren't?
-        int IDeviceHandler.IsFiltered()
+        public int IsFiltered()
         {
-            return Convert.ToInt32(IsFiltered);
-        }
-
-        /// <summary>
-        /// Lets this device know if it is currently being filtered or not, and governs what IsFiltered() returns
-        /// </summary>
-        /// <param name="state">true for filtered, false for not filtered</param>
-        public void SetFilterState(bool state)
-        {
-            IsFiltered = state;
+            return Convert.ToInt32(_isFiltered);
         }
 
         /// <summary>

@@ -12,12 +12,6 @@ namespace AutoHotInterception.DeviceHandlers
         int IsFiltered();
 
         /// <summary>
-        /// Lets this device know if it is currently being filtered or not, and governs what IsFiltered() returns
-        /// </summary>
-        /// <param name="state">true for filtered, false for not filtered</param>
-        void SetFilterState(bool state);
-
-        /// <summary>
         /// Subscribes to a single key or button of this device
         /// </summary>
         /// <param name="code">The ScanCode (keyboard) or Button Code (mouse) for the key or button</param>

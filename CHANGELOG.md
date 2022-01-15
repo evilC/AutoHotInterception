@@ -7,6 +7,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 ### Added
 - Add RemoveContextManager() to remove a Context Manager
 ### Changed
+- MAJOR changes to the code behind the scenes - the code is now organized way better, and key / button handling has been consolidated into the same code.  
+Nothing should have changed apart from what is listed in this changelog
 - If you SubscribeKey to subscribe to a specific key on a device, and use SubscribeKeyboard to subscribe to all keys on the same device 
 Then SubscribeKey now takes precedence (SubscribeKey callback fires, and SubscribeKeyboard does not)
 ### Deprecated
