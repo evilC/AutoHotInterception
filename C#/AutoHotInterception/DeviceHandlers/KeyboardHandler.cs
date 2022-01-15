@@ -26,6 +26,7 @@ namespace AutoHotInterception.DeviceHandlers
             }
         }
 
+        // ScanCode notes: https://www.win.tue.nl/~aeb/linux/kbd/scancodes-1.html
         public override void ProcessStroke(ManagedWrapper.Stroke stroke)
         {
             //ManagedWrapper.Send(DeviceContext, _deviceId, ref stroke, 1);
