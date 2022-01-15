@@ -9,7 +9,7 @@ namespace AutoHotInterception.DeviceHandlers
         protected dynamic ContextCallback;
 
         protected IntPtr DeviceContext;
-        protected int _deviceId;
+        protected int DeviceId;
         public bool IsFiltered { get; set; }
 
         // Holds MappingOptions for individual mouse button / keyboard key subscriptions
@@ -23,7 +23,7 @@ namespace AutoHotInterception.DeviceHandlers
         public DeviceHandler(IntPtr deviceContext, int deviceId)
         {
             DeviceContext = deviceContext;
-            _deviceId = deviceId;
+            DeviceId = deviceId;
         }
 
         /// <summary>

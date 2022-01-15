@@ -104,7 +104,7 @@ namespace AutoHotInterception.DeviceHandlers
                 if (!hasSubscription && hasContext) ContextCallback(1);
 
                 // Pass the key through to the OS.
-                ManagedWrapper.Send(DeviceContext, _deviceId, ref stroke, 1);
+                ManagedWrapper.Send(DeviceContext, DeviceId, ref stroke, 1);
 
                 // If we are processing Context Mode, then Unset the context variable after sending the key
                 if (!hasSubscription && hasContext) ContextCallback(0);

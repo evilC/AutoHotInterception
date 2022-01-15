@@ -7,8 +7,8 @@ namespace AutoHotInterception.DeviceHandlers
 {
     class MouseHandler : DeviceHandler
     {
-        MappingOptions MouseMoveAbsoluteMapping;
-        MappingOptions MouseMoveRelativeMapping;
+        private MappingOptions _mouseMoveAbsoluteMapping;
+        private MappingOptions _mouseMoveRelativeMapping;
 
         private bool _absoluteMode00Reported;
 
@@ -26,8 +26,8 @@ namespace AutoHotInterception.DeviceHandlers
             if (AllButtonsMapping == null 
                 && SingleButtonMappings.Count == 0 
                 && ContextCallback == null 
-                && MouseMoveRelativeMapping == null 
-                && MouseMoveAbsoluteMapping == null)
+                && _mouseMoveRelativeMapping == null 
+                && _mouseMoveAbsoluteMapping == null)
             {
                 IsFiltered = false;
             }
@@ -83,9 +83,9 @@ namespace AutoHotInterception.DeviceHandlers
                 // Process Absolute Mouse Move
                 if (isAbsolute)
                 {
-                    if (MouseMoveAbsoluteMapping != null)
+                    if (_mouseMoveAbsoluteMapping != null)
                     {
-                        var mapping = MouseMoveAbsoluteMapping;
+                        var mapping = _mouseMoveAbsoluteMapping;
                         hasSubscription = true;
                         //var debugStr = $"AHK| Mouse stroke has absolute move of {x}, {y}...";
 
@@ -110,9 +110,9 @@ namespace AutoHotInterception.DeviceHandlers
                 }
                 else
                 {
-                    if (MouseMoveRelativeMapping != null)
+                    if (_mouseMoveRelativeMapping != null)
                     {
-                        var mapping = MouseMoveRelativeMapping;
+                        var mapping = _mouseMoveRelativeMapping;
                         hasSubscription = true;
                         //var debugStr = $"AHK| Mouse stroke has relative move of {x}, {y}...";
 
@@ -221,7 +221,7 @@ namespace AutoHotInterception.DeviceHandlers
                 if ((hasMove && !moveRemoved) || stroke.mouse.state != 0)
                 {
                     //Debug.WriteLine($"AHK| Sending stroke. State = {stroke.mouse.state}. hasMove={hasMove}, moveRemoved={moveRemoved}");
-                    ManagedWrapper.Send(DeviceContext, _deviceId, ref stroke, 1);
+                    ManagedWrapper.Send(DeviceContext, DeviceId, ref stroke, 1);
                 }
                 else
                 {
@@ -233,14 +233,14 @@ namespace AutoHotInterception.DeviceHandlers
             {
                 // Context Mode - forward stroke with context wrapping
                 ContextCallback(1);
-                ManagedWrapper.Send(DeviceContext, _deviceId, ref stroke, 1);
+                ManagedWrapper.Send(DeviceContext, DeviceId, ref stroke, 1);
                 ContextCallback(0);
             }
             else
             {
                 // No subscription or context mode - forward on
                 //Debug.WriteLine($"AHK| Sending stroke. State = {stroke.mouse.state}. hasMove={hasMove}, moveRemoved={moveRemoved}");
-                ManagedWrapper.Send(DeviceContext, _deviceId, ref stroke, 1);
+                ManagedWrapper.Send(DeviceContext, DeviceId, ref stroke, 1);
             }
         }
     }
