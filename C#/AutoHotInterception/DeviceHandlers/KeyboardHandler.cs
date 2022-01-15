@@ -36,7 +36,7 @@ namespace AutoHotInterception.DeviceHandlers
         public void SubscribeKey(ushort code, MappingOptions mappingOptions)
         {
             KeyboardKeyMappings.TryAdd(code, mappingOptions);
-            if (!mappingOptions.Concurrent)
+            if (!mappingOptions.Concurrent && !WorkerThreads.ContainsKey(code))
             {
                 WorkerThreads.TryAdd(code, new WorkerThread());
                 WorkerThreads[code].Start();
@@ -52,7 +52,7 @@ namespace AutoHotInterception.DeviceHandlers
         {
 
             KeyboardKeyMappings.TryRemove(code, out var mappingOptions);
-            if (!mappingOptions.Concurrent)
+            if (!mappingOptions.Concurrent && WorkerThreads.ContainsKey(code))
             {
                 WorkerThreads[code].Dispose();
                 WorkerThreads.TryRemove(code, out _);
