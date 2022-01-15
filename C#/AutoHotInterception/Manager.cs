@@ -354,6 +354,9 @@ namespace AutoHotInterception
             SetThreadState(true);
         }
 
+        /// <summary>
+        /// Removes Context Mode for a given device
+        /// </summary>
         public void RemoveContextCallback(int id)
         {
             SetFilterState(false);
