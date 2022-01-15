@@ -29,6 +29,7 @@ namespace AutoHotInterception.DeviceHandlers
                 WorkerThreads.TryAdd(code, new WorkerThread());
                 WorkerThreads[code].Start();
             }
+            IsFiltered = true;
         }
 
         /// <summary>
@@ -60,6 +61,7 @@ namespace AutoHotInterception.DeviceHandlers
                     DeviceWorkerThread.Start();
                 }
             }
+            IsFiltered = true;
         }
 
         public void UnsubscribeKeyboard()
@@ -88,6 +90,7 @@ namespace AutoHotInterception.DeviceHandlers
         public void SetContextCallback(dynamic callback)
         {
             ContextCallback = callback;
+            IsFiltered = true;
         }
 
         public override void ProcessStroke(ManagedWrapper.Stroke stroke)

@@ -108,7 +108,6 @@ namespace AutoHotInterception
             var handler = (KeyboardHandler)DeviceHandlers[id];
             handler.SubscribeKey(code, new MappingOptions { Block = block, Concurrent = concurrent, Callback = callback });
 
-            SetDeviceFilterState(id, true);
             SetFilterState(true);
             SetThreadState(true);
         }
@@ -145,15 +144,6 @@ namespace AutoHotInterception
             var handler = (KeyboardHandler)DeviceHandlers[id];
             handler.SubscribeKeyboard(new MappingOptions { Block = block, Concurrent = concurrent, Callback = callback });
 
-            // ---
-
-            KeyboardMappings.TryAdd(id, new MappingOptions { Block = block, Concurrent = concurrent, Callback = callback });
-            if (!concurrent)
-            {
-                DeviceWorkerThreads.TryAdd(id, new WorkerThread());
-                DeviceWorkerThreads[id].Start();
-            }
-            SetDeviceFilterState(id, true);
             SetFilterState(true);
             SetThreadState(true);
         }
