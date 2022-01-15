@@ -2,6 +2,7 @@
 using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Threading;
+using AutoHotInterception.DeviceHandlers;
 using AutoHotInterception.Helpers;
 
 namespace AutoHotInterception
@@ -16,6 +17,8 @@ namespace AutoHotInterception
         // If a device ID exists as a key in this Dictionary then that device is filtered.
         // Used by IsMonitoredDevice, which is handed to Interception as a "Predicate".
         private static readonly ConcurrentDictionary<int, bool> FilteredDevices = new ConcurrentDictionary<int, bool>();
+
+        private static readonly ConcurrentDictionary<int, IDeviceHandler> DeviceHandlers = new ConcurrentDictionary<int, IDeviceHandler>();
 
         private static readonly ConcurrentDictionary<int, ConcurrentDictionary<ushort, MappingOptions>> KeyboardKeyMappings =
             new ConcurrentDictionary<int, ConcurrentDictionary<ushort, MappingOptions>>();
@@ -53,6 +56,14 @@ namespace AutoHotInterception
 
         public Manager()
         {
+            for (int i = 1; i < 11; i++)
+            {
+                DeviceHandlers.TryAdd(i, new KeyboardHandler(DeviceContext, i));
+            }
+            for (int i = 11; i < 21; i++)
+            {
+                DeviceHandlers.TryAdd(i, new MouseHandler(DeviceContext, i));
+            }
         }
 
         public void Dispose()
@@ -595,6 +606,9 @@ namespace AutoHotInterception
                 // ... any input which was filtered and is waiting to be processed can be processed (eg lots of mouse moves buffered)
                 while (ManagedWrapper.Receive(DeviceContext, i = ManagedWrapper.WaitWithTimeout(DeviceContext, 10), ref stroke, 1) > 0)
                 {
+                    DeviceHandlers[i].ProcessStroke(stroke);
+                    
+                    /*
                     if (i < 11)
                     {
                         // Keyboard
@@ -905,6 +919,7 @@ namespace AutoHotInterception
                         }
                         //Debug.WriteLine($"AHK| ");
                     }
+                    */
                 }
             }
             _pollThreadRunning = false;

@@ -40,6 +40,10 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="DeviceHandlers\DeviceHandler.cs" />
+    <Compile Include="DeviceHandlers\IDeviceHandler.cs" />
+    <Compile Include="DeviceHandlers\KeyboardHandler.cs" />
+    <Compile Include="DeviceHandlers\MouseHandler.cs" />
     <Compile Include="Helpers\HelperFunctions.cs" />
     <Compile Include="Helpers\ManagedWrapper.cs" />
     <Compile Include="ScanCodeChecker.cs" />
@@ -49,6 +53,7 @@
   <ItemGroup>
     <None Include="ToDo.md" />
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <PreBuildEvent>if not exist "$(TargetDir)x86" mkdir "$(TargetDir)x86"
