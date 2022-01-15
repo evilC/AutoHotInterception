@@ -50,7 +50,13 @@ namespace AutoHotInterception.DeviceHandlers
         /// <param name="code">The ScanCode of the key to subscribe to</param>
         public void UnsubscribeKey(ushort code)
         {
-            KeyboardKeyMappings.TryRemove(code, out _);
+
+            KeyboardKeyMappings.TryRemove(code, out var mappingOptions);
+            if (!mappingOptions.Concurrent)
+            {
+                WorkerThreads[code].Dispose();
+                WorkerThreads.TryRemove(code, out _);
+            }
             DisableFilterIfNeeded();
         }
 
