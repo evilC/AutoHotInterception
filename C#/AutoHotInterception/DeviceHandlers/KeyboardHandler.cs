@@ -61,14 +61,11 @@ namespace AutoHotInterception.DeviceHandlers
         public void SubscribeKeyboard(MappingOptions mappingOptions)
         {
             KeyboardMapping = mappingOptions;
-            if (!mappingOptions.Concurrent)
+            if (!mappingOptions.Concurrent && DeviceWorkerThread == null)
             {
-                if (DeviceWorkerThread == null)
-                {
-                    DeviceWorkerThread = new WorkerThread();
-                    DeviceWorkerThread.Start();
-                }
-            }
+                DeviceWorkerThread = new WorkerThread();
+                DeviceWorkerThread.Start();
+        }
             IsFiltered = true;
         }
 
@@ -76,12 +73,9 @@ namespace AutoHotInterception.DeviceHandlers
         {
             if (KeyboardMapping == null) return;
             // Stop DeviceWorkerThread
-            if (!KeyboardMapping.Concurrent)
+            if (!KeyboardMapping.Concurrent && DeviceWorkerThread != null)
             {
-                if (DeviceWorkerThread != null)
-                {
-                    DeviceWorkerThread.Dispose();
-                }
+                DeviceWorkerThread.Dispose();
             }
             KeyboardMapping = null;
             DisableFilterIfNeeded();
