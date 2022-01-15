@@ -61,6 +61,7 @@ namespace AutoHotInterception.DeviceHandlers
                 WorkerThreads[7].Dispose();
                 WorkerThreads.TryRemove(7, out _);
             }
+            _mouseMoveAbsoluteMapping = null;
         }
 
         /// <summary>
@@ -90,6 +91,7 @@ namespace AutoHotInterception.DeviceHandlers
                 WorkerThreads[8].Dispose();
                 WorkerThreads.TryRemove(8, out _);
             }
+            _mouseMoveRelativeMapping = null;
         }
         #endregion
 
