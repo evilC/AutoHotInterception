@@ -165,56 +165,38 @@ namespace AutoHotInterception
         }
 
         /// <summary>
-        ///     Subscribe to a Mouse button
+        /// Subscribe to a specific button on a mouse
         /// </summary>
         /// <param name="id">The ID of the mouse</param>
-        /// <param name="btn">The button number (LMB = 0, RMB = 1, MMB = 2, X1 = 3, X2 = 4, WV = 5, WH = 6)</param>
+        /// <param name="code">The button number (LMB = 0, RMB = 1, MMB = 2, X1 = 3, X2 = 4, WV = 5, WH = 6)</param>
         /// <param name="block">Whether or not to block the button</param>
         /// <param name="callback">The callback to fire when the button changes state</param>
         /// <param name="concurrent">Whether or not to execute callbacks concurrently</param>
         /// <returns></returns>
-        public void SubscribeMouseButton(int id, ushort btn, bool block, dynamic callback, bool concurrent = false)
-        {
-            HelperFunctions.IsValidDeviceId(true, id);
-
-            if (!MouseButtonMappings.ContainsKey(id))
-                MouseButtonMappings.TryAdd(id, new ConcurrentDictionary<ushort, MappingOptions>());
-
-            MouseButtonMappings[id].TryAdd(btn,
-                new MappingOptions { Block = block, Concurrent = concurrent, Callback = callback });
-
-            if (!concurrent)
-            {
-                if (!WorkerThreads.ContainsKey(id))
-                    WorkerThreads.TryAdd(id, new ConcurrentDictionary<ushort, WorkerThread>());
-
-                WorkerThreads[id].TryAdd(btn, new WorkerThread());
-                WorkerThreads[id][btn].Start();
-            }
-
-            SetDeviceFilterState(id, true);
-            SetFilterState(true);
-            SetThreadState(true);
-        }
-
-        public void UnsubscribeMouseButton(int id, ushort btn)
+        public void SubscribeMouseButton(int id, ushort code, bool block, dynamic callback, bool concurrent = false)
         {
             HelperFunctions.IsValidDeviceId(true, id);
             SetFilterState(false);
 
-            if (MouseButtonMappings.TryGetValue(id, out var thisDevice))
-            {
-                thisDevice.TryRemove(btn, out _);
-                if (thisDevice.Count == 0)
-                {
-                    MouseButtonMappings.TryRemove(id, out _);
-                    if (!MouseButtonsMappings.ContainsKey(id))
-                    {
-                        // Don't remove filter if all buttons subscribed
-                        SetDeviceFilterState(id, false);
-                    }
-                }
-            }
+            var handler = (MouseHandler)DeviceHandlers[id];
+            handler.SubscribeMouseButton(code, new MappingOptions { Block = block, Concurrent = concurrent, Callback = callback });
+
+            SetFilterState(true);
+            SetThreadState(true);
+        }
+
+        /// <summary>
+        /// Unsubscribes from a specific button on a mouse
+        /// </summary>
+        /// <param name="id">The ID of the mouse</param>
+        /// <param name="code">The button number (LMB = 0, RMB = 1, MMB = 2, X1 = 3, X2 = 4, WV = 5, WH = 6)</param>
+        public void UnsubscribeMouseButton(int id, ushort code)
+        {
+            HelperFunctions.IsValidDeviceId(true, id);
+            SetFilterState(false);
+
+            var handler = (MouseHandler)DeviceHandlers[id];
+            handler.UnsubscribeMouseButton(code);
 
             SetFilterState(true);
             SetThreadState(true);

@@ -43,6 +43,8 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AhkKeys.cs" />
+    <Compile Include="MouseButtons.cs" />
+    <Compile Include="MouseButtonTester.cs" />
     <Compile Include="TestDevices.cs" />
     <Compile Include="KeyboardTester.cs" />
     <Compile Include="KeyboardKeyTester.cs" />

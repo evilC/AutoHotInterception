@@ -8,7 +8,8 @@ namespace TestApp
         private static void Main()
         {
             //var mmt = new MouseMoveTester(TestDevices.LogitechWheelMouse);
-            var mbt = new MouseButtonsTester(TestDevices.LogitechWheelMouse, true);
+            var mbt = new MouseButtonTester(TestDevices.LogitechWheelMouse, MouseButtons.Left, true);
+            //var ambt = new MouseButtonsTester(TestDevices.LogitechWheelMouse, true);
             //var kt = new KeyboardTester(TestDevices.WyseKeyboard, true);
             //var kkt = new KeyboardKeyTester(TestDevices.WyseKeyboard, AhkKeys.Obj("1"), true);
             //var tt = new TabletTester(TestDevices.ParbloIslandA609);

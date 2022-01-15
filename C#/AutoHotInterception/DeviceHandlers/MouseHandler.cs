@@ -37,6 +37,37 @@ namespace AutoHotInterception.DeviceHandlers
         }
 
         /// <summary>
+        /// Subscribes to a specific button on this mouse
+        /// </summary>
+        /// <param name="code">The button number (LMB = 0, RMB = 1, MMB = 2, X1 = 3, X2 = 4, WV = 5, WH = 6)</param>
+        /// <param name="mappingOptions">Options for the subscription (block, callback to fire etc)</param>
+        public void SubscribeMouseButton(ushort code, MappingOptions mappingOptions)
+        {
+            MouseButtonMappings.TryAdd(code, mappingOptions);
+            if (!mappingOptions.Concurrent && !WorkerThreads.ContainsKey(code))
+            {
+                WorkerThreads.TryAdd(code, new WorkerThread());
+                WorkerThreads[code].Start();
+            }
+            IsFiltered = true;
+        }
+
+        /// <summary>
+        /// Unsubscribes from a specific button on this mouse
+        /// </summary>
+        /// <param name="code">The button number (LMB = 0, RMB = 1, MMB = 2, X1 = 3, X2 = 4, WV = 5, WH = 6)</param>
+        public void UnsubscribeMouseButton(ushort code)
+        {
+            MouseButtonMappings.TryRemove(code, out var mappingOptions);
+            if (!mappingOptions.Concurrent && WorkerThreads.ContainsKey(code))
+            {
+                WorkerThreads[code].Dispose();
+                WorkerThreads.TryRemove(code, out _);
+            }
+            DisableFilterIfNeeded();
+        }
+
+        /// <summary>
         /// Creates an AllButtons subscription
         /// </summary>
         /// <param name="mappingOptions">Options for the subscription (block, callback to fire etc)</param>
