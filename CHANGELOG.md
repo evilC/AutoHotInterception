@@ -17,6 +17,7 @@ Then SubscribeKey now takes precedence (SubscribeKey callback fires, and Subscri
 - If you had Context Mode enabled for a keyboard, and a SubscribeKey or SubscribeKeyboard subscription for the same keyboard 
 then using UnsubscribeKey or UnsubscribeKeyboard would disable Context Mode
 - CreateContextManager now correctly throws an error if one already exists
+- When unsubscribing from a mouse movement which was not subscribed in Concurrent mode, the WorkerThread is now properly Disposed
 
 ## [0.6.0] - 2022-01-14
 ### Changed
