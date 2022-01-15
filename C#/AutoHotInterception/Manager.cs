@@ -372,7 +372,15 @@ namespace AutoHotInterception
             if (id < 1 || id > 20)
                 throw new ArgumentOutOfRangeException(nameof(id), "DeviceIds must be between 1 and 20");
 
-            ContextCallbacks[id] = callback;
+            if (id < 11)
+            {
+                var device = (KeyboardHandler)DeviceHandlers[id];
+                device.SetContextCallback(callback);
+            }
+            else
+            {
+
+            }
 
             SetDeviceFilterState(id, true);
             SetFilterState(true);

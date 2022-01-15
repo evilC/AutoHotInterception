@@ -81,12 +81,20 @@ namespace AutoHotInterception.DeviceHandlers
             }
         }
 
+        /// <summary>
+        /// Enables Context Mode for this keyboard
+        /// </summary>
+        /// <param name="callback">The callback to call when input happens</param>
+        public void SetContextCallback(dynamic callback)
+        {
+            ContextCallback = callback;
+        }
+
         public override void ProcessStroke(ManagedWrapper.Stroke stroke)
         {
             //ManagedWrapper.Send(DeviceContext, _deviceId, ref stroke, 1);
             var hasSubscription = false;
-            //var hasContext = ContextCallbacks.ContainsKey(i);
-            var hasContext = false;
+            var hasContext = ContextCallback != null;
 
             // Process any waiting input for this keyboard
             var block = false;
@@ -157,13 +165,13 @@ namespace AutoHotInterception.DeviceHandlers
 
                 // If this key had no subscriptions, but Context Mode is set for this keyboard...
                 // ... then set the Context before sending the key
-                //if (!hasSubscription && hasContext) ContextCallbacks[i](1);
+                if (!hasSubscription && hasContext) ContextCallback(1);
 
                 // Pass the key through to the OS.
                 ManagedWrapper.Send(DeviceContext, _deviceId, ref stroke, 1);
 
                 // If we are processing Context Mode, then Unset the context variable after sending the key
-                //if (!hasSubscription && hasContext) ContextCallbacks[i](0);
+                if (!hasSubscription && hasContext) ContextCallback(0);
             }
         }
     }
