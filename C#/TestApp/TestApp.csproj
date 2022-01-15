@@ -42,8 +42,8 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="AhkKeys.cs" />
-    <Compile Include="MouseButtons.cs" />
+    <Compile Include="Helpers\AhkKeys.cs" />
+    <Compile Include="Helpers\MouseButtons.cs" />
     <Compile Include="MouseButtonTester.cs" />
     <Compile Include="TestDevices.cs" />
     <Compile Include="KeyboardTester.cs" />
@@ -65,6 +65,7 @@
       <Name>AutoHotInterception</Name>
     </ProjectReference>
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <PreBuildEvent>if not exist "$(TargetDir)\x86" mkdir "$(TargetDir)\x86"

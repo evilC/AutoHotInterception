@@ -1,5 +1,6 @@
 ﻿using AutoHotInterception;
 using System;
+using TestApp.Helpers;
 
 namespace TestApp
 {

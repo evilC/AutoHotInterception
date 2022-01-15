@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 /* Get AHK specific Scancodes for a given key, as reported by AHK's GetKeySC() */
 
-namespace TestApp
+namespace TestApp.Helpers
 {
     public class AhkKey
     {
