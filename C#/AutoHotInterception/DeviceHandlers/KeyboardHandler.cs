@@ -8,10 +8,34 @@ namespace AutoHotInterception.DeviceHandlers
     class KeyboardHandler : DeviceHandler
     {
         private ConcurrentDictionary<ushort, MappingOptions> KeyboardKeyMappings = new ConcurrentDictionary<ushort, MappingOptions>();
+        private MappingOptions KeyboardMappings;
 
         public KeyboardHandler(IntPtr deviceContext, int deviceId) : base (deviceContext, deviceId)
         {
             
+        }
+
+        public void SubscribeKey(ushort code, MappingOptions mappingOptions)
+        {
+            KeyboardKeyMappings.TryAdd(code, mappingOptions);
+            if (!mappingOptions.Concurrent)
+            {
+                WorkerThreads.TryAdd(code, new WorkerThread());
+                WorkerThreads[code].Start();
+            }
+        }
+
+        public void UnsubscribeKey(ushort code)
+        {
+            KeyboardKeyMappings.TryRemove(code, out _);
+            if (KeyboardKeyMappings.Count == 0)
+            {
+                // Don't remove filter if all keys subscribed
+                if (KeyboardMappings != null)
+                {
+                    IsFiltered = false;
+                }
+            }
         }
 
         public override void ProcessStroke(ManagedWrapper.Stroke stroke)
@@ -91,16 +115,6 @@ namespace AutoHotInterception.DeviceHandlers
 
                 // If we are processing Context Mode, then Unset the context variable after sending the key
                 //if (!hasSubscription && hasContext) ContextCallbacks[i](0);
-            }
-        }
-
-        public void SubscribeKey(ushort code, MappingOptions mappingOptions)
-        {
-            KeyboardKeyMappings.TryAdd(code, mappingOptions);
-            if (!mappingOptions.Concurrent)
-            {
-                WorkerThreads.TryAdd(code, new WorkerThread());
-                WorkerThreads[code].Start();
             }
         }
     }

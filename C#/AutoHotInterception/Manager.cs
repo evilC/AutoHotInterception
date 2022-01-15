@@ -104,21 +104,6 @@ namespace AutoHotInterception
             var handler = (KeyboardHandler)DeviceHandlers[id];
             handler.SubscribeKey(code, new MappingOptions { Block = block, Concurrent = concurrent, Callback = callback });
 
-            //if (!KeyboardKeyMappings.ContainsKey(id))
-            //    KeyboardKeyMappings.TryAdd(id, new ConcurrentDictionary<ushort, MappingOptions>());
-
-            //KeyboardKeyMappings[id].TryAdd(code,
-            //    new MappingOptions { Block = block, Concurrent = concurrent, Callback = callback });
-
-            //if (!concurrent)
-            //{
-            //    if (!WorkerThreads.ContainsKey(id))
-            //        WorkerThreads.TryAdd(id, new ConcurrentDictionary<ushort, WorkerThread>());
-
-            //    WorkerThreads[id].TryAdd(code, new WorkerThread());
-            //    WorkerThreads[id][code].Start();
-            //}
-
             SetDeviceFilterState(id, true);
             SetFilterState(true);
             SetThreadState(true);
@@ -129,19 +114,8 @@ namespace AutoHotInterception
             HelperFunctions.IsValidDeviceId(false, id);
             SetFilterState(false);
 
-            if (KeyboardKeyMappings.TryGetValue(id, out var thisDevice))
-            {
-                thisDevice.TryRemove(code, out _);
-                if (thisDevice.Count == 0)
-                {
-                    KeyboardKeyMappings.TryRemove(id, out _);
-                    // Don't remove filter if all keys subscribed
-                    if (!KeyboardMappings.ContainsKey(id))
-                    {
-                        SetDeviceFilterState(id, false);
-                    }
-                }
-            }
+            var handler = (KeyboardHandler)DeviceHandlers[id];
+            handler.UnsubscribeKey(code);
 
             SetFilterState(true);
             SetThreadState(true);
