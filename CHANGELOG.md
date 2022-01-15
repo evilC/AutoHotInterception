@@ -6,9 +6,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 ## [Unreleased]
 ### Added
 ### Changed
+- If you SubscribeKey to subscribe to a specific key on a device, and use SubscribeKeyboard to subscribe to all keys on the same device 
+Then SubscribeKey now takes precedence (SubscribeKey callback fires, and SubscribeKeyboard does not)
 ### Deprecated
 ### Removed
 ### Fixed
+- If you had Context Mode enabled for a keyboard, and a SubscribeKey or SubscribeKeyboard subscription for the same keyboard 
+then using UnsubscribeKey or UnsubscribeKeyboard would disable Context Mode
 
 ## [0.6.0] - 2022-01-14
 ### Changed

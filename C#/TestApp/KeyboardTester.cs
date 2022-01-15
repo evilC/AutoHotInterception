@@ -9,7 +9,7 @@ namespace TestApp
 {
     public class KeyboardTester
     {
-        public KeyboardTester(TestDevice device)
+        public KeyboardTester(TestDevice device, bool block = false)
         {
             var im = new Manager();
 
@@ -17,7 +17,7 @@ namespace TestApp
 
             if (devId == 0) return;
 
-            im.SubscribeKeyboard(devId, true, new Action<ushort, int>(OnKeyEvent));
+            im.SubscribeKeyboard(devId, block, new Action<ushort, int>(OnKeyEvent));
         }
 
         public void OnKeyEvent(ushort code, int value)

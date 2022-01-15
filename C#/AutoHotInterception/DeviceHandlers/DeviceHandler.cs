@@ -11,6 +11,7 @@ namespace AutoHotInterception.DeviceHandlers
         public bool IsFiltered { get; set; }
 
         protected readonly ConcurrentDictionary<ushort, WorkerThread> WorkerThreads = new ConcurrentDictionary<ushort, WorkerThread>();
+        protected WorkerThread DeviceWorkerThread;
 
         public DeviceHandler(IntPtr deviceContext, int deviceId)
         {

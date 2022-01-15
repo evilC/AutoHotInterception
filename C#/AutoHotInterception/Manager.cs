@@ -71,6 +71,10 @@ namespace AutoHotInterception
             SetState(false);
         }
 
+        /// <summary>
+        /// Used by AHK code to make sure it can communicate with AHI
+        /// </summary>
+        /// <returns></returns>
         public string OkCheck()
         {
             return "OK";
@@ -109,6 +113,11 @@ namespace AutoHotInterception
             SetThreadState(true);
         }
 
+        /// <summary>
+        /// Unsubscribe from a keyboard key
+        /// </summary>
+        /// <param name="id">The id of the keyboard</param>
+        /// <param name="code">The Scancode of the key</param>
         public void UnsubscribeKey(int id, ushort code)
         {
             HelperFunctions.IsValidDeviceId(false, id);
@@ -121,10 +130,22 @@ namespace AutoHotInterception
             SetThreadState(true);
         }
 
+        /// <summary>
+        /// Subscribe to all keys on a keyboard
+        /// </summary>
+        /// <param name="id">The id of the keyboard</param>
+        /// <param name="block">Whether or not to block the key</param>
+        /// <param name="callback">The callback to fire when the key changes state</param>
+        /// <param name="concurrent">Whether or not to execute callbacks concurrently</param>
         public void SubscribeKeyboard(int id, bool block, dynamic callback, bool concurrent = false)
         {
             HelperFunctions.IsValidDeviceId(false, id);
             SetFilterState(false);
+
+            var handler = (KeyboardHandler)DeviceHandlers[id];
+            handler.SubscribeKeyboard(new MappingOptions { Block = block, Concurrent = concurrent, Callback = callback });
+
+            // ---
 
             KeyboardMappings.TryAdd(id, new MappingOptions { Block = block, Concurrent = concurrent, Callback = callback });
             if (!concurrent)
@@ -137,16 +158,17 @@ namespace AutoHotInterception
             SetThreadState(true);
         }
 
+        /// <summary>
+        /// Remove a SubscribeKeyboard subscription
+        /// </summary>
+        /// <param name="id">The id of the keyboard</param>
         public void UnsubscribeKeyboard(int id)
         {
             HelperFunctions.IsValidDeviceId(false, id);
             SetFilterState(false);
 
-            KeyboardMappings.TryRemove(id, out _);
-            if (!KeyboardKeyMappings.ContainsKey(id))
-            {
-                SetDeviceFilterState(id, false);
-            }
+            var handler = (KeyboardHandler)DeviceHandlers[id];
+            handler.UnsubscribeKeyboard();
 
             SetFilterState(true);
             SetThreadState(true);

@@ -8,13 +8,19 @@ namespace AutoHotInterception.DeviceHandlers
     class KeyboardHandler : DeviceHandler
     {
         private ConcurrentDictionary<ushort, MappingOptions> KeyboardKeyMappings = new ConcurrentDictionary<ushort, MappingOptions>();
-        private MappingOptions KeyboardMappings;
+        private MappingOptions KeyboardMapping;
+        dynamic ContextCallback;
 
         public KeyboardHandler(IntPtr deviceContext, int deviceId) : base (deviceContext, deviceId)
         {
             
         }
 
+        /// <summary>
+        /// Subscribe to a specific key on this keyboard
+        /// </summary>
+        /// <param name="code">The ScanCode of the key to subscribe to</param>
+        /// <param name="mappingOptions">Options for the subscription (block, callback to fire etc)</param>
         public void SubscribeKey(ushort code, MappingOptions mappingOptions)
         {
             KeyboardKeyMappings.TryAdd(code, mappingOptions);
@@ -25,16 +31,53 @@ namespace AutoHotInterception.DeviceHandlers
             }
         }
 
+        /// <summary>
+        /// Unsubscribe from a specific key on this keyboard
+        /// </summary>
+        /// <param name="code">The ScanCode of the key to subscribe to</param>
         public void UnsubscribeKey(ushort code)
         {
             KeyboardKeyMappings.TryRemove(code, out _);
-            if (KeyboardKeyMappings.Count == 0)
+            // If we have no other key subscriptions, and no context callback is present, mark this device as not filtered
+            if (KeyboardKeyMappings.Count == 0 && KeyboardMapping == null && ContextCallback == null)
             {
-                // Don't remove filter if all keys subscribed
-                if (KeyboardMappings != null)
+                IsFiltered = false;
+            }
+        }
+
+        /// <summary>
+        /// Subscribe to all keys on this keyboard
+        /// </summary>
+        /// <param name="mappingOptions">Options for the subscription (block, callback to fire etc)</param>
+        public void SubscribeKeyboard(MappingOptions mappingOptions)
+        {
+            KeyboardMapping = mappingOptions;
+            if (!mappingOptions.Concurrent)
+            {
+                if (DeviceWorkerThread == null)
                 {
-                    IsFiltered = false;
+                    DeviceWorkerThread = new WorkerThread();
+                    DeviceWorkerThread.Start();
                 }
+            }
+        }
+
+        public void UnsubscribeKeyboard()
+        {
+            if (KeyboardMapping == null) return;
+            // Stop DeviceWorkerThread
+            if (KeyboardMapping.Concurrent)
+            {
+                if (DeviceWorkerThread != null)
+                {
+                    DeviceWorkerThread.Dispose();
+                }
+            }
+            KeyboardMapping = null;
+            // If not mapped to any individual keys, or no Context callback is present, mark this device as not filtered
+            if (KeyboardKeyMappings.Count == 0 && ContextCallback == null)
+            {
+                IsFiltered = false;
             }
         }
 
@@ -56,10 +99,16 @@ namespace AutoHotInterception.DeviceHandlers
                 var state = processedState.State;
                 MappingOptions mapping = null;
 
+                // If there is a mapping to this specific key, then use that ...
                 if (KeyboardKeyMappings.ContainsKey(code))
                 {
                     isKeyMapping = true;
                     mapping = KeyboardKeyMappings[code];
+                }
+                // ... otherwise, if there is a mapping to the whole keyboard, use that
+                else if (KeyboardMapping != null)
+                {
+                    mapping = KeyboardMapping;
                 }
 
                 if (mapping != null)
@@ -97,7 +146,7 @@ namespace AutoHotInterception.DeviceHandlers
                             }
                             else
                             {
-                                //DeviceWorkerThreads[i]?.Actions.Add(() => mapping.Callback(code, state));
+                                DeviceWorkerThread?.Actions.Add(() => mapping.Callback(code, state));
                             }
                         }
                     }
