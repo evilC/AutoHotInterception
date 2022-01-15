@@ -194,11 +194,14 @@ cm1 := AHI.CreateContextManager(keyboard1Id)
 #if			; Close the #if block
 ```
 
+You can remove a Context Manager using `AHI.RemoveContextManager(keyboard1Id)`
+
 ### Subscription mode
 In Subscription mode, you bypass AHK's hotkey system completely, and Interception notifies you of key events via callbacks.  
 All forms of input are supported in Subscription Mode.  
 Subscription Mode overrides Context Mode - that is, if a key on a keyboard has been subscribed to with Subscription Mode, then Context Mode will not fire for that key on that keyboard.  
-Each Subscribe endpont also has a corresponding Unsubscribe endpoint, which removes the subscription and any block associated with it.  
+SubscribeKey overrides SubscribeKeyboard - that is, if you have subscribed to all keys and a specific key on the same keyboard, then if you press the specific key, it's callback will fire and the callback for SubscribeKeyboard will not.  
+Each Subscribe endpoint also has a corresponding Unsubscribe endpoint, which removes the subscription and any block associated with it.  
 
 #### Subscribing to Keyboard keys
 ##### Subscribe to a specific key on a specific keyboard  

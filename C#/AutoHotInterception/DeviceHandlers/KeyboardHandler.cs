@@ -17,6 +17,18 @@ namespace AutoHotInterception.DeviceHandlers
         }
 
         /// <summary>
+        /// Called when we are removing a Subscription or Context Mode
+        /// If there are no other subscriptions, and Context Mode is disabled, turn the filter off
+        /// </summary>
+        private void DisableFilterIfNeeded()
+        {
+            if (KeyboardMapping != null || KeyboardKeyMappings.Count > 0 || ContextCallback != null)
+            {
+                IsFiltered = false;
+            }
+        }
+
+        /// <summary>
         /// Subscribe to a specific key on this keyboard
         /// </summary>
         /// <param name="code">The ScanCode of the key to subscribe to</param>
@@ -39,11 +51,7 @@ namespace AutoHotInterception.DeviceHandlers
         public void UnsubscribeKey(ushort code)
         {
             KeyboardKeyMappings.TryRemove(code, out _);
-            // If we have no other key subscriptions, and no context callback is present, mark this device as not filtered
-            if (KeyboardKeyMappings.Count == 0 && KeyboardMapping == null && ContextCallback == null)
-            {
-                IsFiltered = false;
-            }
+            DisableFilterIfNeeded();
         }
 
         /// <summary>
@@ -76,11 +84,7 @@ namespace AutoHotInterception.DeviceHandlers
                 }
             }
             KeyboardMapping = null;
-            // If not mapped to any individual keys, or no Context callback is present, mark this device as not filtered
-            if (KeyboardKeyMappings.Count == 0 && ContextCallback == null)
-            {
-                IsFiltered = false;
-            }
+            DisableFilterIfNeeded();
         }
 
         /// <summary>
@@ -91,6 +95,12 @@ namespace AutoHotInterception.DeviceHandlers
         {
             ContextCallback = callback;
             IsFiltered = true;
+        }
+
+        public void RemoveContextCallback()
+        {
+            ContextCallback = null;
+            DisableFilterIfNeeded();
         }
 
         public override void ProcessStroke(ManagedWrapper.Stroke stroke)

@@ -372,7 +372,26 @@ namespace AutoHotInterception
 
             }
 
-            SetDeviceFilterState(id, true);
+            SetFilterState(true);
+            SetThreadState(true);
+        }
+
+        public void RemoveContextCallback(int id)
+        {
+            SetFilterState(false);
+            if (id < 1 || id > 20)
+                throw new ArgumentOutOfRangeException(nameof(id), "DeviceIds must be between 1 and 20");
+
+            if (id < 11)
+            {
+                var device = (KeyboardHandler)DeviceHandlers[id];
+                device.RemoveContextCallback();
+            }
+            else
+            {
+
+            }
+
             SetFilterState(true);
             SetThreadState(true);
         }

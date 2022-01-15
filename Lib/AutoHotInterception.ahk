@@ -224,12 +224,22 @@ class AutoHotInterception {
 	; ------------- Context Mode ----------------
 	; Creates a context class to make it easy to turn on/off the hotkeys
 	CreateContextManager(id) {
-		if (this._contextManagers.ContainsKey(id)) {
+		if (this._contextManagers.HasKey(id)) {
 			Msgbox % "ID " id " already has a Context Manager"
 			ExitApp
 		}
 		cm := new this.ContextManager(this, id)
 		this._contextManagers[id] := cm
+		return cm
+	}
+
+	RemoveContextManager(id) {
+		if (!this._contextManagers.HasKey(id)) {
+			Msgbox % "ID " id " does not have a Context Manager"
+			ExitApp
+		}
+		this._contextManagers[id].Remove()
+		this._contextManagers.Delete(id)
 		return cm
 	}
 
@@ -245,6 +255,10 @@ class AutoHotInterception {
 		OnContextCallback(state) {
 			Sleep 0
 			this.IsActive := state
+		}
+		
+		Remove(){
+			this.parent.Instance.RemoveContextCallback(this.id)
 		}
 	}
 }

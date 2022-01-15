@@ -5,6 +5,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 ### Added
+- Add RemoveContextManager() to remove a Context Manager
 ### Changed
 - If you SubscribeKey to subscribe to a specific key on a device, and use SubscribeKeyboard to subscribe to all keys on the same device 
 Then SubscribeKey now takes precedence (SubscribeKey callback fires, and SubscribeKeyboard does not)
@@ -13,6 +14,7 @@ Then SubscribeKey now takes precedence (SubscribeKey callback fires, and Subscri
 ### Fixed
 - If you had Context Mode enabled for a keyboard, and a SubscribeKey or SubscribeKeyboard subscription for the same keyboard 
 then using UnsubscribeKey or UnsubscribeKeyboard would disable Context Mode
+- CreateContextManager now correctly throws an error if one already exists
 
 ## [0.6.0] - 2022-01-14
 ### Changed
