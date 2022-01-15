@@ -8,14 +8,8 @@ namespace AutoHotInterception.DeviceHandlers
     class MouseHandler : DeviceHandler
     {
         dynamic ContextCallback;
-        // Holds MappingOptions for individual mouse button subscriptions
-        private ConcurrentDictionary<ushort, MappingOptions> MouseButtonMappings = new ConcurrentDictionary<ushort, MappingOptions>();
-        // If all mouse buttons are subscribed, this holds the mapping options
-        private MappingOptions MouseButtonsMappings;
         MappingOptions MouseMoveAbsoluteMapping;
         MappingOptions MouseMoveRelativeMapping;
-        protected readonly ConcurrentDictionary<ushort, WorkerThread> WorkerThreads = new ConcurrentDictionary<ushort, WorkerThread>();
-        protected WorkerThread DeviceWorkerThread;
 
         private bool _absoluteMode00Reported;
 
@@ -28,73 +22,12 @@ namespace AutoHotInterception.DeviceHandlers
         /// Called when we are removing a Subscription or Context Mode
         /// If there are no other subscriptions, and Context Mode is disabled, turn the filter off
         /// </summary>
-        private void DisableFilterIfNeeded()
+        public override void DisableFilterIfNeeded()
         {
-            if (MouseButtonsMappings != null || MouseButtonMappings.Count > 0 || ContextCallback != null)
+            if (AllButtonsMapping != null || SingleButtonMappings.Count > 0 || ContextCallback != null)
             {
                 IsFiltered = false;
             }
-        }
-
-        /// <summary>
-        /// Subscribes to a specific button on this mouse
-        /// </summary>
-        /// <param name="code">The button number (LMB = 0, RMB = 1, MMB = 2, X1 = 3, X2 = 4, WV = 5, WH = 6)</param>
-        /// <param name="mappingOptions">Options for the subscription (block, callback to fire etc)</param>
-        public void SubscribeMouseButton(ushort code, MappingOptions mappingOptions)
-        {
-            MouseButtonMappings.TryAdd(code, mappingOptions);
-            if (!mappingOptions.Concurrent && !WorkerThreads.ContainsKey(code))
-            {
-                WorkerThreads.TryAdd(code, new WorkerThread());
-                WorkerThreads[code].Start();
-            }
-            IsFiltered = true;
-        }
-
-        /// <summary>
-        /// Unsubscribes from a specific button on this mouse
-        /// </summary>
-        /// <param name="code">The button number (LMB = 0, RMB = 1, MMB = 2, X1 = 3, X2 = 4, WV = 5, WH = 6)</param>
-        public void UnsubscribeMouseButton(ushort code)
-        {
-            MouseButtonMappings.TryRemove(code, out var mappingOptions);
-            if (!mappingOptions.Concurrent && WorkerThreads.ContainsKey(code))
-            {
-                WorkerThreads[code].Dispose();
-                WorkerThreads.TryRemove(code, out _);
-            }
-            DisableFilterIfNeeded();
-        }
-
-        /// <summary>
-        /// Creates an AllButtons subscription
-        /// </summary>
-        /// <param name="mappingOptions">Options for the subscription (block, callback to fire etc)</param>
-        public void SubscribeMouseButtons(MappingOptions mappingOptions)
-        {
-            MouseButtonsMappings = mappingOptions;
-            if (!mappingOptions.Concurrent && DeviceWorkerThread == null)
-            {
-                DeviceWorkerThread = new WorkerThread();
-                DeviceWorkerThread.Start();
-            }
-            IsFiltered = true;
-        }
-
-        /// <summary>
-        /// Remove an AllButtons subscription
-        /// </summary>
-        public void UnsubscribeMouseButtons()
-        {
-            if (MouseButtonsMappings == null) return;
-            // Stop DeviceWorkerThread
-            if (!MouseButtonsMappings.Concurrent && DeviceWorkerThread != null)
-            {
-                DeviceWorkerThread.Dispose();
-            }
-            MouseButtonsMappings = null;
-            DisableFilterIfNeeded();
         }
 
         public override void ProcessStroke(ManagedWrapper.Stroke stroke)
@@ -202,26 +135,26 @@ namespace AutoHotInterception.DeviceHandlers
 
             }
 
-            var isMouseButtonsMapping = MouseButtonsMappings != null;
+            var isMouseButtonsMapping = AllButtonsMapping != null;
 
             // Process Mouse Buttons - do this AFTER mouse movement, so that absolute mode has coordinates available at the point that the button callback is fired
-            if (stroke.mouse.state != 0 && MouseButtonMappings.Count > 0 || isMouseButtonsMapping)
+            if (stroke.mouse.state != 0 && SingleButtonMappings.Count > 0 || isMouseButtonsMapping)
             {
                 var btnStates = HelperFunctions.MouseStrokeToButtonStates(stroke);
                 foreach (var btnState in btnStates)
                 {
-                    if (!isMouseButtonsMapping && !MouseButtonMappings.ContainsKey(btnState.Button))
+                    if (!isMouseButtonsMapping && !SingleButtonMappings.ContainsKey(btnState.Button))
                         continue;
 
                     hasSubscription = true;
                     MappingOptions mapping = null;
                     if (isMouseButtonsMapping)
                     {
-                        mapping = MouseButtonsMappings;
+                        mapping = AllButtonsMapping;
                     }
                     else
                     {
-                        mapping = MouseButtonMappings[btnState.Button];
+                        mapping = SingleButtonMappings[btnState.Button];
                     }
 
                     var state = btnState;

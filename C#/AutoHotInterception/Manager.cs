@@ -105,8 +105,8 @@ namespace AutoHotInterception
             HelperFunctions.IsValidDeviceId(false, id);
             SetFilterState(false);
 
-            var handler = (KeyboardHandler)DeviceHandlers[id];
-            handler.SubscribeKey(code, new MappingOptions { Block = block, Concurrent = concurrent, Callback = callback });
+            var handler = DeviceHandlers[id];
+            handler.SubscribeSingleButton(code, new MappingOptions { Block = block, Concurrent = concurrent, Callback = callback });
 
             SetFilterState(true);
             SetThreadState(true);
@@ -122,8 +122,8 @@ namespace AutoHotInterception
             HelperFunctions.IsValidDeviceId(false, id);
             SetFilterState(false);
 
-            var handler = (KeyboardHandler)DeviceHandlers[id];
-            handler.UnsubscribeKey(code);
+            var handler = DeviceHandlers[id];
+            handler.UnsubscribeSingleButton(code);
 
             SetFilterState(true);
             SetThreadState(true);
@@ -141,8 +141,8 @@ namespace AutoHotInterception
             HelperFunctions.IsValidDeviceId(false, id);
             SetFilterState(false);
 
-            var handler = (KeyboardHandler)DeviceHandlers[id];
-            handler.SubscribeKeyboard(new MappingOptions { Block = block, Concurrent = concurrent, Callback = callback });
+            var handler = DeviceHandlers[id];
+            handler.SubscribeAllButtons(new MappingOptions { Block = block, Concurrent = concurrent, Callback = callback });
 
             SetFilterState(true);
             SetThreadState(true);
@@ -157,8 +157,8 @@ namespace AutoHotInterception
             HelperFunctions.IsValidDeviceId(false, id);
             SetFilterState(false);
 
-            var handler = (KeyboardHandler)DeviceHandlers[id];
-            handler.UnsubscribeKeyboard();
+            var handler = DeviceHandlers[id];
+            handler.UnsubscribeAllButtons();
 
             SetFilterState(true);
             SetThreadState(true);
@@ -178,8 +178,8 @@ namespace AutoHotInterception
             HelperFunctions.IsValidDeviceId(true, id);
             SetFilterState(false);
 
-            var handler = (MouseHandler)DeviceHandlers[id];
-            handler.SubscribeMouseButton(code, new MappingOptions { Block = block, Concurrent = concurrent, Callback = callback });
+            var handler = DeviceHandlers[id];
+            handler.SubscribeSingleButton(code, new MappingOptions { Block = block, Concurrent = concurrent, Callback = callback });
 
             SetFilterState(true);
             SetThreadState(true);
@@ -195,8 +195,8 @@ namespace AutoHotInterception
             HelperFunctions.IsValidDeviceId(true, id);
             SetFilterState(false);
 
-            var handler = (MouseHandler)DeviceHandlers[id];
-            handler.UnsubscribeMouseButton(code);
+            var handler = DeviceHandlers[id];
+            handler.UnsubscribeSingleButton(code);
 
             SetFilterState(true);
             SetThreadState(true);
@@ -214,8 +214,8 @@ namespace AutoHotInterception
             HelperFunctions.IsValidDeviceId(true, id);
             SetFilterState(false);
 
-            var handler = (MouseHandler)DeviceHandlers[id];
-            handler.SubscribeMouseButtons(new MappingOptions { Block = block, Concurrent = concurrent, Callback = callback });
+            var handler = DeviceHandlers[id];
+            handler.SubscribeAllButtons(new MappingOptions { Block = block, Concurrent = concurrent, Callback = callback });
             SetFilterState(true);
             SetThreadState(true);
         }
@@ -229,8 +229,8 @@ namespace AutoHotInterception
             HelperFunctions.IsValidDeviceId(true, id);
             SetFilterState(false);
 
-            var handler = (MouseHandler)DeviceHandlers[id];
-            handler.UnsubscribeMouseButtons();
+            var handler = DeviceHandlers[id];
+            handler.UnsubscribeAllButtons();
 
             SetFilterState(true);
             SetThreadState(true);
@@ -347,15 +347,8 @@ namespace AutoHotInterception
             if (id < 1 || id > 20)
                 throw new ArgumentOutOfRangeException(nameof(id), "DeviceIds must be between 1 and 20");
 
-            if (id < 11)
-            {
-                var device = (KeyboardHandler)DeviceHandlers[id];
-                device.SetContextCallback(callback);
-            }
-            else
-            {
-
-            }
+            var device = DeviceHandlers[id];
+            device.SetContextCallback(callback);
 
             SetFilterState(true);
             SetThreadState(true);

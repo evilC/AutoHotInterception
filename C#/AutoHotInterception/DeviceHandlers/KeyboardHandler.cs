@@ -7,10 +7,6 @@ namespace AutoHotInterception.DeviceHandlers
 {
     class KeyboardHandler : DeviceHandler
     {
-        private ConcurrentDictionary<ushort, MappingOptions> KeyboardKeyMappings = new ConcurrentDictionary<ushort, MappingOptions>();
-        private MappingOptions KeyboardMapping;
-        dynamic ContextCallback;
-
         public KeyboardHandler(IntPtr deviceContext, int deviceId) : base (deviceContext, deviceId)
         {
             
@@ -20,90 +16,12 @@ namespace AutoHotInterception.DeviceHandlers
         /// Called when we are removing a Subscription or Context Mode
         /// If there are no other subscriptions, and Context Mode is disabled, turn the filter off
         /// </summary>
-        private void DisableFilterIfNeeded()
+        public override void DisableFilterIfNeeded()
         {
-            if (KeyboardMapping != null || KeyboardKeyMappings.Count > 0 || ContextCallback != null)
+            if (AllButtonsMapping != null || SingleButtonMappings.Count > 0 || ContextCallback != null)
             {
                 IsFiltered = false;
             }
-        }
-
-        /// <summary>
-        /// Subscribe to a specific key on this keyboard
-        /// </summary>
-        /// <param name="code">The ScanCode of the key to subscribe to</param>
-        /// <param name="mappingOptions">Options for the subscription (block, callback to fire etc)</param>
-        public void SubscribeKey(ushort code, MappingOptions mappingOptions)
-        {
-            KeyboardKeyMappings.TryAdd(code, mappingOptions);
-            if (!mappingOptions.Concurrent && !WorkerThreads.ContainsKey(code))
-            {
-                WorkerThreads.TryAdd(code, new WorkerThread());
-                WorkerThreads[code].Start();
-            }
-            IsFiltered = true;
-        }
-
-        /// <summary>
-        /// Unsubscribe from a specific key on this keyboard
-        /// </summary>
-        /// <param name="code">The ScanCode of the key to subscribe to</param>
-        public void UnsubscribeKey(ushort code)
-        {
-
-            KeyboardKeyMappings.TryRemove(code, out var mappingOptions);
-            if (!mappingOptions.Concurrent && WorkerThreads.ContainsKey(code))
-            {
-                WorkerThreads[code].Dispose();
-                WorkerThreads.TryRemove(code, out _);
-            }
-            DisableFilterIfNeeded();
-        }
-
-        /// <summary>
-        /// Create an AllKeys subscription
-        /// </summary>
-        /// <param name="mappingOptions">Options for the subscription (block, callback to fire etc)</param>
-        public void SubscribeKeyboard(MappingOptions mappingOptions)
-        {
-            KeyboardMapping = mappingOptions;
-            if (!mappingOptions.Concurrent && DeviceWorkerThread == null)
-            {
-                DeviceWorkerThread = new WorkerThread();
-                DeviceWorkerThread.Start();
-            }
-            IsFiltered = true;
-        }
-
-        /// <summary>
-        /// Unsubscribes the AllKeys subscription
-        /// </summary>
-        public void UnsubscribeKeyboard()
-        {
-            if (KeyboardMapping == null) return;
-            // Stop DeviceWorkerThread
-            if (!KeyboardMapping.Concurrent && DeviceWorkerThread != null)
-            {
-                DeviceWorkerThread.Dispose();
-            }
-            KeyboardMapping = null;
-            DisableFilterIfNeeded();
-        }
-
-        /// <summary>
-        /// Enables Context Mode for this keyboard
-        /// </summary>
-        /// <param name="callback">The callback to call when input happens</param>
-        public void SetContextCallback(dynamic callback)
-        {
-            ContextCallback = callback;
-            IsFiltered = true;
-        }
-
-        public void RemoveContextCallback()
-        {
-            ContextCallback = null;
-            DisableFilterIfNeeded();
         }
 
         public override void ProcessStroke(ManagedWrapper.Stroke stroke)
@@ -124,15 +42,15 @@ namespace AutoHotInterception.DeviceHandlers
                 MappingOptions mapping = null;
 
                 // If there is a mapping to this specific key, then use that ...
-                if (KeyboardKeyMappings.ContainsKey(code))
+                if (SingleButtonMappings.ContainsKey(code))
                 {
                     isKeyMapping = true;
-                    mapping = KeyboardKeyMappings[code];
+                    mapping = SingleButtonMappings[code];
                 }
                 // ... otherwise, if there is a mapping to the whole keyboard, use that
-                else if (KeyboardMapping != null)
+                else if (AllButtonsMapping != null)
                 {
-                    mapping = KeyboardMapping;
+                    mapping = AllButtonsMapping;
                 }
 
                 if (mapping != null)

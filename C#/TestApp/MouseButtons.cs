@@ -7,6 +7,11 @@ using System.Threading.Tasks;
 namespace TestApp
 {
     static class MouseButtons {
+        public static List<string> Name { get; } = new List<string>()
+        {
+            "Left", "Right", "Middle", "XButton 1", "XButton 2", "Scroll (Vertical)", "Scroll (Horizontal)"
+        };
+
         public static MouseButton Left { get; } = new MouseButton("Left", 0);
         public static MouseButton Right { get; } = new MouseButton("Right", 1);
         public static MouseButton Middle { get; } = new MouseButton("Middle", 2);

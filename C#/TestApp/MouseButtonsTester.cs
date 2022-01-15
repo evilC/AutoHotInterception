@@ -23,7 +23,7 @@ namespace TestApp
 
         public void OnButtonEvent(ushort code, int state)
         {
-            Console.WriteLine($"Code: {code}, State: {state}");
+            Console.WriteLine($"Code: {code}, Name: {MouseButtons.Name[code]}, State: {state}");
         }
     }
 }
