@@ -26,6 +26,7 @@ namespace AutoHotInterception
         {
             if (!_running) return;
             _running = false;
+            _worker.Abort();
             _worker.Join();
         }
 
