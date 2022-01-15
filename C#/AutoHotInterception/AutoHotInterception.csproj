@@ -46,9 +46,11 @@
     <Compile Include="DeviceHandlers\MouseHandler.cs" />
     <Compile Include="Helpers\HelperFunctions.cs" />
     <Compile Include="Helpers\ManagedWrapper.cs" />
+    <Compile Include="MappingOptions.cs" />
     <Compile Include="ScanCodeChecker.cs" />
     <Compile Include="Manager.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="WorkerThread.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="ToDo.md" />
