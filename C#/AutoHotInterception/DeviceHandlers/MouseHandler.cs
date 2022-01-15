@@ -33,6 +33,9 @@ namespace AutoHotInterception.DeviceHandlers
             IsFiltered = true;
         }
 
+        /// <summary>
+        /// Unsubscribes from absolute mouse movement
+        /// </summary>
         public void UnsubscribeMouseMoveAbsolute()
         {
             if (_mouseMoveAbsoluteMapping == null) return;
@@ -59,6 +62,9 @@ namespace AutoHotInterception.DeviceHandlers
             IsFiltered = true;
         }
 
+        /// <summary>
+        /// Unsubscribes from relative mouse movement
+        /// </summary>
         public void UnsubscribeMouseMoveRelative()
         {
             if (_mouseMoveRelativeMapping == null) return;
@@ -83,6 +89,62 @@ namespace AutoHotInterception.DeviceHandlers
             {
                 IsFiltered = false;
             }
+        }
+
+        /// <summary>
+        /// Sends Mouse button events
+        /// </summary>
+        /// <param name="btn">Button ID to send</param>
+        /// <param name="state">State of the button</param>
+        /// <returns></returns>
+        public void SendMouseButtonEvent(int btn, int state)
+        {
+            var stroke = HelperFunctions.MouseButtonAndStateToStroke(btn, state);
+            ManagedWrapper.Send(DeviceContext, DeviceId, ref stroke, 1);
+        }
+
+        /// <summary>
+        /// Same as <see cref="SendMouseButtonEvent" />, but sends button events in Absolute mode (with coordinates)
+        /// </summary>
+        /// <param name="btn">Button ID to send</param>
+        /// <param name="state">State of the button</param>
+        /// <param name="x">X position</param>
+        /// <param name="y">Y position</param>
+        public void SendMouseButtonEventAbsolute(int btn, int state, int x, int y)
+        {
+            var stroke = HelperFunctions.MouseButtonAndStateToStroke(btn, state);
+            stroke.mouse.x = x;
+            stroke.mouse.y = y;
+            stroke.mouse.flags = (ushort)ManagedWrapper.MouseFlag.MouseMoveAbsolute;
+            ManagedWrapper.Send(DeviceContext, DeviceId, ref stroke, 1);
+        }
+
+        /// <summary>
+        /// Sends Absolute Mouse Movement
+        /// Note: Creating a new stroke seems to make Absolute input become relative to main monitor
+        /// Calling Send on an actual stroke from an Absolute device results in input relative to all monitors
+        /// </summary>
+        /// <param name="x"></param>
+        /// <param name="y"></param>
+        /// <returns></returns>
+        public void SendMouseMoveAbsolute(int x, int y)
+        {
+            var stroke = new ManagedWrapper.Stroke
+            { mouse = { x = x, y = y, flags = (ushort)ManagedWrapper.MouseFlag.MouseMoveAbsolute } };
+            ManagedWrapper.Send(DeviceContext, DeviceId, ref stroke, 1);
+        }
+
+        /// <summary>
+        ///     Sends Relative Mouse Movement
+        /// </summary>
+        /// <param name="x">X movement</param>
+        /// <param name="y">Y movement</param>
+        /// <returns></returns>
+        public void SendMouseMoveRelative(int x, int y)
+        {
+            var stroke = new ManagedWrapper.Stroke
+            { mouse = { x = x, y = y, flags = (ushort)ManagedWrapper.MouseFlag.MouseMoveRelative } };
+            ManagedWrapper.Send(DeviceContext, DeviceId, ref stroke, 1);
         }
 
         public override void ProcessStroke(ManagedWrapper.Stroke stroke)

@@ -345,7 +345,7 @@ namespace AutoHotInterception
         #region Input Synthesis
 
         /// <summary>
-        ///     Sends a keyboard key event
+        /// Sends a keyboard key event
         /// </summary>
         /// <param name="id">The ID of the Keyboard to send as</param>
         /// <param name="code">The ScanCode to send</param>
@@ -353,50 +353,37 @@ namespace AutoHotInterception
         public void SendKeyEvent(int id, ushort code, int state)
         {
             HelperFunctions.IsValidDeviceId(false, id);
-            var st = 1 - state;
-            var stroke = new ManagedWrapper.Stroke();
-            if (code > 255)
-            {
-                code -= 256;
-                if (code != 54) // RShift has > 256 code, but state is 0/1
-                    st += 2;
-            }
-
-            stroke.key.code = code;
-            stroke.key.state = (ushort)st;
-            ManagedWrapper.Send(DeviceContext, id, ref stroke, 1);
+            var device = (KeyboardHandler)DeviceHandlers[id];
+            device.SendKeyEvent(code, state);
         }
 
         /// <summary>
-        ///     Sends Mouse button events
+        /// Sends Mouse button events
         /// </summary>
         /// <param name="id"></param>
-        /// <param name="btn"></param>
-        /// <param name="state"></param>
+        /// <param name="btn">Button ID to send</param>
+        /// <param name="state">State of the button</param>
         /// <returns></returns>
         public void SendMouseButtonEvent(int id, int btn, int state)
         {
             HelperFunctions.IsValidDeviceId(true, id);
-
-            var stroke = HelperFunctions.MouseButtonAndStateToStroke(btn, state);
-            ManagedWrapper.Send(DeviceContext, id, ref stroke, 1);
+            var device = (MouseHandler)DeviceHandlers[id];
+            device.SendMouseButtonEvent(btn, state);
         }
 
         /// <summary>
-        ///     Same as <see cref="SendMouseButtonEvent" />, but sends button events in Absolute mode (with coordinates)
+        /// Same as <see cref="SendMouseButtonEvent" />, but sends button events in Absolute mode (with coordinates)
         /// </summary>
-        /// <param name="id"></param>
-        /// <param name="btn"></param>
-        /// <param name="state"></param>
-        /// <param name="x"></param>
-        /// <param name="y"></param>
+        /// <param name="id">ID of the mouse</param>
+        /// <param name="btn">Button ID to send</param>
+        /// <param name="state">State of the button</param>
+        /// <param name="x">X position</param>
+        /// <param name="y">Y position</param>
         public void SendMouseButtonEventAbsolute(int id, int btn, int state, int x, int y)
         {
-            var stroke = HelperFunctions.MouseButtonAndStateToStroke(btn, state);
-            stroke.mouse.x = x;
-            stroke.mouse.y = y;
-            stroke.mouse.flags = (ushort)ManagedWrapper.MouseFlag.MouseMoveAbsolute;
-            ManagedWrapper.Send(DeviceContext, id, ref stroke, 1);
+            HelperFunctions.IsValidDeviceId(true, id);
+            var device = (MouseHandler)DeviceHandlers[id];
+            device.SendMouseButtonEventAbsolute(btn, state, x, y);
         }
 
         public void SendMouseMove(int id, int x, int y)
@@ -407,9 +394,9 @@ namespace AutoHotInterception
         /// <summary>
         ///     Sends Relative Mouse Movement
         /// </summary>
-        /// <param name="id"></param>
-        /// <param name="x"></param>
-        /// <param name="y"></param>
+        /// <param name="id">The id of the mouse</param>
+        /// <param name="x">X movement</param>
+        /// <param name="y">Y movement</param>
         /// <returns></returns>
         public void SendMouseMoveRelative(int id, int x, int y)
         {
@@ -432,10 +419,9 @@ namespace AutoHotInterception
         public void SendMouseMoveAbsolute(int id, int x, int y)
         {
             HelperFunctions.IsValidDeviceId(true, id);
+            var device = (MouseHandler)DeviceHandlers[id];
 
-            var stroke = new ManagedWrapper.Stroke
-            { mouse = { x = x, y = y, flags = (ushort)ManagedWrapper.MouseFlag.MouseMoveAbsolute } };
-            ManagedWrapper.Send(DeviceContext, id, ref stroke, 1);
+            device.SendMouseMoveAbsolute(x, y);
         }
 
         #endregion
