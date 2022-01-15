@@ -18,7 +18,9 @@ namespace AutoHotInterception.DeviceHandlers
         /// </summary>
         public override void DisableFilterIfNeeded()
         {
-            if (AllButtonsMapping != null || SingleButtonMappings.Count > 0 || ContextCallback != null)
+            if (AllButtonsMapping == null 
+                && SingleButtonMappings.Count == 0
+                && ContextCallback == null)
             {
                 IsFiltered = false;
             }
