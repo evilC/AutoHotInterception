@@ -65,7 +65,7 @@ namespace AutoHotInterception.DeviceHandlers
             {
                 DeviceWorkerThread = new WorkerThread();
                 DeviceWorkerThread.Start();
-        }
+            }
             IsFiltered = true;
         }
 
