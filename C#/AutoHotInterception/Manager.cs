@@ -45,7 +45,7 @@ namespace AutoHotInterception
         private static bool _absoluteMode00Reported;
 
         private static bool _pollThreadRunning;
-        private volatile bool _lctr = false;
+        public volatile bool _lctr = false;
         private CancellationTokenSource _cancellationToken;
 
         #region Public
@@ -624,7 +624,7 @@ namespace AutoHotInterception
                         if (isMonitoredKeyboard)
                         {
                             var isKeyMapping = false; // True if this is a mapping to a single key, else it would be a mapping to a whole device
-                            var processedState = HelperFunctions.KeyboardStrokeToKeyboardState(stroke);
+                            var processedState = HelperFunctions.KeyboardStrokeToKeyboardState(stroke, _lctr);
                             var code = processedState.Code;
                             var state = processedState.State;
                             MappingOptions mapping = null;
