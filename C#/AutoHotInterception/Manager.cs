@@ -237,7 +237,7 @@ namespace AutoHotInterception
         }
 
         /// <summary>
-        ///     Subscribes to Absolute mouse movement
+        /// Subscribes to Absolute mouse movement
         /// </summary>
         /// <param name="id">The id of the Mouse</param>
         /// <param name="block">Whether or not to block the movement</param>
@@ -249,31 +249,26 @@ namespace AutoHotInterception
             HelperFunctions.IsValidDeviceId(true, id);
             SetFilterState(false);
 
-            MouseMoveAbsoluteMappings[id] = new MappingOptions
-            { Block = block, Concurrent = concurrent, Callback = callback };
+            var device = (MouseHandler)DeviceHandlers[id];
+            device.SubscribeMouseMoveAbsolute(new MappingOptions
+            { Block = block, Concurrent = concurrent, Callback = callback });
 
-            if (!concurrent)
-            {
-                if (!WorkerThreads.ContainsKey(id))
-                    WorkerThreads.TryAdd(id, new ConcurrentDictionary<ushort, WorkerThread>());
-
-                WorkerThreads[id].TryAdd(7, new WorkerThread()); // Use 7 as second index for MouseMoveAbsolute
-                WorkerThreads[id][7].Start();
-            }
-
-            SetDeviceFilterState(id, true);
             SetFilterState(true);
             SetThreadState(true);
         }
 
+        /// <summary>
+        /// Unsubscribes from absolute mouse movement
+        /// </summary>
+        /// <param name="id">The id of the mouse</param>
         public void UnsubscribeMouseMoveAbsolute(int id)
         {
             HelperFunctions.IsValidDeviceId(true, id);
             SetFilterState(false);
 
-            if (MouseMoveAbsoluteMappings.TryRemove(id, out _))
-                if (!DeviceHasBindings(id))
-                    SetDeviceFilterState(id, false);
+            var device = (MouseHandler)DeviceHandlers[id];
+            device.UnsubscribeMouseMoveAbsolute();
+
             SetFilterState(true);
             SetThreadState(true);
         }
@@ -300,32 +295,27 @@ namespace AutoHotInterception
         public void SubscribeMouseMoveRelative(int id, bool block, dynamic callback, bool concurrent = false)
         {
             HelperFunctions.IsValidDeviceId(true, id);
+            SetFilterState(false);
 
-            MouseMoveRelativeMappings[id] = new MappingOptions
-            { Block = block, Concurrent = concurrent, Callback = callback };
+            var device = (MouseHandler)DeviceHandlers[id];
+            device.SubscribeMouseMoveRelative(new MappingOptions
+            { Block = block, Concurrent = concurrent, Callback = callback });
 
-            if (!concurrent)
-            {
-                if (!WorkerThreads.ContainsKey(id))
-                    WorkerThreads.TryAdd(id, new ConcurrentDictionary<ushort, WorkerThread>());
-
-                WorkerThreads[id].TryAdd(8, new WorkerThread()); // Use 8 as second index for MouseMoveRelative
-                WorkerThreads[id][8].Start();
-            }
-
-            SetDeviceFilterState(id, true);
             SetFilterState(true);
             SetThreadState(true);
         }
 
+        /// <summary>
+        /// Unsubscribes from relative mouse movement
+        /// </summary>
+        /// <param name="id">The id of the mouse</param>
         public void UnsubscribeMouseMoveRelative(int id)
         {
             HelperFunctions.IsValidDeviceId(true, id);
             SetFilterState(false);
 
-            if (MouseMoveRelativeMappings.TryRemove(id, out _))
-                if (!DeviceHasBindings(id))
-                    SetDeviceFilterState(id, false);
+            var device = (MouseHandler)DeviceHandlers[id];
+            device.UnsubscribeMouseMoveRelative();
 
             SetFilterState(true);
             SetThreadState(true);

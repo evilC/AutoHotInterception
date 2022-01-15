@@ -18,6 +18,58 @@ namespace AutoHotInterception.DeviceHandlers
         }
 
         /// <summary>
+        /// Subscribes to Absolute mouse movement
+        /// </summary>
+        /// <param name="mappingOptions">Options for the subscription (block, callback to fire etc)</param>
+        /// <returns></returns>
+        public void SubscribeMouseMoveAbsolute(MappingOptions mappingOptions)
+        {
+            _mouseMoveAbsoluteMapping = mappingOptions;
+            if (!mappingOptions.Concurrent && !WorkerThreads.ContainsKey(7))
+            {
+                WorkerThreads.TryAdd(7, new WorkerThread());
+                WorkerThreads[7].Start();
+            }
+            IsFiltered = true;
+        }
+
+        public void UnsubscribeMouseMoveAbsolute()
+        {
+            if (_mouseMoveAbsoluteMapping == null) return;
+            if (!_mouseMoveAbsoluteMapping.Concurrent && WorkerThreads.ContainsKey(7))
+            {
+                WorkerThreads[7].Dispose();
+                WorkerThreads.TryRemove(7, out _);
+            }
+        }
+
+        /// <summary>
+        /// Subscribes to Relative mouse movement
+        /// </summary>
+        /// <param name="mappingOptions">Options for the subscription (block, callback to fire etc)</param>
+        /// <returns></returns>
+        public void SubscribeMouseMoveRelative(MappingOptions mappingOptions)
+        {
+            _mouseMoveRelativeMapping = mappingOptions;
+            if (!mappingOptions.Concurrent && !WorkerThreads.ContainsKey(8))
+            {
+                WorkerThreads.TryAdd(8, new WorkerThread());
+                WorkerThreads[8].Start();
+            }
+            IsFiltered = true;
+        }
+
+        public void UnsubscribeMouseMoveRelative()
+        {
+            if (_mouseMoveRelativeMapping == null) return;
+            if (!_mouseMoveRelativeMapping.Concurrent && WorkerThreads.ContainsKey(8))
+            {
+                WorkerThreads[8].Dispose();
+                WorkerThreads.TryRemove(8, out _);
+            }
+        }
+
+        /// <summary>
         /// Called when we are removing a Subscription or Context Mode
         /// If there are no other subscriptions, and Context Mode is disabled, turn the filter off
         /// </summary>
