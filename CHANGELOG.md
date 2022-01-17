@@ -5,6 +5,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 ### Added
+### Changed
+### Deprecated
+### Removed
+### Fixed
+
+## [0.7.0] - 2022-01 -17
+### Added
 - Add RemoveContextManager() to remove a Context Manager
 ### Changed
 - MAJOR changes to the code behind the scenes - the code is now organized way better, and key / button handling has been consolidated into the same code.  
