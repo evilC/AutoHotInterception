@@ -18,6 +18,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 Nothing should have changed apart from what is listed in this changelog
 - If you SubscribeKey to subscribe to a specific key on a device, and use SubscribeKeyboard to subscribe to all keys on the same device 
 Then SubscribeKey now takes precedence (SubscribeKey callback fires, and SubscribeKeyboard does not)
+- AhiScanCodeTester.ahk in Development Tools is currently broken due to changes in AHI - it will be fixed in the next release
 ### Deprecated
 ### Removed
 ### Fixed
