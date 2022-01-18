@@ -41,9 +41,24 @@ namespace AutoHotInterception.Helpers
         public static SpecialKey Numlock { get; set; } = new SpecialKey("Numlock", 69, ExtMode.E0, CodeType.High, Order.Normal);
         public static SpecialKey Pause { get; set; } = new SpecialKey("Pause", 69, ExtMode.E0, CodeType.Low, Order.Prefixed);
         public static SpecialKey Home { get; set; } = new SpecialKey("Home", 71, ExtMode.E1, CodeType.High, Order.Wrapped);
+        public static SpecialKey Up { get; set; } = new SpecialKey("Up", 72, ExtMode.E1, CodeType.High, Order.Wrapped);
+        public static SpecialKey PgUp { get; set; } = new SpecialKey("PgUp", 73, ExtMode.E1, CodeType.High, Order.Wrapped);
+        public static SpecialKey Left { get; set; } = new SpecialKey("Left", 75, ExtMode.E1, CodeType.High, Order.Wrapped);
+        public static SpecialKey Right { get; set; } = new SpecialKey("Right", 77, ExtMode.E1, CodeType.High, Order.Wrapped);
+        public static SpecialKey End { get; set; } = new SpecialKey("End", 79, ExtMode.E1, CodeType.High, Order.Wrapped);
+        public static SpecialKey Down { get; set; } = new SpecialKey("Down", 80, ExtMode.E1, CodeType.High, Order.Wrapped);
+        public static SpecialKey PgDn { get; set; } = new SpecialKey("PgDn", 81, ExtMode.E1, CodeType.High, Order.Wrapped);
+        public static SpecialKey Insert { get; set; } = new SpecialKey("Insert", 82, ExtMode.E1, CodeType.High, Order.Wrapped);
+        public static SpecialKey Delete { get; set; } = new SpecialKey("Delete", 83, ExtMode.E1, CodeType.High, Order.Wrapped);
+        public static SpecialKey LeftWindows { get; } = new SpecialKey("Left Windows", 91, ExtMode.E1, CodeType.High, Order.Normal);
+        public static SpecialKey RightWindows { get; } = new SpecialKey("Right Windows", 92, ExtMode.E1, CodeType.High, Order.Normal);
+        public static SpecialKey Apps { get; } = new SpecialKey("Apps", 93, ExtMode.E1, CodeType.High, Order.Normal);
+
         public static List<SpecialKey> List { get; set; } = new List<SpecialKey>()
         {
-            NumpadEnter, RightControl, NumpadDiv, RightShift, RightAlt, Numlock, Pause, Home
+            NumpadEnter, RightControl, NumpadDiv, RightShift, RightAlt, Numlock, Pause,
+            Home, Up, PgUp, Left, Right, End, Down, PgDn, Insert, Delete,
+            LeftWindows, RightWindows, Apps
         };
     }
 
