@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using static AutoHotInterception.Helpers.ManagedWrapper;
 
 /*
@@ -20,16 +21,13 @@ namespace AutoHotInterception.Helpers
     public class TranslatedKey
     {
         public ushort AhkCode { get; set; }
-        //public List<KeyStroke> Strokes { get; set; }
-        public KeyStroke FirstStroke { get; }
-        public KeyStroke SecondStroke { get; set; }
+        public List<KeyStroke> Strokes { get; set; }
         public bool IsExtended { get;  }
         public int State { get; set; }
 
         public TranslatedKey(KeyStroke stroke, bool isExtended)
         {
-            //Strokes = new List<KeyStroke>() { stroke };
-            FirstStroke = stroke;
+            Strokes = new List<KeyStroke>() { stroke };
         }
     }
 
@@ -39,11 +37,13 @@ namespace AutoHotInterception.Helpers
         public static SpecialKey RightControl { get; } = new SpecialKey("Right Control", 29, ExtMode.E1, CodeType.High, Order.Normal);
         public static SpecialKey NumpadDiv { get; } = new SpecialKey("Numpad Div", 53, ExtMode.E1, CodeType.High, Order.Normal);
         public static SpecialKey RightShift { get; set; } = new SpecialKey("Right Shift", 54, ExtMode.E0, CodeType.High, Order.Normal);
+        public static SpecialKey RightAlt { get; } = new SpecialKey("Right Alt", 56, ExtMode.E1, CodeType.High, Order.Normal);
+        public static SpecialKey Numlock { get; set; } = new SpecialKey("Numlock", 69, ExtMode.E0, CodeType.High, Order.Normal);
         public static SpecialKey Pause { get; set; } = new SpecialKey("Pause", 69, ExtMode.E0, CodeType.Low, Order.Prefixed);
         public static SpecialKey Home { get; set; } = new SpecialKey("Home", 71, ExtMode.E1, CodeType.High, Order.Wrapped);
         public static List<SpecialKey> List { get; set; } = new List<SpecialKey>()
         {
-            NumpadEnter, RightControl, NumpadDiv, Pause, Home
+            NumpadEnter, RightControl, NumpadDiv, RightShift, RightAlt, Numlock, Pause, Home
         };
     }
 
@@ -66,7 +66,7 @@ namespace AutoHotInterception.Helpers
         public CodeType CodeType { get; }
         public Order StrokeOrder { get; }
 
-        public SpecialKey(string name, ushort code, ExtMode extendedMode, CodeType codeType, Order strokeOrderW)
+        public SpecialKey(string name, ushort code, ExtMode extendedMode, CodeType codeType, Order strokeOrder)
         {
             // The name of the key
             Name = name;
@@ -76,68 +76,50 @@ namespace AutoHotInterception.Helpers
             ExtendedMode = extendedMode;
             // Whether AHK uses a High (+256) or Low code for this key
             CodeType = codeType;
+            // Whether part of two stroke extended set, and if so, which order the strokes come in
+            StrokeOrder = strokeOrder;
         }
     }
 
     public class ScanCodeHelper
     {
-        //private KeyStroke? _extendedBuffer;
         private TranslatedKey _translatedKey;
         // Converts Interception state to AHK state
-        private static List<ushort> _stateConverter = new List<ushort>() { 1, 0 , 1, 0, 1, 0 };
+        private static List<ushort> _stateConverter = new List<ushort>() { 1, 0, 1, 0, 1, 0 };
         // Converts state to extended mode
         private static List<ushort> _stateToExtendedMode = new List<ushort>() { 0, 0, 1, 1, 2, 2 };
+        // List of code/states which signify first stroke of a two stroke set
+        private static HashSet<Tuple<ushort, ushort>> _extendedCodeAndStates = new HashSet<Tuple<ushort, ushort>>();
 
-        /*
-        // Keys which AHK assigns a high code to, even though state is 0/1
-        // These keys also do not generate extended key codes
-        private Dictionary<ushort, string> _highCodes = new Dictionary<ushort, string>()
-        {
-            { 28, "Nummpad Enter" },
-            { 54, "Right Shift" },
-            { 69, "Numlock" },
-
-        };
-
-
-        // Keys which have an extended state, but extended modifiers are not sent
-        private Dictionary<ushort, string> _noExtendedModifier = new Dictionary<ushort, string>()
-        {
-            {29, "Right Control" },
-            {53, "Numpad Div" },
-            {56, "Right Alt" },
-            {91, "Left Windows" },
-            {92, "Right Windows" },
-            {93, "Apps" }
-        };
-        */
-
-        public ScanCodeHelper()
+         public ScanCodeHelper()
         {
             for (int i = 0; i < SpecialKeys.List.Count; i++)
             {
                 var specialKey = SpecialKeys.List[i];
                 var dict = specialKey.CodeType == CodeType.Low ? _lowCodes : _highCodes;
                 dict.Add(specialKey.Code, specialKey.Name);
-                if (specialKey.ExtendedMode != ExtMode.E0 && specialKey.StrokeOrder == Order.Normal)
+                // Build list of codes which signify that this is the first stroke of an extended set
+                if (specialKey.StrokeOrder == Order.Wrapped)
                 {
-                    _noExtendedModifier.Add(specialKey.Code, specialKey.Name);
+                    _extendedCodeAndStates.Add(new Tuple<ushort, ushort>(42, 2)); // LShift with E1 state on press
+                    _extendedCodeAndStates.Add(new Tuple<ushort, ushort>(specialKey.Code, 3)); // ScanCode with E1 state on release
+                }
+                else if (specialKey.StrokeOrder == Order.Prefixed)
+                {
+                    _extendedCodeAndStates.Add(new Tuple<ushort, ushort>(29, 4)); // LCtrl with E2 state on press
+                    _extendedCodeAndStates.Add(new Tuple<ushort, ushort>(29, 5)); // LCtrl with E2 state on release
                 }
             }
         }
 
         private Dictionary<ushort, string> _highCodes = new Dictionary<ushort, string>();
         private Dictionary<ushort, string> _lowCodes = new Dictionary<ushort, string>();
-        // Keys which have E1 or E2 state, but do not send extended modifier
-        private Dictionary<ushort, string> _noExtendedModifier = new Dictionary<ushort, string>();
 
         public TranslatedKey TranslateScanCode(KeyStroke stroke)
         {
-            //if(stroke.state > 1 && !_noExtendedModifier.ContainsKey(stroke.code))
-            //if (stroke.state > 1 || stroke.code == SpecialKeys.Pause.Code )
-            if (stroke.state > 1 && !_noExtendedModifier.ContainsKey(stroke.code))
+            if (_extendedCodeAndStates.Contains(new Tuple<ushort, ushort>(stroke.code, stroke.state)) || _translatedKey != null)
             {
-                // Stroke is part of Extended key sequence of 2 keys
+                // Stroke is first key of Extended key sequence of 2 keys
                 if (_translatedKey == null)
                 {
                     // Stroke is first of an Extended key sequence
@@ -145,10 +127,31 @@ namespace AutoHotInterception.Helpers
                     // ... and instruct ProcessStroke to take no action for this stroke, as we do not know what the sequence is yet
                     _translatedKey = new TranslatedKey(stroke, true);
                     return null;
-                } else
+                }
+                else
                 {
                     // Stroke is 2nd of Extended key sequence - we now know what the full sequence is
-                    _translatedKey.SecondStroke = stroke;
+                    _translatedKey.Strokes.Add(stroke);
+                    var extMode = _stateToExtendedMode[stroke.state];
+                    switch (extMode)
+                    {
+                        case 0:
+                            throw new Exception("Expecting E1 or E2 state");
+                        case 1:
+                            // Which state to report (1 = press, 0 = release)
+                            var state = _stateConverter[_translatedKey.Strokes[0].state];
+                            // Which code to use depends on whether this is a press or release
+                            // On press, use the second stroke (index 1)
+                            // On release, use the first stroke (index 0)
+                            var whichStroke = _translatedKey.Strokes[state];
+                            _translatedKey.AhkCode = (ushort)(whichStroke.code + 256);
+                            _translatedKey.State = state;
+                            break;
+                        case 2:
+                            throw new NotImplementedException();
+                        default:
+                            throw new Exception("state can only be E0, E1 or E2");
+                    }
                 }
             }
             else
@@ -164,6 +167,7 @@ namespace AutoHotInterception.Helpers
                 _translatedKey.State = _stateConverter[stroke.state];
             }
             var returnValue = _translatedKey;
+            // ToDo - can this always be nulled?
             if (!_translatedKey.IsExtended)
             {
                 _translatedKey = null;
