@@ -18,11 +18,12 @@ The purpose of this class is to encapsulate the logic required to deal with this
 */
 namespace AutoHotInterception.Helpers
 {
+    // Returned to the ProcessStroke function to indicate the ultimate result of processing the stroke(s)
+    // Can be the result of processing a two-stroke Extended Keycode set
     public class TranslatedKey
     {
         public ushort AhkCode { get; set; }
         public List<KeyStroke> Strokes { get; set; }
-        //public bool IsExtended { get;  }
         public int State { get; set; }
 
         public TranslatedKey(KeyStroke stroke, bool isExtended)
@@ -31,6 +32,31 @@ namespace AutoHotInterception.Helpers
         }
     }
 
+    // Holds information for a special key to describe how it behaves
+    public class SpecialKey
+    {
+        public string Name { get; }
+        public ushort Code { get; }
+        public ExtMode ExtendedMode { get; }
+        public CodeType CodeType { get; }
+        public Order StrokeOrder { get; }
+
+        public SpecialKey(string name, ushort code, ExtMode extendedMode, CodeType codeType, Order strokeOrder)
+        {
+            // The name of the key
+            Name = name;
+            // The code that identifies this key
+            Code = code;
+            // What values will be reported for press/release states for this key
+            ExtendedMode = extendedMode;
+            // Whether AHK uses a High (+256) or Low code for this key
+            CodeType = codeType;
+            // Whether part of two stroke extended set, and if so, which order the strokes come in
+            StrokeOrder = strokeOrder;
+        }
+    }
+
+    // List of all the special keys ahd how they behave
     public static class SpecialKeys
     {
         public static SpecialKey NumpadEnter { get; set; } = new SpecialKey("Numpad Enter", 28, ExtMode.E0, CodeType.High, Order.Normal);
@@ -73,29 +99,7 @@ namespace AutoHotInterception.Helpers
             , Wrapped /* Stroke order is Ext Modifier press, Key press, Key release, Ext Modifier Release */
             , Prefixed /* Stroke order is Ext Modifier press, Key press, Ext Modifier release, Key release */};
 
-    public class SpecialKey
-    {
-        public string Name { get; }
-        public ushort Code { get; }
-        public ExtMode ExtendedMode { get; }
-        public CodeType CodeType { get; }
-        public Order StrokeOrder { get; }
-
-        public SpecialKey(string name, ushort code, ExtMode extendedMode, CodeType codeType, Order strokeOrder)
-        {
-            // The name of the key
-            Name = name;
-            // The code that identifies this key
-            Code = code;
-            // What values will be reported for press/release states for this key
-            ExtendedMode = extendedMode;
-            // Whether AHK uses a High (+256) or Low code for this key
-            CodeType = codeType;
-            // Whether part of two stroke extended set, and if so, which order the strokes come in
-            StrokeOrder = strokeOrder;
-        }
-    }
-
+    // Processes strokes and translates them into AHK style code and state
     public class ScanCodeHelper
     {
         private TranslatedKey _translatedKey;
@@ -105,14 +109,16 @@ namespace AutoHotInterception.Helpers
         private static List<ushort> _stateToExtendedMode = new List<ushort>() { 0, 0, 1, 1, 2, 2 };
         // List of code/states which signify first stroke of a two stroke set
         private static HashSet<Tuple<ushort, ushort>> _extendedCodeAndStates = new HashSet<Tuple<ushort, ushort>>();
+        // Keys which are E0, but AHK still assigns a High (+256) code to them
+        private Dictionary<ushort, string> _highCodes = new Dictionary<ushort, string>();
 
-         public ScanCodeHelper()
+        public ScanCodeHelper()
         {
+            // Read the SpecialKeys list and build lookup tables to help in logic processing
             for (int i = 0; i < SpecialKeys.List.Count; i++)
             {
                 var specialKey = SpecialKeys.List[i];
-                var dict = specialKey.CodeType == CodeType.Low ? _lowCodes : _highCodes;
-                dict.Add(specialKey.Code, specialKey.Name);
+                if (specialKey.CodeType == CodeType.High) _highCodes.Add(specialKey.Code, specialKey.Name);
                 // Build list of codes which signify that this is the first stroke of an extended set
                 if (specialKey.StrokeOrder == Order.Wrapped)
                 {
@@ -127,9 +133,8 @@ namespace AutoHotInterception.Helpers
             }
         }
 
-        private Dictionary<ushort, string> _highCodes = new Dictionary<ushort, string>();
-        private Dictionary<ushort, string> _lowCodes = new Dictionary<ushort, string>();
-
+        // Process stroke(s) and return ONE TranslatedKey
+        // May need to be called twice to return a TranslatedKey - it maay return null for the first stroke
         public TranslatedKey TranslateScanCode(KeyStroke stroke)
         {
             if (_extendedCodeAndStates.Contains(new Tuple<ushort, ushort>(stroke.code, stroke.state)) || _translatedKey != null)
@@ -147,7 +152,6 @@ namespace AutoHotInterception.Helpers
                 {
                     // Stroke is 2nd of Extended key sequence - we now know what the full sequence is
                     _translatedKey.Strokes.Add(stroke);
-                    //var extMode = _stateToExtendedMode[stroke.state];
                     var extMode = _stateToExtendedMode[_translatedKey.Strokes[0].state];
                     ushort state;
                     KeyStroke whichStroke;
