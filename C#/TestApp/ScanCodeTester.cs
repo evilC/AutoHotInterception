@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using AutoHotInterception;
 
@@ -11,12 +12,17 @@ namespace TestApp
             var scc = new ScanCodeChecker();
             var devId = device.GetDeviceId();
             if (devId == 0) return;
-            scc.Subscribe(devId, new Action<KeyEvent>(OnKeyEvent), block);
+            scc.Subscribe(devId, new Action<List<KeyEvent>>(OnKeyEvent), block);
         }
 
-        public void OnKeyEvent(KeyEvent keyEvent)
+        public void OnKeyEvent(List<KeyEvent> keyEvents)
         {
-            Debug.WriteLine($"Code: {keyEvent.Code} (0x{keyEvent.Code.ToString("X")}) - {keyEvent.Code + 256}, State: {keyEvent.State}");
+            var str = $"{keyEvents.Count} - ";
+            foreach (var keyEvent in keyEvents)
+            {
+                str += $"Code: {keyEvent.Code} (0x{keyEvent.Code.ToString("X")}) - {keyEvent.Code + 256}, State: {keyEvent.State} | ";
+            }
+            Debug.WriteLine(str);
         }
     }
 }

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using AutoHotInterception.Helpers;
 
 namespace AutoHotInterception
@@ -29,10 +30,27 @@ namespace AutoHotInterception
             ManagedWrapper.SetFilter(_deviceContext, IsMonitoredDevice, ManagedWrapper.Filter.All);
             int i;
             var stroke = new ManagedWrapper.Stroke();
-            while (ManagedWrapper.Receive(_deviceContext, i = ManagedWrapper.Wait(_deviceContext), ref stroke, 1) > 0)
+            while (true)
             {
-                if (!_block) ManagedWrapper.Send(_deviceContext, _deviceId, ref stroke, 1);
-                _callback(new KeyEvent { Code = stroke.key.code, State = stroke.key.state });
+                var strokes = new List<ManagedWrapper.Stroke>();
+                while (ManagedWrapper.Receive(_deviceContext, i = ManagedWrapper.WaitWithTimeout(_deviceContext, 0), ref stroke, 1) > 0)
+                {
+                    strokes.Add(stroke);
+                }
+                if (!block)
+                {
+                    foreach (var s in strokes)
+                    {
+                        ManagedWrapper.Send(_deviceContext, _deviceId, ref stroke, 1);
+                    }
+                }
+                if (strokes.Count == 0) continue;
+                var keyEvents = new List<KeyEvent>();
+                foreach (var s in strokes)
+                {
+                    keyEvents.Add(new KeyEvent { Code = stroke.key.code, State = stroke.key.state });
+                }
+                _callback(keyEvents);
             }
         }
 
@@ -43,7 +61,8 @@ namespace AutoHotInterception
 
         private int IsMonitoredDevice(int device)
         {
-            return Convert.ToInt32(_deviceId == device);
+            return (Convert.ToInt32(_deviceId == device) );
+            //return (Convert.ToInt32(_deviceId == device || device == 12) );
         }
     }
 
