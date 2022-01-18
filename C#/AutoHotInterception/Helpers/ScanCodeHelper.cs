@@ -156,7 +156,7 @@ namespace AutoHotInterception.Helpers
                         case 0:
                             throw new Exception("Expecting E1 or E2 state");
                         case 1:
-                            // E1
+                            // E1 (Home, Up, PgUp, Left, Right, End, Down, PgDn, Insert, Delete)
                             // Which state to report (1 = press, 0 = release)
                             state = _stateConverter[_translatedKey.Strokes[0].state];
                             // Which code to use depends on whether this is a press or release
@@ -167,11 +167,10 @@ namespace AutoHotInterception.Helpers
                             _translatedKey.State = state;
                             break;
                         case 2:
-                            // E2
+                            // E2 (Pause only)
                             // Which state to report (1 = press, 0 = release)
                             state = _stateConverter[_translatedKey.Strokes[0].state];
-                            // Which code to use depends on whether this is a press or release
-                            // Always use the second stroke (index 1)
+                            // Always use the code of the second stroke (index 1)
                             whichStroke = _translatedKey.Strokes[1];
                             _translatedKey.AhkCode = whichStroke.code;
                             _translatedKey.State = state;
