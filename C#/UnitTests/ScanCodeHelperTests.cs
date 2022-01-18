@@ -40,8 +40,6 @@ namespace UnitTests
     [TestFixture]
     class ScanCodeHelperTests
     {
-        ScanCodeHelper sch = new ScanCodeHelper();
-
         private static List<Stroke> Stroke(ushort code1, ushort state1, ushort code2 = 0, ushort state2 = 0)
         {
             var strokes = new List<Stroke>();
@@ -65,12 +63,12 @@ namespace UnitTests
             Debug.WriteLine($"\nTesting key {name}...");
             Debug.WriteLine("Testing Press");
             var expectedResult = pressResult;
-            var actualResult = sch.TranslateScanCodes(pressStrokes);
+            var actualResult = ScanCodeHelper.TranslateScanCodes(pressStrokes);
             AssertResult(actualResult, expectedResult);
 
             Debug.WriteLine("Testing Release");
             expectedResult = releaseResult;
-            actualResult = sch.TranslateScanCodes(releaseStrokes);
+            actualResult = ScanCodeHelper.TranslateScanCodes(releaseStrokes);
             AssertResult(actualResult, expectedResult);
 
             Debug.WriteLine("OK!");
@@ -116,7 +114,7 @@ namespace UnitTests
         void AssertResult(TranslatedKey actualResult, ExpectedResult expectedResult)
         {
             Debug.WriteLine($"Expecting code of {expectedResult.Code}, state of {expectedResult.State}");
-            Assert.That(actualResult.AhkCode, Is.EqualTo(expectedResult.Code), $"Code should be {expectedResult.Code}, got {actualResult.AhkCode}");
+            Assert.That(actualResult.Code, Is.EqualTo(expectedResult.Code), $"Code should be {expectedResult.Code}, got {actualResult.Code}");
             Assert.That(actualResult.State, Is.EqualTo(expectedResult.State), $"State should be {expectedResult.State}, got {actualResult.State}");
         }
     }

@@ -150,7 +150,7 @@ namespace TestApp.Helpers
             {81 /*(0x51)*/, "NumpadPgDn"},
             {82 /*(0x52)*/, "NumpadIns"},
             {83 /*(0x53)*/, "NumpadDel"},
-            {84 /*(0x54)*/, "PrintScreen"},
+            //{84 /*(0x54)*/, "PrintScreen"}, Use 311 instead
             {86 /*(0x56)*/, "\\"},
             {87 /*(0x57)*/, "F11"},
             {88 /*(0x58)*/, "F12"},
@@ -180,6 +180,7 @@ namespace TestApp.Helpers
             {306 /*(0x132)*/, "Browser_Home"},
             {309 /*(0x135)*/, "NumpadDiv"},
             {310 /*(0x136)*/, "RShift"},
+            {311 /*(0x136)*/, "PrintScreen"}, // Note: GetKeySC("PrintScreen") yields 311, but GetKeyName("sc54") (Dec of 84) yields "PrintScreen"
             {312 /*(0x138)*/, "RAlt"},
             {325 /*(0x145)*/, "Numlock"},
             {326 /*(0x146)*/, "CtrlBreak"},

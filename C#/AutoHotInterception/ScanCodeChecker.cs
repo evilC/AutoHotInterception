@@ -48,7 +48,7 @@ namespace AutoHotInterception
                 var keyEvents = new List<KeyEvent>();
                 foreach (var s in strokes)
                 {
-                    keyEvents.Add(new KeyEvent { Code = stroke.key.code, State = stroke.key.state });
+                    keyEvents.Add(new KeyEvent { Code = s.key.code, State = s.key.state });
                 }
                 _callback(keyEvents);
             }

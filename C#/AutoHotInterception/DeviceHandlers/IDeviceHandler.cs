@@ -1,4 +1,5 @@
 ﻿using AutoHotInterception.Helpers;
+using System.Collections.Generic;
 
 namespace AutoHotInterception.DeviceHandlers
 {
@@ -53,9 +54,9 @@ namespace AutoHotInterception.DeviceHandlers
         void DisableFilterIfNeeded();
 
         /// <summary>
-        /// Process an incoming stroke
+        /// Process an incoming stroke, or a pair of extended keycode strokes
         /// </summary>
-        /// <param name="stroke">The stroke to process</param>
-        void ProcessStroke(ManagedWrapper.Stroke stroke);
+        /// <param name="strokes">The stroke(s) to process</param>
+        void ProcessStroke(List<ManagedWrapper.Stroke> strokes);
     }
 }

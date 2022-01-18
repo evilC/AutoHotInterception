@@ -12,7 +12,7 @@ namespace AutoHotInterception.Helpers
         Prefixed // Stroke order is Ext Modifier press, Key press, Ext Modifier release, Key release
     };
 
-    public class ScanCodeHelper
+    public static class ScanCodeHelper
     {
         // Converts Interception state to AHK state
         private static List<ushort> _stateConverter = new List<ushort>() { 1, 0, 1, 0, 1, 0 };
@@ -20,7 +20,7 @@ namespace AutoHotInterception.Helpers
         private static List<ushort> _stateToExtendedMode = new List<ushort>() { 0, 0, 1, 1, 2, 2 };
 
         // Keys which have an E0 state, but AHK uses High (+256) code
-        private HashSet<ushort> _highCodeE0Keys = new HashSet<ushort>()
+        private static HashSet<ushort> _highCodeE0Keys = new HashSet<ushort>()
         {
             28, // Numpad Enter
             54, // Right Shift
@@ -30,6 +30,7 @@ namespace AutoHotInterception.Helpers
         // List of two-stroke keys, used to build _twoStrokeKeyConverter
         private static Dictionary<ushort, Order> _twoStrokeKeys = new Dictionary<ushort, Order>()
         {
+            { 55, Order.Wrapped }, // PrtScr
             { 69, Order.Prefixed }, // Pause
             { 71, Order.Wrapped }, // Home
             { 72, Order.Wrapped }, // Up
@@ -47,7 +48,7 @@ namespace AutoHotInterception.Helpers
         private static Dictionary<Tuple<ushort, ushort, ushort, ushort>, TranslatedKey>
             _twoStrokeKeyConverter = new Dictionary<Tuple<ushort, ushort, ushort, ushort>, TranslatedKey>();
 
-        public ScanCodeHelper()
+        static ScanCodeHelper()
         {
             foreach (var item in _twoStrokeKeys)
             {
@@ -55,9 +56,10 @@ namespace AutoHotInterception.Helpers
                 _twoStrokeKeyConverter.Add(twoStrokeKey.PressTuple, twoStrokeKey.PressKey);
                 _twoStrokeKeyConverter.Add(twoStrokeKey.ReleaseTuple, twoStrokeKey.ReleaseKey);
             }
+            //_twoStrokeKeyConverter.Add(new Tuple<ushort, ushort, ushort, ushort>(42, 298, 55, 311), new Tr
         }
 
-        public TranslatedKey TranslateScanCodes(List<Stroke> strokes)
+        public static TranslatedKey TranslateScanCodes(List<Stroke> strokes)
         {
             if (strokes.Count == 2)
             {
@@ -94,12 +96,12 @@ namespace AutoHotInterception.Helpers
     // Holds the AHK code and state equivalent of a one or two-stroke set
     public class TranslatedKey
     {
-        public ushort AhkCode { get; }
+        public ushort Code { get; }
         public int State { get; }
 
         public TranslatedKey(ushort code, int state)
         {
-            AhkCode = code;
+            Code = code;
             State = state;
         }
     }

@@ -144,7 +144,7 @@ namespace UnitTestsFoo
             {
                 Debug.WriteLine($"Expecting code of {expectedResult.Code}, state of {expectedResult.State}");
                 Assert.That(actualResult != null, "Result should not be null");
-                Assert.That(actualResult.AhkCode, Is.EqualTo(expectedResult.Code), $"Code should be {expectedResult.Code}, got {actualResult.AhkCode}");
+                Assert.That(actualResult.Code, Is.EqualTo(expectedResult.Code), $"Code should be {expectedResult.Code}, got {actualResult.Code}");
                 Assert.That(actualResult.State, Is.EqualTo(expectedResult.State), $"State should be {expectedResult.State}, got {actualResult.State}");
             }
         }

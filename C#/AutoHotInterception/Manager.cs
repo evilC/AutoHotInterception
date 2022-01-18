@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading;
 using AutoHotInterception.DeviceHandlers;
@@ -524,15 +525,32 @@ namespace AutoHotInterception
             //Debug.WriteLine($"AHK| Poll Thread Started");
             _pollThreadRunning = true;
             var stroke = new ManagedWrapper.Stroke();
-            int i;
+            int deviceId;
             while (!token.IsCancellationRequested)
             {
+                //var strokes = new List<ManagedWrapper.Stroke>();
+                var deviceStrokes = new Dictionary<int, List<ManagedWrapper.Stroke>>();
                 // While no input happens, this loop will exit every 1ms to allow us to check if cancellation has been requested
                 // WaitWithTimeout is used with a timeout of 10ms instead of Wait, so that when we eg use SetState to turn the thread off...
                 // ... any input which was filtered and is waiting to be processed can be processed (eg lots of mouse moves buffered)
-                while (ManagedWrapper.Receive(DeviceContext, i = ManagedWrapper.WaitWithTimeout(DeviceContext, 10), ref stroke, 1) > 0)
+                while (ManagedWrapper.Receive(DeviceContext, deviceId = ManagedWrapper.WaitWithTimeout(DeviceContext, 0), ref stroke, 1) > 0)
                 {
-                    DeviceHandlers[i].ProcessStroke(stroke);
+                    if (!deviceStrokes.ContainsKey(deviceId))
+                    {
+                        deviceStrokes.Add(deviceId, new List<ManagedWrapper.Stroke>());
+                    }
+                    deviceStrokes[deviceId].Add(stroke);
+                    //DeviceHandlers[i].ProcessStroke(stroke);
+                }
+                if (deviceStrokes.Count == 0) continue;
+                foreach (var strokes in deviceStrokes)
+                {
+                    //var keyEvents = new List<KeyEvent>();
+                    //foreach (var s in strokes.Value)
+                    //{
+                    //    keyEvents.Add(new KeyEvent { Code = s.key.code, State = s.key.state });
+                    //}
+                    DeviceHandlers[strokes.Key].ProcessStroke(strokes.Value);
                 }
             }
             _pollThreadRunning = false;
