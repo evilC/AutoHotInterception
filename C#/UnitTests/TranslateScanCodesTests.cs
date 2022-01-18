@@ -38,7 +38,7 @@ namespace UnitTests
     }
 
     [TestFixture]
-    class ScanCodeHelperTests
+    class TranslateScanCodesTests
     {
         private static List<Stroke> Stroke(ushort code1, ushort state1, ushort code2 = 0, ushort state2 = 0)
         {
@@ -76,10 +76,14 @@ namespace UnitTests
 
         private static IEnumerable<TestCaseData> TestKeyProvider()
         {
+            yield return new TestCaseData("One", Stroke(2, 0), Stroke(2, 1), Result(2, 1), Result(2, 0));
+            yield return new TestCaseData("Scroll Lock", Stroke(70, 0), Stroke(70, 1), Result(70, 1), Result(70, 0));
+
             yield return new TestCaseData("Numpad Enter", Stroke(28, 0), Stroke(28, 1), Result(284, 1), Result(284, 0));
             yield return new TestCaseData("Right Control", Stroke(29, 2), Stroke(29, 3), Result(285, 1), Result(285, 0));
             yield return new TestCaseData("Numpad Div", Stroke(53, 2), Stroke(53, 3), Result(309, 1), Result(309, 0));
             yield return new TestCaseData("Right Shift", Stroke(54, 0), Stroke(54, 1), Result(310, 1), Result(310, 0));
+            yield return new TestCaseData("Print Screen", Stroke(42, 2, 55, 2), Stroke(55, 3, 42, 3), Result(311, 1), Result(311, 0));
             yield return new TestCaseData("Right Alt", Stroke(56, 2), Stroke(56, 3), Result(312, 1), Result(312, 0));
             yield return new TestCaseData("Numlock", Stroke(69, 0), Stroke(69, 1), Result(325, 1), Result(325, 0));
             yield return new TestCaseData("Pause", Stroke(29, 4, 69, 0), Stroke(29, 5, 69, 1), Result(69, 1), Result(69, 0));

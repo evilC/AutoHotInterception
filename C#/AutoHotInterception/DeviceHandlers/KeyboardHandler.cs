@@ -35,18 +35,12 @@ namespace AutoHotInterception.DeviceHandlers
         /// <param name="state">The State to send (1 = pressed, 0 = released)</param>
         public void SendKeyEvent(ushort code, int state)
         {
-            var st = 1 - state;
-            var stroke = new ManagedWrapper.Stroke();
-            if (code > 255)
+            var strokes = ScanCodeHelper.TranslateAhkCode(code, state);
+            for (int i = 0; i < strokes.Count; i++)
             {
-                code -= 256;
-                if (code != 54) // RShift has > 256 code, but state is 0/1
-                    st += 2;
+                var stroke = strokes[i];
+                ManagedWrapper.Send(DeviceContext, DeviceId, ref stroke, 1);
             }
-
-            stroke.key.code = code;
-            stroke.key.state = (ushort)st;
-            ManagedWrapper.Send(DeviceContext, DeviceId, ref stroke, 1);
         }
         #endregion
 

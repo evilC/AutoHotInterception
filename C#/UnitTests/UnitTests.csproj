@@ -40,7 +40,8 @@
     <Reference Include="System" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="ScanCodeHelperTests.cs" />
+    <Compile Include="TranslateAhkCodeTests.cs" />
+    <Compile Include="TranslateScanCodesTests.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

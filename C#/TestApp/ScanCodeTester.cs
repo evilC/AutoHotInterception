@@ -17,7 +17,7 @@ namespace TestApp
 
         public void OnKeyEvent(List<KeyEvent> keyEvents)
         {
-            var str = $"{keyEvents.Count} - ";
+            var str = "";
             foreach (var keyEvent in keyEvents)
             {
                 str += $"Code: {keyEvent.Code} (0x{keyEvent.Code.ToString("X")}) - {keyEvent.Code + 256}, State: {keyEvent.State} | ";
