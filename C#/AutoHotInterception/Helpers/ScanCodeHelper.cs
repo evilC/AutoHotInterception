@@ -22,7 +22,7 @@ namespace AutoHotInterception.Helpers
     {
         public ushort AhkCode { get; set; }
         public List<KeyStroke> Strokes { get; set; }
-        public bool IsExtended { get;  }
+        //public bool IsExtended { get;  }
         public int State { get; set; }
 
         public TranslatedKey(KeyStroke stroke, bool isExtended)
@@ -132,23 +132,35 @@ namespace AutoHotInterception.Helpers
                 {
                     // Stroke is 2nd of Extended key sequence - we now know what the full sequence is
                     _translatedKey.Strokes.Add(stroke);
-                    var extMode = _stateToExtendedMode[stroke.state];
+                    //var extMode = _stateToExtendedMode[stroke.state];
+                    var extMode = _stateToExtendedMode[_translatedKey.Strokes[0].state];
+                    ushort state;
+                    KeyStroke whichStroke;
                     switch (extMode)
                     {
                         case 0:
                             throw new Exception("Expecting E1 or E2 state");
                         case 1:
+                            // E1
                             // Which state to report (1 = press, 0 = release)
-                            var state = _stateConverter[_translatedKey.Strokes[0].state];
+                            state = _stateConverter[_translatedKey.Strokes[0].state];
                             // Which code to use depends on whether this is a press or release
                             // On press, use the second stroke (index 1)
                             // On release, use the first stroke (index 0)
-                            var whichStroke = _translatedKey.Strokes[state];
+                            whichStroke = _translatedKey.Strokes[state];
                             _translatedKey.AhkCode = (ushort)(whichStroke.code + 256);
                             _translatedKey.State = state;
                             break;
                         case 2:
-                            throw new NotImplementedException();
+                            // E2
+                            // Which state to report (1 = press, 0 = release)
+                            state = _stateConverter[_translatedKey.Strokes[0].state];
+                            // Which code to use depends on whether this is a press or release
+                            // Always use the second stroke (index 1)
+                            whichStroke = _translatedKey.Strokes[1];
+                            _translatedKey.AhkCode = whichStroke.code;
+                            _translatedKey.State = state;
+                            break;
                         default:
                             throw new Exception("state can only be E0, E1 or E2");
                     }
@@ -166,12 +178,11 @@ namespace AutoHotInterception.Helpers
                 _translatedKey.AhkCode = code;
                 _translatedKey.State = _stateConverter[stroke.state];
             }
+
+            // Code will only get here if the stroke was a single key, or the second key of an extended sequence
+            // Return _translatedKey and clear it, ready for the next key
             var returnValue = _translatedKey;
-            // ToDo - can this always be nulled?
-            if (!_translatedKey.IsExtended)
-            {
-                _translatedKey = null;
-            }
+            _translatedKey = null;
             return returnValue;
         }
     }

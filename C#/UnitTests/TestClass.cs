@@ -53,7 +53,7 @@ namespace UnitTests
             new TestKey("Right Shift", Stroke(54, 0), Stroke(54, 1), Result(310, 1), Result(310, 0)),
             new TestKey("Right Alt", Stroke(56, 2), Stroke(56, 3), Result(312, 1), Result(312, 0)),
             new TestKey("Numlock", Stroke(69, 0), Stroke(69, 1), Result(325, 1), Result(325, 0)),
-            //new TestKey("Pause", Stroke(69, 0), Stroke(69, 1), Result(325, 1), Result(325, 0)),
+            new TestKey("Pause", Stroke(29, 4, 69, 0), Stroke(29, 5, 69, 1), Result(null, null, 69, 1), Result(null, null, 69, 0)),
             new TestKey("Home", Stroke(42, 2, 71, 2), Stroke(71, 3, 42, 3), Result(null, null, 327, 1), Result(null, null, 327, 0)),
         };
 
@@ -87,7 +87,6 @@ namespace UnitTests
         [Test]
         public void PressReleaseTests()
         {
-            //DoTest(_testKeys[6]);
             foreach (var testKey in _testKeys)
             {
                 DoTest(testKey);
