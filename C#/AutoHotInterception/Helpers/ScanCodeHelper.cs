@@ -56,7 +56,6 @@ namespace AutoHotInterception.Helpers
                 _twoStrokeKeyConverter.Add(twoStrokeKey.PressTuple, twoStrokeKey.PressKey);
                 _twoStrokeKeyConverter.Add(twoStrokeKey.ReleaseTuple, twoStrokeKey.ReleaseKey);
             }
-            //_twoStrokeKeyConverter.Add(new Tuple<ushort, ushort, ushort, ushort>(42, 298, 55, 311), new Tr
         }
 
         public static TranslatedKey TranslateScanCodes(List<Stroke> strokes)
