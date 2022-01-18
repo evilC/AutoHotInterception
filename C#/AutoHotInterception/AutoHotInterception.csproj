@@ -46,6 +46,7 @@
     <Compile Include="DeviceHandlers\MouseHandler.cs" />
     <Compile Include="Helpers\HelperFunctions.cs" />
     <Compile Include="Helpers\ManagedWrapper.cs" />
+    <Compile Include="Helpers\OldScanCodeHelper.cs" />
     <Compile Include="Helpers\ScanCodeHelper.cs" />
     <Compile Include="MappingOptions.cs" />
     <Compile Include="ScanCodeChecker.cs" />

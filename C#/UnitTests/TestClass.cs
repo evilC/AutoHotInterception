@@ -8,7 +8,7 @@ using AutoHotInterception.Helpers;
 using NUnit.Framework;
 using static AutoHotInterception.Helpers.ManagedWrapper;
 
-namespace UnitTests
+namespace UnitTestsFoo
 {
     public class TestKey
     {
@@ -42,9 +42,9 @@ namespace UnitTests
     }
 
     [TestFixture]
-    public class ScanCodeHelperTests
+    public class OldScanCodeHelperTests
     {
-        ScanCodeHelper sch;
+        //ScanCodeHelper sch;
         private static List<TestKey> _testKeys = new List<TestKey>()
         {
             new TestKey("Numpad Enter", Stroke(28, 0), Stroke(28, 1), Result(284, 1), Result(284, 0)),
@@ -67,12 +67,14 @@ namespace UnitTests
             new TestKey("Left Windows", Stroke(91, 2), Stroke(91, 3), Result(347, 1), Result(347, 0)),
             new TestKey("Right Windows", Stroke(92, 2), Stroke(92, 3), Result(348, 1), Result(348, 0)),
             new TestKey("Apps", Stroke(93, 2), Stroke(93, 3), Result(349, 1), Result(349, 0)),
+
+            new TestKey("Delete", Stroke(83, 2), Stroke(83, 3), Result(339, 1), Result(339, 0)),
         };
 
         [SetUp]
         public void SetUpBeforeEachTest()
         {
-            sch = new ScanCodeHelper();
+            //sch = new ScanCodeHelper();
         }
 
         private static List<KeyStroke> Stroke (ushort code1, ushort state1, ushort code2 = 0, ushort state2 = 0)
@@ -99,10 +101,11 @@ namespace UnitTests
         [Test]
         public void PressReleaseTests()
         {
-            foreach (var testKey in _testKeys)
-            {
-                DoTest(testKey);
-            }
+            DoTest(_testKeys[20]);
+            //foreach (var testKey in _testKeys)
+            //{
+            //    DoTest(testKey);
+            //}
         }
 
         private void DoTest(TestKey testKey)
@@ -114,8 +117,8 @@ namespace UnitTests
                 var stroke = testKey.PressStrokes[i];
                 Debug.WriteLine($"Sending stroke #{i+1} with code {stroke.code}, state {stroke.state}");
                 var expectedResult = testKey.PressResults[i];
-                var actualResult = sch.TranslateScanCode(stroke);
-                AssertResult(actualResult, expectedResult);
+                //var actualResult = sch.TranslateScanCode(stroke);
+                //AssertResult(actualResult, expectedResult);
             }
 
             Debug.WriteLine("Testing Release");
@@ -124,8 +127,8 @@ namespace UnitTests
                 var stroke = testKey.ReleaseStrokes[i];
                 Debug.WriteLine($"Sending stroke #{i+1} with code {stroke.code}, state {stroke.state}");
                 var expectedResult = testKey.ReleaseResults[i];
-                var actualResult = sch.TranslateScanCode(stroke);
-                AssertResult(actualResult, expectedResult);
+                //var actualResult = sch.TranslateScanCode(stroke);
+                //AssertResult(actualResult, expectedResult);
             }
             Debug.WriteLine("OK!");
         }
