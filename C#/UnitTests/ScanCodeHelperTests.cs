@@ -97,11 +97,14 @@ namespace UnitTests
         [Test]
         public void PressReleaseTests()
         {
-            DoTest(_testKeys[0]);
-            //foreach (var testKey in _testKeys)
-            //{
-            //    DoTest(testKey);
-            //}
+            //DoTest(_testKeys[0]); // Numpad Enter
+            //DoTest(_testKeys[6]); // Pause
+            //DoTest(_testKeys[5]); // Numlock
+            //DoTest(_testKeys[7]); // Home
+            foreach (var testKey in _testKeys)
+            {
+                DoTest(testKey);
+            }
         }
 
         private void DoTest(TestKey testKey)
@@ -112,41 +115,19 @@ namespace UnitTests
             var actualResult = sch.TranslateScanCodes(testKey.PressStrokes);
             AssertResult(actualResult, expectedResult);
 
-            //for (int i = 0; i < testKey.PressStrokes.Count; i++)
-            //{
-            //    var stroke = testKey.PressStrokes[i].key;
-            //    Debug.WriteLine($"Sending stroke #{i + 1} with code {stroke.code}, state {stroke.state}");
-            //    var expectedResult = testKey.PressResults[i];
-            //    var actualResult = sch.TranslateScanCode(stroke);
-            //    AssertResult(actualResult, expectedResult);
-            //}
+            Debug.WriteLine("Testing Release");
+            expectedResult = testKey.ReleaseResult;
+            actualResult = sch.TranslateScanCodes(testKey.ReleaseStrokes);
+            AssertResult(actualResult, expectedResult);
 
-            //Debug.WriteLine("Testing Release");
-            //for (int i = 0; i < testKey.ReleaseStrokes.Count; i++)
-            //{
-            //    var stroke = testKey.ReleaseStrokes[i].key;
-            //    Debug.WriteLine($"Sending stroke #{i + 1} with code {stroke.code}, state {stroke.state}");
-            //    var expectedResult = testKey.ReleaseResults[i];
-            //    var actualResult = sch.TranslateScanCode(stroke);
-            //    AssertResult(actualResult, expectedResult);
-            //}
             Debug.WriteLine("OK!");
         }
 
         void AssertResult(TranslatedKey actualResult, ExpectedResult expectedResult)
         {
-            if (expectedResult == null)
-            {
-                Debug.WriteLine($"Expecting result of null");
-                Assert.That(actualResult == null, "Result should be null");
-            }
-            else
-            {
-                Debug.WriteLine($"Expecting code of {expectedResult.Code}, state of {expectedResult.State}");
-                Assert.That(actualResult != null, "Result should not be null");
-                Assert.That(actualResult.AhkCode, Is.EqualTo(expectedResult.Code), $"Code should be {expectedResult.Code}, got {actualResult.AhkCode}");
-                Assert.That(actualResult.State, Is.EqualTo(expectedResult.State), $"State should be {expectedResult.State}, got {actualResult.State}");
-            }
+            Debug.WriteLine($"Expecting code of {expectedResult.Code}, state of {expectedResult.State}");
+            Assert.That(actualResult.AhkCode, Is.EqualTo(expectedResult.Code), $"Code should be {expectedResult.Code}, got {actualResult.AhkCode}");
+            Assert.That(actualResult.State, Is.EqualTo(expectedResult.State), $"State should be {expectedResult.State}, got {actualResult.State}");
         }
     }
 }
