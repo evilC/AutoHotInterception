@@ -5,17 +5,23 @@ using AutoHotInterception;
 
 namespace TestApp
 {
-    public class ScanCodeTester
+    public class ScanCodeTester : IDisposable
     {
+        private ScanCodeChecker scc;
         public ScanCodeTester(TestDevice device, bool block = false)
         {
-            var scc = new ScanCodeChecker();
+            scc = new ScanCodeChecker();
             var devId = device.GetDeviceId();
             if (devId == 0) return;
-            scc.Subscribe(devId, new Action<List<KeyEvent>>(OnKeyEvent), block);
+            scc.Subscribe(devId, new Action<KeyEvent[]>(OnKeyEvent), block);
         }
 
-        public void OnKeyEvent(List<KeyEvent> keyEvents)
+        public void Dispose()
+        {
+            scc.Dispose();
+        }
+
+        public void OnKeyEvent(KeyEvent[] keyEvents)
         {
             var str = "";
             foreach (var keyEvent in keyEvents)

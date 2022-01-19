@@ -14,9 +14,10 @@ namespace TestApp
             //var kmt = new KeyboardAndMouseTester(TestDevices.WyseKeyboard, true).AddDevice(TestDevices.LogitechWheelMouse, true);
             //var kkt = new KeyboardKeyTester(TestDevices.WyseKeyboard, AhkKeys.Obj("1"), true);
             //var tt = new TabletTester(TestDevices.ParbloIslandA609);
-            var sct = new ScanCodeTester(TestDevices.WyseKeyboard, true);
+            var scc = new ScanCodeTester(TestDevices.WyseKeyboard, true);
             //var sst = new SetStateTester(TestDevices.WyseKeyboard, AhkKeys.Obj("1"));
             Console.ReadLine();
+            scc.Dispose();
         }
     }
 }

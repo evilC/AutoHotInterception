@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Threading;
 using AutoHotInterception.Helpers;
 
 namespace AutoHotInterception
@@ -9,12 +10,13 @@ namespace AutoHotInterception
     Tool to check Scan Codes and Press / Release states
     Note that these are raw scancodes and states as they come from Interception. Some keys (eg extended code keys) will not match AHK key codes!
     */
-    public class ScanCodeChecker
+    public class ScanCodeChecker : IDisposable
     {
         private readonly IntPtr _deviceContext;
         private dynamic _callback;
         private int _deviceId;
         private bool _block;
+        private Thread _pollThread;
 
         public ScanCodeChecker()
         {
@@ -27,6 +29,12 @@ namespace AutoHotInterception
             _deviceId = deviceId;
             _block = block;
 
+            _pollThread = new Thread(PollThread);
+            _pollThread.Start();
+        }
+
+        private void PollThread()
+        {
             ManagedWrapper.SetFilter(_deviceContext, IsMonitoredDevice, ManagedWrapper.Filter.All);
             int deviceId1;
             int deviceId2;
@@ -45,7 +53,7 @@ namespace AutoHotInterception
                             strokes.Add(stroke2);
                         }
                     }
-                    if (!block)
+                    if (!_block)
                     {
                         for (int i = 0; i < strokes.Count; i++)
                         {
@@ -53,10 +61,12 @@ namespace AutoHotInterception
                             ManagedWrapper.Send(_deviceContext, _deviceId, ref stroke, 1);
                         }
                     }
-                    var keyEvents = new List<KeyEvent>();
-                    foreach (var s in strokes)
+                    // Use array for callback, as the callback may be AHK code, and dealing with arrays in AHK is way simpler that Lists
+                    var keyEvents = new KeyEvent[strokes.Count];
+                    for (int i = 0; i < strokes.Count; i++)
                     {
-                        keyEvents.Add(new KeyEvent { Code = s.key.code, State = s.key.state });
+                        var s = strokes[i];
+                        keyEvents[i] = new KeyEvent { Code = s.key.code, State = s.key.state };
                     }
                     _callback(keyEvents);
                 }
@@ -71,7 +81,12 @@ namespace AutoHotInterception
         private int IsMonitoredDevice(int device)
         {
             return (Convert.ToInt32(_deviceId == device) );
-            //return (Convert.ToInt32(_deviceId == device || device == 12) );
+        }
+
+        public void Dispose()
+        {
+            _pollThread.Abort();
+            _pollThread.Join();
         }
     }
 
