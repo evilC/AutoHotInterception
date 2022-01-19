@@ -28,29 +28,38 @@ namespace AutoHotInterception
             _block = block;
 
             ManagedWrapper.SetFilter(_deviceContext, IsMonitoredDevice, ManagedWrapper.Filter.All);
-            int i;
-            var stroke = new ManagedWrapper.Stroke();
+            int deviceId1;
+            int deviceId2;
+            var stroke1 = new ManagedWrapper.Stroke();
+            var stroke2 = new ManagedWrapper.Stroke();
             while (true)
             {
                 var strokes = new List<ManagedWrapper.Stroke>();
-                while (ManagedWrapper.Receive(_deviceContext, i = ManagedWrapper.WaitWithTimeout(_deviceContext, 0), ref stroke, 1) > 0)
+                if (ManagedWrapper.Receive(_deviceContext, deviceId1 = ManagedWrapper.WaitWithTimeout(_deviceContext, 10), ref stroke1, 1) > 0)
                 {
-                    strokes.Add(stroke);
-                }
-                if (!block)
-                {
+                    strokes.Add(stroke1);
+                    if (deviceId1 < 11)
+                    {
+                        if (ManagedWrapper.Receive(_deviceContext, deviceId2 = ManagedWrapper.WaitWithTimeout(_deviceContext, 0), ref stroke2, 1) > 0)
+                        {
+                            strokes.Add(stroke2);
+                        }
+                    }
+                    if (!block)
+                    {
+                        for (int i = 0; i < strokes.Count; i++)
+                        {
+                            var stroke = strokes[i];
+                            ManagedWrapper.Send(_deviceContext, _deviceId, ref stroke, 1);
+                        }
+                    }
+                    var keyEvents = new List<KeyEvent>();
                     foreach (var s in strokes)
                     {
-                        ManagedWrapper.Send(_deviceContext, _deviceId, ref stroke, 1);
+                        keyEvents.Add(new KeyEvent { Code = s.key.code, State = s.key.state });
                     }
+                    _callback(keyEvents);
                 }
-                if (strokes.Count == 0) continue;
-                var keyEvents = new List<KeyEvent>();
-                foreach (var s in strokes)
-                {
-                    keyEvents.Add(new KeyEvent { Code = s.key.code, State = s.key.state });
-                }
-                _callback(keyEvents);
             }
         }
 
