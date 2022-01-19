@@ -6,6 +6,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 ## [Unreleased]
 ### Added
 ### Changed
+- Input is now processed even faster  
+Since 0.6.0, there could have been a 10ms delay between processing one piece of input and the next  
+Now it should be effectively instant
 ### Deprecated
 ### Removed
 ### Fixed
