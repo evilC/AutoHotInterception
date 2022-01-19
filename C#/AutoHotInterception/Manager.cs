@@ -519,38 +519,59 @@ namespace AutoHotInterception
                 state ? ManagedWrapper.Filter.All : ManagedWrapper.Filter.None);
         }
 
+        private static string RenderStroke(ManagedWrapper.Stroke stroke)
+        {
+            return $"key code: {stroke.key.code}, key state: {stroke.key.state}, mouse x/y: {stroke.mouse.x}, {stroke.mouse.y}";
+        }
+
         private static void PollThread(object obj)
         {
             var token = (CancellationToken)obj;
             //Debug.WriteLine($"AHK| Poll Thread Started");
             _pollThreadRunning = true;
-            var stroke = new ManagedWrapper.Stroke();
-            int deviceId;
+            var stroke1 = new ManagedWrapper.Stroke();
+            var stroke2 = new ManagedWrapper.Stroke();
+            int stroke1DeviceId;
+            int stroke2DeviceId;
+            //bool newPoll = true;
             while (!token.IsCancellationRequested)
             {
-                //var strokes = new List<ManagedWrapper.Stroke>();
-                var deviceStrokes = new Dictionary<int, List<ManagedWrapper.Stroke>>();
-                // While no input happens, this loop will exit every 1ms to allow us to check if cancellation has been requested
+                // While no input happens, this loop will exit every 10ms to allow us to check if cancellation has been requested
                 // WaitWithTimeout is used with a timeout of 10ms instead of Wait, so that when we eg use SetState to turn the thread off...
                 // ... any input which was filtered and is waiting to be processed can be processed (eg lots of mouse moves buffered)
-                while (ManagedWrapper.Receive(DeviceContext, deviceId = ManagedWrapper.WaitWithTimeout(DeviceContext, 0), ref stroke, 1) > 0)
+
+                //if (newPoll)
+                //{
+                //    Debug.WriteLine($"\n\n\nNEXT POLL");
+                //    newPoll = false;
+                //}
+                
+                if (ManagedWrapper.Receive(DeviceContext, stroke1DeviceId = ManagedWrapper.WaitWithTimeout(DeviceContext, 10), ref stroke1, 1) > 0)
                 {
-                    if (!deviceStrokes.ContainsKey(deviceId))
-                    {
-                        deviceStrokes.Add(deviceId, new List<ManagedWrapper.Stroke>());
-                    }
-                    deviceStrokes[deviceId].Add(stroke);
-                    //DeviceHandlers[i].ProcessStroke(stroke);
-                }
-                if (deviceStrokes.Count == 0) continue;
-                foreach (var strokes in deviceStrokes)
-                {
-                    //var keyEvents = new List<KeyEvent>();
-                    //foreach (var s in strokes.Value)
+                    //newPoll = true;
+                    var strokes = new List<ManagedWrapper.Stroke>();
+                    //Debug.WriteLine($"Stroke: {RenderStroke(stroke1)}");
+                    //if (stroke1.key.code == 83 && stroke1.key.state == 2)
                     //{
-                    //    keyEvents.Add(new KeyEvent { Code = s.key.code, State = s.key.state });
+                    //    throw new Exception("Saw second character of Del two-stroke press sequence when expecting a first stroke");
                     //}
-                    DeviceHandlers[strokes.Key].ProcessStroke(strokes.Value);
+                    strokes.Add(stroke1);
+                    if (stroke1DeviceId < 11)
+                    {
+                        // If this is a keyboard stroke, then perform another Receive immediately with a timeout of 0...
+                        // ... this is to check whether an extended stroke is waiting
+                        if (ManagedWrapper.Receive(DeviceContext, stroke2DeviceId = ManagedWrapper.WaitWithTimeout(DeviceContext, 0), ref stroke2, 1) > 0)
+                        {
+                            if (stroke2DeviceId != stroke1DeviceId)
+                            {
+                                // Never seems to happen, but conceivably possible
+                                throw new Exception("Stroke 2 DeviceId is not the same as Stroke 1 DeviceId");
+                            }
+                            //Debug.WriteLine($"Second stroke: {RenderStroke(stroke2)}");
+                            strokes.Add(stroke2);
+                        }
+                    }
+                    DeviceHandlers[stroke1DeviceId].ProcessStroke(strokes);
                 }
             }
             _pollThreadRunning = false;
