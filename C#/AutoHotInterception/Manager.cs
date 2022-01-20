@@ -529,42 +529,31 @@ namespace AutoHotInterception
             var token = (CancellationToken)obj;
             //Debug.WriteLine($"AHK| Poll Thread Started");
             _pollThreadRunning = true;
-            var stroke1 = new ManagedWrapper.Stroke();
-            var stroke2 = new ManagedWrapper.Stroke();
             int stroke1DeviceId;
             int stroke2DeviceId;
-            //bool newPoll = true;
             while (!token.IsCancellationRequested)
             {
+                var stroke = new ManagedWrapper.Stroke();
                 // While no input happens, this loop will exit every 10ms to allow us to check if cancellation has been requested
                 // WaitWithTimeout is used with a timeout of 10ms instead of Wait, so that when we eg use SetState to turn the thread off...
                 // ... any input which was filtered and is waiting to be processed can be processed (eg lots of mouse moves buffered)
-
-                //if (newPoll)
-                //{
-                //    Debug.WriteLine($"\n\n\nNEXT POLL");
-                //    newPoll = false;
-                //}
-                
-                if (ManagedWrapper.Receive(DeviceContext, stroke1DeviceId = ManagedWrapper.WaitWithTimeout(DeviceContext, 10), ref stroke1, 1) > 0)
+                if (ManagedWrapper.Receive(DeviceContext, stroke1DeviceId = ManagedWrapper.WaitWithTimeout(DeviceContext, 10), ref stroke, 1) > 0)
                 {
-                    //newPoll = true;
                     var strokes = new List<ManagedWrapper.Stroke>();
-                    //Debug.WriteLine($"Stroke: {RenderStroke(stroke1)}");
-                    //if (stroke1.key.code == 83 && stroke1.key.state == 2)
-                    //{
-                    //    throw new Exception("Saw second character of Del two-stroke press sequence when expecting a first stroke");
-                    //}
-                    strokes.Add(stroke1);
+                    strokes.Add(stroke);
                     if (stroke1DeviceId < 11)
                     {
-                        // If this is a keyboard stroke, then perform another Receive immediately with a timeout of 0...
-                        // ... this is to check whether an extended stroke is waiting
-						//  Start by building a list of all pending strokes
-                        while (ManagedWrapper.Receive(DeviceContext, stroke2DeviceId = ManagedWrapper.WaitWithTimeout(DeviceContext, 0), ref stroke2, 1) > 0)
+                        //Debug.WriteLine($"Stroke 1: {RenderStroke(stroke)}");
+                        // If this is a keyboard stroke, then keep performing more Receives immediately with a timeout of 0...
+                        // ... this is to check whether an extended stroke is waiting.
+                        // Unfortunately, at this point, it's entirely possible that two single-stroke keys end up in strokes...
+                        // ... or even 3 strokes or more (eg one single-stroke key followed by a two-stroke key)
+                        //while ((stroke2DeviceId = ManagedWrapper.WaitWithTimeout(DeviceContext, 0)) == stroke1DeviceId)
+                        while ((stroke2DeviceId = ManagedWrapper.WaitWithTimeout(DeviceContext, 0)) != 0)
                         {
-                            if (stroke2DeviceId != stroke1DeviceId) { throw new Exception("Stroke 2 DeviceId is not the same as Stroke 1 DeviceId"); }
-                            strokes.Add(stroke2);
+                            ManagedWrapper.Receive(DeviceContext, stroke2DeviceId, ref stroke, 1);
+                            strokes.Add(stroke);
+                            //Debug.WriteLine($"Stroke {strokes.Count}: {RenderStroke(stroke)}");
                         }
 
                         // Loop through the list checking the first 2 indexes for valid "two-code" key combinations. 
