@@ -560,18 +560,33 @@ namespace AutoHotInterception
                     {
                         // If this is a keyboard stroke, then perform another Receive immediately with a timeout of 0...
                         // ... this is to check whether an extended stroke is waiting
-                        if (ManagedWrapper.Receive(DeviceContext, stroke2DeviceId = ManagedWrapper.WaitWithTimeout(DeviceContext, 0), ref stroke2, 1) > 0)
+						//  Start by building a list of all pending strokes
+                        while (ManagedWrapper.Receive(DeviceContext, stroke2DeviceId = ManagedWrapper.WaitWithTimeout(DeviceContext, 0), ref stroke2, 1) > 0)
                         {
-                            if (stroke2DeviceId != stroke1DeviceId)
-                            {
-                                // Never seems to happen, but conceivably possible
-                                throw new Exception("Stroke 2 DeviceId is not the same as Stroke 1 DeviceId");
-                            }
-                            //Debug.WriteLine($"Second stroke: {RenderStroke(stroke2)}");
+                            if (stroke2DeviceId != stroke1DeviceId) { throw new Exception("Stroke 2 DeviceId is not the same as Stroke 1 DeviceId"); }
                             strokes.Add(stroke2);
                         }
+
+                        // Loop through the list checking the first 2 indexes for valid "two-code" key combinations. 
+                        //   If no combo is found, send index 0 on its way, remove it off the top of the list, repeat 
+                        while (strokes.Count > 0)
+                        {
+                            if (strokes.Count >= 2 && ScanCodeHelper.IsDoubleScanCode(new List<ManagedWrapper.Stroke> { strokes[0], strokes[1] }))
+                            {
+                                DeviceHandlers[stroke1DeviceId].ProcessStroke(new List<ManagedWrapper.Stroke> { strokes[0], strokes[1] });
+                                strokes.RemoveRange(0, 2);
+                            }
+                            else
+                            {
+                                DeviceHandlers[stroke1DeviceId].ProcessStroke(new List<ManagedWrapper.Stroke> { strokes[0] });
+                                strokes.RemoveAt(0);
+                            }
+                        }
                     }
-                    DeviceHandlers[stroke1DeviceId].ProcessStroke(strokes);
+                    else
+                    {
+                        DeviceHandlers[stroke1DeviceId].ProcessStroke(strokes);
+                    }
                 }
             }
             _pollThreadRunning = false;
