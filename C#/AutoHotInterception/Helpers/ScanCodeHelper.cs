@@ -70,6 +70,11 @@ namespace AutoHotInterception.Helpers
             }
         }
 
+        public static bool IsDoubleScanCode(List<Stroke> strokes)
+        {
+            return _twoStrokeKeyConverter.ContainsKey(new Tuple<ushort, ushort, ushort, ushort>(strokes[0].key.code, strokes[0].key.state, strokes[1].key.code, strokes[1].key.state));
+        }
+
         /// <summary>
         /// Used by ProcessStrokes() KeyboardHandler to translate incoming key(s) from Interception to AHK format
         /// </summary>
