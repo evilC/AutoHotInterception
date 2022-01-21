@@ -14,6 +14,8 @@ namespace TestApp
     public class KeyboardAndMouseTester
     {
         private Manager im = new Manager();
+        private Dictionary<int, bool> _deviceStates = new Dictionary<int, bool>();
+        private Dictionary<int, bool> _blockingEnabled = new Dictionary<int, bool>();
 
         public KeyboardAndMouseTester(TestDevice testDevice, bool block = false)
         {
@@ -25,23 +27,56 @@ namespace TestApp
             var devId = testDevice.GetDeviceId();
 
             if (devId == 0) return this;
+            _blockingEnabled[devId] = block;
+            SetDeviceState(devId, true);
+            return this;
+        }
+
+        private void SetDeviceState(int devId, bool state)
+        {
             if (devId < 11)
             {
-                im.SubscribeKeyboard(devId, block, new Action<ushort, int>((code, value) =>
+                if (state)
                 {
-                    var keyObj = AhkKeys.Obj(code);
+                    im.SubscribeKeyboard(devId, _blockingEnabled[devId], new Action<ushort, int>((code, value) =>
+                    {
+                        var keyObj = AhkKeys.Obj(code);
 
-                    Console.WriteLine($"Name: {keyObj.Name}, Code: {keyObj.LogCode()}, State: {value}");
-                }));
+                        Console.WriteLine($"Name: {keyObj.Name}, Code: {keyObj.LogCode()}, State: {value}");
+                    }));
+                }
+                else
+                {
+                    im.UnsubscribeKeyboard(devId);
+                }
             }
             else
             {
-                im.SubscribeMouseMove(devId, block, new Action<int, int>((x, y) =>
+                if (state)
                 {
-                    Console.WriteLine($"Mouse Move: x: {x}, y: {y}");
-                }));
+                    im.SubscribeMouseMove(devId, _blockingEnabled[devId], new Action<int, int>((x, y) =>
+                    {
+                        Console.WriteLine($"Mouse Move: x: {x}, y: {y}");
+                    }));
+                }
+                else
+                {
+                    im.UnsubscribeMouseMove(devId);
+                }
             }
-            return this;
+            _deviceStates[devId] = state;
+        }
+
+        // Allows toggling on and off of keyboard subscription whilst mouse sub active
+        public void Toggle(TestDevice testDevice)
+        {
+            var devId = testDevice.GetDeviceId();
+            while (true)
+            {
+                Console.WriteLine($"Subscribe: {_deviceStates[devId]} (Enter to toggle)");
+                Console.ReadLine();
+                SetDeviceState(devId, !_deviceStates[devId]);
+            }
         }
     }
 }
