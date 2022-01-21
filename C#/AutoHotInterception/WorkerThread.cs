@@ -1,8 +1,5 @@
 ﻿using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -10,40 +7,32 @@ namespace AutoHotInterception
 {
     class WorkerThread : IDisposable
     {
-        private readonly Thread _worker;
-        private volatile bool _running;
+        private Task _worker;
+        private CancellationTokenSource _cancellationToken;
+        public BlockingCollection<Action> Actions { get; }
 
         public WorkerThread()
         {
             Actions = new BlockingCollection<Action>();
-            _worker = new Thread(Run);
-            _running = false;
-        }
-
-        public BlockingCollection<Action> Actions { get; }
-
-        public void Dispose()
-        {
-            if (!_running) return;
-            _running = false;
-            _worker.Abort();
-            _worker.Join();
-        }
-
-        public void Start()
-        {
-            if (_running) return;
-            _running = true;
+            _cancellationToken = new CancellationTokenSource();
+            _worker = new Task(Run, _cancellationToken.Token);
             _worker.Start();
         }
 
-        private void Run()
+        private void Run(Object obj)
         {
-            while (_running)
+            var token = (CancellationToken)obj;
+            while (!token.IsCancellationRequested)
             {
                 var action = Actions.Take();
                 action.Invoke();
             }
+        }
+
+        public void Dispose()
+        {
+            _cancellationToken.Cancel();
+            _cancellationToken.Dispose();
         }
     }
 }

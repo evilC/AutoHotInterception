@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Threading;
 using AutoHotInterception.Helpers;
@@ -46,7 +45,6 @@ namespace AutoHotInterception.DeviceHandlers
             if (!mappingOptions.Concurrent && !WorkerThreads.ContainsKey(7))
             {
                 WorkerThreads.TryAdd(7, new WorkerThread());
-                WorkerThreads[7].Start();
             }
             _isFiltered = true;
         }
@@ -76,7 +74,6 @@ namespace AutoHotInterception.DeviceHandlers
             if (!mappingOptions.Concurrent && !WorkerThreads.ContainsKey(8))
             {
                 WorkerThreads.TryAdd(8, new WorkerThread());
-                WorkerThreads[8].Start();
             }
             _isFiltered = true;
         }

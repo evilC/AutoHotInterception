@@ -38,7 +38,6 @@ namespace AutoHotInterception.DeviceHandlers
             if (!mappingOptions.Concurrent && !WorkerThreads.ContainsKey(code))
             {
                 WorkerThreads.TryAdd(code, new WorkerThread());
-                WorkerThreads[code].Start();
             }
             _isFiltered = true;
         }
@@ -69,7 +68,6 @@ namespace AutoHotInterception.DeviceHandlers
             if (!mappingOptions.Concurrent && DeviceWorkerThread == null)
             {
                 DeviceWorkerThread = new WorkerThread();
-                DeviceWorkerThread.Start();
             }
             _isFiltered = true;
         }
@@ -84,6 +82,7 @@ namespace AutoHotInterception.DeviceHandlers
             if (!AllButtonsMapping.Concurrent && DeviceWorkerThread != null)
             {
                 DeviceWorkerThread.Dispose();
+                DeviceWorkerThread = null;
             }
             AllButtonsMapping = null;
             DisableFilterIfNeeded();
