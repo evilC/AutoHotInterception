@@ -22,6 +22,8 @@ Similar to the above example, if you sent Home, previously, only Home would be s
 LShift would not have been sent with a state of 2 as it should  
 Also, Pause should send a state of 4, whereas before it sent a state of 2  
 - AhiScanCodeTester.ahk in Development Tools now works again
+- Bug introduced in 0.7.0 whereby unsubscribing whilst a callback is still running would lock up the script is now fixed  
+(WorkerThreads now use Tasks and CancellationTokens)
 
 ## [0.7.0] - 2022-01 -17
 ### Added
