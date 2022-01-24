@@ -124,8 +124,10 @@ namespace AutoHotInterception.Helpers
             var strokes = new List<Stroke>();
             Order order;
             ushort state = (ushort)(1 - ahkState);
+            var wasHighCode = false;
             if (code > 256)
             {
+                wasHighCode = true;
                 code -= 256;
                 if (_highCodeE0Keys.Contains(code) || _e1Keys.Contains(code))
                 {
@@ -149,7 +151,7 @@ namespace AutoHotInterception.Helpers
                 order = Order.Normal;
             }
 
-            if (_e1Keys.Contains(code))
+            if (wasHighCode && _e1Keys.Contains(code))
             {
                 state += 2;
             }

@@ -45,6 +45,7 @@ namespace UnitTests
         {
             yield return new TestCaseData("One", 2, Result(2, 0), Result(2, 1));
             yield return new TestCaseData("Scroll Lock", 70, Result(70, 0), Result(70, 1));
+            yield return new TestCaseData("Div", 53, Result(53, 0), Result(53, 1));
 
             yield return new TestCaseData("Numpad Enter", 284, Result(28, 0), Result(28, 1));
             yield return new TestCaseData("Right Control", 285, Result(29, 2), Result(29, 3));
