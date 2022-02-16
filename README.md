@@ -202,6 +202,9 @@ All forms of input are supported in Subscription Mode.
 Subscription Mode overrides Context Mode - that is, if a key on a keyboard has been subscribed to with Subscription Mode, then Context Mode will not fire for that key on that keyboard.  
 SubscribeKey overrides SubscribeKeyboard - that is, if you have subscribed to all keys and a specific key on the same keyboard, then if you press the specific key, it's callback will fire and the callback for SubscribeKeyboard will not.  
 Each Subscribe endpoint also has a corresponding Unsubscribe endpoint, which removes the subscription and any block associated with it.  
+Both keyboard and mouse subscription functions have an optional `concurrent` parameter. This controls whether callbacks are fired sequentially or not.  
+False (Default) means that a new callback will not be fired until the last one has completed. This is especially useful for subscriptions involving mouse movement.  
+True means that a new thread will be used for each callback. If your callback has a long-running loop in it, this could mean that a callback could interrupt the previous callback, resulting in a steady buildup of callbacks (Read memory leak). Use at own risk!  
 
 #### Subscribing to Keyboard keys
 ##### Subscribe to a specific key on a specific keyboard  
@@ -216,7 +219,6 @@ KeyEvent(state){
 	ToolTip % "State: " state
 }
 ```
-Parameter `<concurrent>` is optional and is <b>false</b> by default meaning that all the events raised for that key will be handled sequentially (i.e. callback function will be called on a single thread). If set to <b>true</b>, a new thread will be created for each event and the callback function will be called on it.
 
 ##### Subscribe to all keys on a specific keyboard  
 `SubscribeKeyboard(<deviceId>, <block>, <callback>, <concurrent>)`  
