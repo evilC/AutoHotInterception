@@ -5,6 +5,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 ### Added
+### Changed
+### Deprecated
+### Removed
+### Fixed
+
+## [0.8.0] - 2022-02-20
+### Added
 - Add two SubscribeAbsolute example scripts which show how to process movement data coming from a tablet
 ### Changed
 - Input is now processed even faster  
@@ -26,7 +33,7 @@ Also, Pause should send a state of 4, whereas before it sent a state of 2
 - Bug introduced in 0.7.0 whereby unsubscribing whilst a callback is still running would lock up the script is now fixed  
 (WorkerThreads now use Tasks and CancellationTokens)
 
-## [0.7.0] - 2022-01 -17
+## [0.7.0] - 2022-01-17
 ### Added
 - Add RemoveContextManager() to remove a Context Manager
 ### Changed
