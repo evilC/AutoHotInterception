@@ -5,10 +5,26 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 ### Added
+- Add two SubscribeAbsolute example scripts which show how to process movement data coming from a tablet
 ### Changed
+- Input is now processed even faster  
+Since 0.6.0, there could have been a 10ms delay between processing one piece of input and the next  
+Now it should be effectively instant
 ### Deprecated
 ### Removed
 ### Fixed
+- Subscription / Context mode Extended keycodes fixed  
+Previously, some keys were not properly subscribe-able (Pause / NumLock)  
+Also, if any key was subscribed to with block enabled, and that key generated Extended Modifier keys when pressed  
+(eg when you press Home with NumLock off, keyboards send LShift with a state of 2, then Home with a state of 2)  
+then the Extended Modifier key (LShift with a state of 2 in the above example) was NOT blocked.
+- SendKeyEvent() now sends exactly the same ScanCodes that would be sent if you really pressed it  
+Similar to the above example, if you sent Home, previously, only Home would be sent with a state of 2  
+LShift would not have been sent with a state of 2 as it should  
+Also, Pause should send a state of 4, whereas before it sent a state of 2  
+- AhiScanCodeTester.ahk in Development Tools now works again
+- Bug introduced in 0.7.0 whereby unsubscribing whilst a callback is still running would lock up the script is now fixed  
+(WorkerThreads now use Tasks and CancellationTokens)
 
 ## [0.7.0] - 2022-01 -17
 ### Added

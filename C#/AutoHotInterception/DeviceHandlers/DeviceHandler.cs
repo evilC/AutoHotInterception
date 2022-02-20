@@ -1,6 +1,7 @@
 ﻿using AutoHotInterception.Helpers;
 using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 
 namespace AutoHotInterception.DeviceHandlers
 {
@@ -37,7 +38,6 @@ namespace AutoHotInterception.DeviceHandlers
             if (!mappingOptions.Concurrent && !WorkerThreads.ContainsKey(code))
             {
                 WorkerThreads.TryAdd(code, new WorkerThread());
-                WorkerThreads[code].Start();
             }
             _isFiltered = true;
         }
@@ -68,7 +68,6 @@ namespace AutoHotInterception.DeviceHandlers
             if (!mappingOptions.Concurrent && DeviceWorkerThread == null)
             {
                 DeviceWorkerThread = new WorkerThread();
-                DeviceWorkerThread.Start();
             }
             _isFiltered = true;
         }
@@ -83,6 +82,7 @@ namespace AutoHotInterception.DeviceHandlers
             if (!AllButtonsMapping.Concurrent && DeviceWorkerThread != null)
             {
                 DeviceWorkerThread.Dispose();
+                DeviceWorkerThread = null;
             }
             AllButtonsMapping = null;
             DisableFilterIfNeeded();
@@ -120,9 +120,9 @@ namespace AutoHotInterception.DeviceHandlers
         public abstract void DisableFilterIfNeeded();
 
         /// <summary>
-        /// Process an incoming stroke
+        /// Process an incoming stroke, or a pair of extended keycode strokes
         /// </summary>
-        /// <param name="stroke">The stroke to process</param>
-        public abstract void ProcessStroke(ManagedWrapper.Stroke stroke);
+        /// <param name="strokes">The stroke(s) to process</param>
+        public abstract void ProcessStroke(List<ManagedWrapper.Stroke> strokes);
     }
 }

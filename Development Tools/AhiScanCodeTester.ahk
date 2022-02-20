@@ -15,15 +15,20 @@ Note that for some keys (eg Pause), AHI will see TWO key events for that key, he
 All ScanCodes are in Decimal
 
 */
+#include ..\Lib\AutoHotInterception.ahk
+
+AHI := new AutoHotInterception()
 
 vid := 0x04F2, pid := 0x0112 ; Wyse Keyboard
+keyboardId := AHI.GetKeyboardId(vid, pid)
 
 OutputDebug, DBGVIEWCLEAR
 AhkKeyBuffer := []
 
 asm := CLR_LoadLibrary("..\Lib\AutoHotInterception.dll")
 sct := asm.CreateInstance("AutoHotInterception.ScanCodeChecker")
-sct.Subscribe(vid, pid, Func("AhiKeyEvent"))
+sct.Subscribe(keyboardId, Func("AhiKeyEvent"), false)
+
 
 ih := InputHook()
 ih.KeyOpt("{All}", "SN")
@@ -66,7 +71,7 @@ AhiKeyEvent(keyEvents){
 	}
 	
 	; Note that keyEvents is a ZERO-BASED array!
-	
+
 	ahiSc1 := keyEvents[0].Code
 	ahiState1 := keyEvents[0].state
 	
