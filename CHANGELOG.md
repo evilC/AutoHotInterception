@@ -5,6 +5,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 
 ## [Unreleased]
 ### Added
+- Add two SubscribeAbsolute example scripts which show how to process movement data coming from a tablet
 ### Changed
 - Input is now processed even faster  
 Since 0.6.0, there could have been a 10ms delay between processing one piece of input and the next  
