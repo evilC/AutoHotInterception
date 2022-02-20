@@ -1,4 +1,5 @@
 ﻿using AutoHotInterception;
+using AutoHotInterception.Helpers;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -17,6 +18,8 @@ namespace TestApp
 
     public class TestDevice
     {
+        private static readonly IntPtr _deviceContext = ManagedWrapper.CreateContext();
+
         public bool IsMouse { get; set; }
         public int? Vid { get; set; }
         public int? Pid { get; set; }
@@ -25,15 +28,13 @@ namespace TestApp
 
         public int GetDeviceId()
         {
-            var im = new Manager();
-
             if (Vid != null && Pid != null)
             {
-                return im.GetDeviceId(IsMouse, (int)Vid, (int)Pid, Instance);
+                return HelperFunctions.GetDeviceId(_deviceContext, IsMouse, (int)Vid, (int)Pid, Instance);
             }
             else
             {
-                return im.GetDeviceIdFromHandle(IsMouse, Handle, Instance);
+                return HelperFunctions.GetDeviceIdFromHandle(_deviceContext, IsMouse, Handle, Instance);
             }
         }
 
