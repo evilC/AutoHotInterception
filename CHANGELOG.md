@@ -10,6 +10,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 ### Removed
 ### Fixed
 
+## [0.9.0] - 2023-03-21
+### Added
+- Added support for AHK v2
+
 ## [0.8.0] - 2022-02-20
 ### Added
 - Add two SubscribeAbsolute example scripts which show how to process movement data coming from a tablet
