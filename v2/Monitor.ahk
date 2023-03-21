@@ -108,18 +108,15 @@ btnClearMouse.OnEvent("Click", ClearMouse)
 lowest += 30
 
 ; Output
-; Gui, Add, ListView, % "x" columnX.K " y" lowest " w" totalWidths.K " h" outputH " hwndhLvKeyboard", ID|Code|State|Key Name
-; LV_ModifyCol(4, 100)
-; Gui, Add, ListView, % "x" columnX.M " yp w" totalWidths.M " h" outputH " hwndhLvMouse", ID|Code|State|X|Y|Info
-; LV_ModifyCol(6, 200)
+lvKeyboard := monitorGui.Add("ListView", "x" columnX["K"] " y" lowest " w" totalWidths["K"] " h" outputH, ["ID", "Code", "State", "Key Name"])
+lvKeyboard.ModifyCol(4, 100)
+
+lvMouse := monitorGui.Add("ListView", "x" columnX["M"] " yp w" totalWidths["M"] " h" outputH, ["ID", "Code", "State", "X", "Y", "Info"])
+lvMouse.ModifyCol(6, 200)
 
 lowest += outputH
 
-; Gui("Show", "w" (marginX * 3) + totalWidths.K + totalWidths.M " h" marginY + lowest, "AutoHotInterception Monitor")
 monitorGui.Show("w" (marginX * 3) + totalWidths["K"] + totalWidths["M"] " h" marginY + lowest)
-
-;~ Monitor.Subscribe(Func("KeyboardEvent"), Func("MouseEvent"))
-
 return
 
 
@@ -186,13 +183,13 @@ FilterPress(ctrl, info){
 }
 
 ClearKeyboard(ctrl, info){
-	; Gui, ListView, % hLvKeyboard
-	; LV_Delete()
+	global lvKeyboard
+	lvKeyboard.Delete()
 }
 
 ClearMouse(ctrl, info){
-	; Gui, ListView, % hLvMouse
-	; LV_Delete()
+	global lvMouse
+	lvMouse.Delete()
 }
 
 FormatHex(num){
@@ -201,31 +198,27 @@ FormatHex(num){
 
 
 KeyboardEvent(id, code, state){
-	ToolTip("Keyboard Event`nid: " id "`ncode: " code "`nstate: " state)
-	; global hLvKeyboard, filterKeyPress
-    ; if (filterKeyPress && state)
-    ;     return
-	; Gui, ListView, % hLvKeyboard
-	; scanCode := Format("{:x}", code)
-	; keyName := GetKeyName("SC" scanCode)
-	; row := LV_Add(, id, code, state, keyName)
-	; LV_Modify(row, "Vis")
+	global lvKeyboard, filterKeyPress
+    if (filterKeyPress && state)
+        return
+	scanCode := Format("{:x}", code)
+	keyName := GetKeyName("SC" scanCode)
+	row := lvKeyboard.Add(, id, code, state, keyName)
+	lvKeyboard.Modify(row, "Vis")
 }
 
 MouseButtonEvent(id, code, state){
-	; global hLvMouse
-	; Gui, ListView, % hLvMouse
-	; row := LV_Add(, id, code, state, "", "", "Button")
-	; LV_Modify(row, "Vis")
+	global lvMouse
+	row := lvMouse.Add(, id, code, state, "", "", "Button")
+	lvMouse.Modify(row, "Vis")
 }
 
 MouseAxisEvent(id, info, x, y){
-	; global hLvMouse, filterMouseMove
-	; if (filterMouseMove)
-	; 	return
-	; Gui, ListView, % hLvMouse
-	; row := LV_Add(, id, "", "", x, y, info)
-	; LV_Modify(row, "Vis")
+	global lvMouse, filterMouseMove
+	if (filterMouseMove)
+		return
+	row := lvMouse.Add(, id, "", "", x, y, info)
+	lvMouse.Modify(row, "Vis")
 }
 
 CopyClipboard(str, ctrl, info){
