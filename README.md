@@ -71,12 +71,12 @@ Here is a GIF showing the process:
 ## Build your AutoHotInterception folder
 1. Download an AHI release from the [releases page](https://github.com/evilC/AutoHotInterception/releases) and extract it to a folder.  
 DO NOT use the "Clone or Download" link on the main page.  
-2. From the AHI release zip, extract EITHER the `AHK v1` folder **OR** the `AHK v2` folder to somewhere on your disk.  
+2. From the AHI release zip, extract **EITHER** the `AHK v1` folder **OR** the `AHK v2` folder to somewhere on your disk.  
 This is the "working folder" where (at least initially) you will be running scripts from.  
 It contains a number of sample `.ahk` scripts and a `lib` folder.  
 3. From the AHI release zip, extract `AutoHotInterception.dll` from the `Common\lib` folder and place it into `lib` in your "working folder"
 4. In the Interception installer zip, there is a `library` folder containing `x86` and `x64` folders.  
-Copy both of these folders into the `lib` folder in your "working" folder.  
+Copy both of these folders into the `lib` folder in your "working folder".  
 
 Example for AHK v1 - the "working folder" is on the left, top right is the AutoHotInterception zip, bottom right is the Interception zip.   
 ![](https://github.com/evilC/AutoHotInterception/blob/master/FolderSetup.gif)
@@ -99,8 +99,10 @@ AHI Root Folder
 ```
 4. Right-click `Unblocker.ps1` in the lib folder and select `Run as Admin`.  
 This is because downloaded DLLs are often blocked and will not work.  
-This can be done manually by right clicking the DLLs, selecting Properties, and checking a "Block" box if it exists.  
-5. Edit one of the example remapping scripts, replacing the VID/PID(s) with that of your device (Use the Monitor app to find it) and run it to make sure it works.  
+Alternatively, this can be done manually in one of two ways:
+   1. By right clicking the DLLs, selecting Properties, and checking a "Block" box if it exists.  
+   1. Before you open any zip (ie the AutoHotInterception zip or the Interception zip), right click it and select "Unblock".  
+5. Run `Monitor.ahk` from your working folder to check that everything works
 6. (Optional) The contents of the `lib` folder can actually be placed in one of the AutoHotkey lib folders (eg `My Documents\AutoHotkey\lib` - make it if it does not exist), and the `#include` lines of the sample scripts changed to `#include <AutoHotInterception>`, to enable your AHI scripts to be in any folder, without each needing it's own copy of the library files.  
 
 
