@@ -10,6 +10,7 @@ OutputDebug("DBGVIEWCLEAR")
 monitorGui := Gui("", "AutoHotInterception Monitor")
 monitorGui.MarginX := 0
 monitorGui.MarginY := 0
+monitorGui.OnEvent("Close", GuiClosed)
 
 DeviceList := {}
 filterMouseMove := 1
@@ -231,8 +232,11 @@ ClearTooltip(){
 	ToolTip
 }
 
+GuiClosed(gui){
+	ExitApp
+}
+
 ^Esc::
 {
-	GuiClose:
-		ExitApp
+	ExitApp
 }
