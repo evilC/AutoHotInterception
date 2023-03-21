@@ -7,9 +7,9 @@ Persistent
 
 OutputDebug("DBGVIEWCLEAR")
 
-mg := Gui("", "AutoHotInterception Monitor")
-mg.MarginX := 0
-mg.MarginY := 0
+monitorGui := Gui("", "AutoHotInterception Monitor")
+monitorGui.MarginX := 0
+monitorGui.MarginY := 0
 
 DeviceList := {}
 filterMouseMove := 1
@@ -54,16 +54,16 @@ Loop 2 {
 		dev := DeviceList[i]
 		rowY := (marginY * 3) + ((A_Index - 1) * rowH)
 
-		chkDevice := mg.Add("Checkbox", "x" columnX[devType] " y" rowY " w" idW, "ID: " dev.id)
+		chkDevice := monitorGui.Add("Checkbox", "x" columnX[devType] " y" rowY " w" idW, "ID: " dev.id)
 		chkDevice.OnEvent("Click", CheckboxChanged.Bind(dev.id))
 
 		lowest := UpdateLowest(chkDevice)
 		strings[A_index] := {vid:FormatHex(dev.VID), pid: FormatHex(dev.PID), handle: dev.Handle}
 
-		textVidPid := mg.Add("Text", "x" columnX[devType] + idW " y" rowY - vhOff, "VID / PID:`t0x" strings[A_index].vid ", 0x" strings[A_index].pid)
+		textVidPid := monitorGui.Add("Text", "x" columnX[devType] + idW " y" rowY - vhOff, "VID / PID:`t0x" strings[A_index].vid ", 0x" strings[A_index].pid)
 		maxWidths[devType] := UpdateWidth(textVidPid)
 
-		textHandle := mg.Add("Text", "x" columnX[devType] + idW " y" rowY + vhOff, "Handle:`t`t" StrReplace(strings[A_index].Handle, "&", "&&"))
+		textHandle := monitorGui.Add("Text", "x" columnX[devType] + idW " y" rowY + vhOff, "Handle:`t`t" StrReplace(strings[A_index].Handle, "&", "&&"))
 		maxWidths[devType] := UpdateWidth(textHandle)
 	}
 
@@ -77,15 +77,15 @@ Loop 2 {
 		rowY := (marginY * 3) + ((A_Index - 1) * rowH)
 		xpos := columnX[devType] + idW + maxWidths[devType]
 
-		btnCopyVidPid := mg.Add("Button", "x" xpos " y" rowY - vhOff " h14 w" copyW, "Copy")
+		btnCopyVidPid := monitorGui.Add("Button", "x" xpos " y" rowY - vhOff " h14 w" copyW, "Copy")
 		btnCopyVidPid.OnEvent("Click", CopyClipboard.Bind("0x" strings[A_index].vid ", 0x" strings[A_index].pid))
 		
-		btnCopyHandle := mg.Add("Button", "x" xpos " y" rowY + vhOff " h14 w" copyW, "Copy")
+		btnCopyHandle := monitorGui.Add("Button", "x" xpos " y" rowY + vhOff " h14 w" copyW, "Copy")
 		btnCopyHandle.OnEvent("Click", CopyClipboard.Bind(strings[A_index].handle))
 	}
 
 	totalWidths[devType] := idW + maxWidths[devType] + copyW
-	mg.Add("Text", "x" columnX[devType] " y5 w" totalWidths[devType] " Center", columnTitles[devType])
+	monitorGui.Add("Text", "x" columnX[devType] " y5 w" totalWidths[devType] " Center", columnTitles[devType])
 }
 
 lowest += 2 * MarginY
@@ -115,7 +115,7 @@ lowest += 30
 lowest += outputH
 
 ; Gui("Show", "w" (marginX * 3) + totalWidths.K + totalWidths.M " h" marginY + lowest, "AutoHotInterception Monitor")
-mg.Show("w" (marginX * 3) + totalWidths["K"] + totalWidths["M"] " h" marginY + lowest)
+monitorGui.Show("w" (marginX * 3) + totalWidths["K"] + totalWidths["M"] " h" marginY + lowest)
 
 ;~ Monitor.Subscribe(Func("KeyboardEvent"), Func("MouseEvent"))
 
