@@ -91,18 +91,19 @@ Loop 2 {
 lowest += 2 * MarginY
 
 ; Options
-; Gui, Add, CheckBox, % "x" columnX.K " y" lowest " hwndhCbFilterPress", Only show key releases
-; fn := Func("FilterPress")
-; GuiControl, +g, % hCbFilterPress, % fn
+chkFilterPress := monitorGui.Add("CheckBox", "x" columnX["K"] " y" lowest, "Only show key releases")
+chkFilterPress.OnEvent("Click", FilterPress)
 
-; Gui, Add, CheckBox, % "x" columnX.M " w" totalWidths[devType] " yp hwndhCbFilterMove Checked", Filter Movement (Warning: Turning off can cause crashes)
-; fn := Func("FilterMove")
-; GuiControl, +g, % hCbFilterMove, % fn
+chkFilterMove :=  monitorGui.Add("CheckBox", "x" columnX["M"] " w" totalWidths[devType] " yp Checked", "Filter Movement (Warning: Turning off can cause crashes)")
+chkFilterMove.OnEvent("Click", FilterMove)
 
 lowest += 2 * MarginY
 
-; Gui, Add, Button, % "x" columnX.K " y" lowest " w" totalWidths.K " Center gClearKeyboard", Clear
-; Gui, Add, Button, % "x" columnX.M " yp w" totalWidths.M " gClearMouse Center", Clear
+btnClearKeyboard := monitorGui.Add("Button", "x" columnX["K"] " y" lowest " w" totalWidths["K"] " Center", "Clear")
+btnClearKeyboard.OnEvent("Click", ClearKeyboard)
+
+btnClearMouse := monitorGui.Add("Button", "x" columnX["M"] " yp w" totalWidths["M"] " Center", "Clear")
+btnClearMouse.OnEvent("Click", ClearMouse)
 
 lowest += 30
 
@@ -173,31 +174,26 @@ CheckboxChanged(id, ctrl, info){
 		}
 	}
 }
-/*
 
-FilterMove(hwnd){
+FilterMove(ctrl, info){
 	global filterMouseMove
-	GuiControlGet, state, , % hwnd
-	filterMouseMove := state
+	filterMouseMove := ctrl.Value
 }
 
-FilterPress(hwnd){
+FilterPress(ctrl, info){
 	global filterKeyPress
-	GuiControlGet, state, , % hwnd
-	filterKeyPress := state
+	filterKeyPress := ctrl.Value
 }
 
-ClearKeyboard:
-	Gui, ListView, % hLvKeyboard
-	LV_Delete()
-	return
+ClearKeyboard(ctrl, info){
+	; Gui, ListView, % hLvKeyboard
+	; LV_Delete()
+}
 
-ClearMouse:
-	Gui, ListView, % hLvMouse
-	LV_Delete()
-	return
-
-*/
+ClearMouse(ctrl, info){
+	; Gui, ListView, % hLvMouse
+	; LV_Delete()
+}
 
 FormatHex(num){
 	return Format("{:04X}", num)
