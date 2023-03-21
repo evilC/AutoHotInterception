@@ -67,7 +67,7 @@ Here is a GIF showing the process:
 2. Download an AHI release from the [releases page](https://github.com/evilC/AutoHotInterception/releases) and extract it to a folder.  
 DO NOT use the "Clone or Download" link on the main page.  
 This is the folder where (at least initially) you will be running scripts from.  
-It contains a number of sample `.ahk` scripts and a `lib` folder, which contains all the AHI libraries.  
+It contains `AHK v1` and `AHK v2` folders - use the one appropriate for your AHK version. Inside each is a number of sample `.ahk` scripts and a `lib` folder, which contains all the AHI libraries.  
 3. In the Interception installer zip, there is a `library` folder containing `x86` and `x64` folders.  
 Copy both of these folders into the AHI `lib` folder that you created in step (3) - the folder structure should end up looking like:  
 ```
@@ -95,6 +95,7 @@ This can be done manually by right clicking the DLLs, selecting Properties, and 
 
 # Usage
 ## Initializing the Library
+### AHK v1
 Include the library
 ```
 #Persistent ; (Interception hotkeys do not stop AHK from exiting, so use this)
@@ -104,6 +105,18 @@ Include the library
 Initialize the library
 ```
 global AHI := new AutoHotInterception()
+```
+
+### AHK v2
+Include the library
+```
+Persistent ; (Interception hotkeys do not stop AHK from exiting, so use this)
+#include Lib\AutoHotInterception.ahk
+```
+
+Initialize the library
+```
+global AHI := AutoHotInterception()
 ```
 
 *Note*  
@@ -176,9 +189,11 @@ Create a Context Manager for the keyboard or mouse, pass it the Interception ID 
 Then Create your hotkeys, wrapped in an `#if` block that checks the `.IsActive` property of your Context Manager  
 
 (Complete, working script)  
+#### AHK v1
 ```
 #include Lib\AutoHotInterception.ahk
 
+AHI := new AutoHotInterception()
 keyboard1Id := AHI.GetKeyboardId(0x04F2, 0x0112)
 cm1 := AHI.CreateContextManager(keyboard1Id)
 
@@ -192,6 +207,30 @@ cm1 := AHI.CreateContextManager(keyboard1Id)
 	ToolTip % "KEY UP EVENT @ " A_TickCount
 	return
 #if			; Close the #if block
+```
+
+#### AHK v2
+```
+#include Lib\AutoHotInterception.ahk
+
+AHI := AutoHotInterception()
+keyboard1Id := AHI.GetKeyboardId(0x04F2, 0x0112)
+cm1 := AHI.CreateContextManager(keyboard1Id)
+
+#HotIf cm1.IsActive	; Start the #if block
+::aaa::JACKPOT
+1::
+{
+	ToolTip("KEY DOWN EVENT @ " A_TickCount)
+	return
+}
+	
+1 up::
+{
+	ToolTip("KEY UP EVENT @ " A_TickCount)
+	return
+}
+#HotIf			; Close the #if block
 ```
 
 You can remove a Context Manager using `AHI.RemoveContextManager(keyboard1Id)`
@@ -209,8 +248,9 @@ True means that a new thread will be used for each callback. If your callback ha
 #### Subscribing to Keyboard keys
 ##### Subscribe to a specific key on a specific keyboard  
 `SubscribeKey(<deviceId>, <scanCode>, <block>, <callback>, <concurrent>)`  
-`UnsubscribeKey(<deviceId>, <scanCode>)`
+`UnsubscribeKey(<deviceId>, <scanCode>)`  
 eg  
+###### AHK v1
 `AHI.SubscribeKey(keyboardId, GetKeySC("1"), true, Func("KeyEvent"))`
 
 Callback function is passed state `0` (released) or `1` (pressed)
@@ -220,15 +260,36 @@ KeyEvent(state){
 }
 ```
 
+###### AHK v2
+`AHI.SubscribeKey(keyboardId, GetKeySC("1"), true, KeyEvent)`
+
+Callback function is passed state `0` (released) or `1` (pressed)
+```
+KeyEvent(state){
+	ToolTip("State: " state)
+}
+```
+
 ##### Subscribe to all keys on a specific keyboard  
 `SubscribeKeyboard(<deviceId>, <block>, <callback>, <concurrent>)`  
 eg  
+###### AHK v1
 `AHI.SubscribeKeyboard(keyboardId, true, Func("KeyEvent"))`  
 
 Callback function is passed scancode of pressed key and state  
 ```
 KeyEvent(code, state){
 	ToolTip % "Keyboard Key - Code: " code ", State: " state
+}
+```
+
+###### AHK v2
+`AHI.SubscribeKeyboard(keyboardId, true, KeyEvent)`  
+
+Callback function is passed scancode of pressed key and state  
+```
+KeyEvent(code, state){
+	ToolTip("Keyboard Key - Code: " code ", State: " state)
 }
 ```
 
@@ -253,12 +314,23 @@ Otherwise, usage is identical to `SubscribeKey`
 ##### Subscribing to all buttons on a specific mouse
 `SubscribeMouseButtons(<deviceId>, <block>, <callback>, <concurrent>)`  
 eg  
+###### AHK v1
 `AHI.SubscribeMouseButtons(mouseId, true, Func("MouseButtonEvent"))`  
 
 Callback function is passed ID (See above) of pressed button and state  
 ```
 MouseButtonEvent(code, state){
 	ToolTip % "Mouse Button - Code: " code ", State: " state	
+}
+```
+
+###### AHK v2
+`AHI.SubscribeMouseButtons(mouseId, true, MouseButtonEvent)`  
+
+Callback function is passed ID (See above) of pressed button and state  
+```
+MouseButtonEvent(code, state){
+	ToolTip("Mouse Button - Code: " code ", State: " state)	
 }
 ```
 
@@ -278,8 +350,19 @@ Each endpoint has two naming variants for convenience, they both do the same.
 `UnsubscribeMouseMove(<deviceId>)`  
 `UnsubscribeMouseMoveRelative(<deviceId>)`  
 For Mouse Movement, the callback is passed two ints - x and y.  
+eg  
+###### AHK v1
 ```
 AHI.SubscribeMouseMove(mouseId, false, Func("MouseEvent"))
+
+MouseEvent(x, y){
+	[...]
+}
+```
+
+###### AHK v2
+```
+AHI.SubscribeMouseMove(mouseId, false, MouseEvent)
 
 MouseEvent(x, y){
 	[...]
@@ -292,6 +375,8 @@ Coordinates will be in the range 0..65535
 `SubscribeMouseMoveAbsolute(<deviceId>, <block>, <callback>, <concurrent>)`  
 `UnsubscribeMouseMoveAbsolute(<deviceId>)`  
 Again, the callback is passed two ints - x and y.  
+eg  
+###### AHK v1
 ```
 AHI.SubscribeMouseMoveAbsolute(mouseId, false, Func("MouseEvent"))
 
@@ -299,6 +384,17 @@ MouseEvent(x, y){
 	[...]
 }
 ```
+
+###### AHK v2
+```
+AHI.SubscribeMouseMoveAbsolute(mouseId, false, MouseEvent)
+
+MouseEvent(x, y){
+	[...]
+}
+```
+
+
 ## Synthesizing Output
 Note that these commands will work in both Context and Subscription modes  
 Also note that you can send as any device, regardless of whether you have subscribed to it in some way or not. 
