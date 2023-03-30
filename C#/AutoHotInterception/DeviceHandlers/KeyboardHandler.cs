@@ -21,6 +21,7 @@ namespace AutoHotInterception.DeviceHandlers
         {
             if (AllButtonsMapping == null 
                 && SingleButtonMappings.Count == 0
+                && SingleButtonMappingsEx.Count == 0
                 && ContextCallback == null)
             {
                 _isFiltered = false;
@@ -56,6 +57,7 @@ namespace AutoHotInterception.DeviceHandlers
             if (_isFiltered)
             {
                 var isKeyMapping = false; // True if this is a mapping to a single key, else it would be a mapping to a whole device
+                var useExtendedCallback = false;
                 var processedState = ScanCodeHelper.TranslateScanCodes(strokes);
                 var code = processedState.Code;
                 var state = processedState.State;
@@ -65,7 +67,15 @@ namespace AutoHotInterception.DeviceHandlers
                 if (SingleButtonMappings.ContainsKey(code))
                 {
                     isKeyMapping = true;
+                    useExtendedCallback = false;
                     mapping = SingleButtonMappings[code];
+                }
+                // If there is an mapping (via SubscribeKeyEx) to this specific key, then use that ...
+                if (SingleButtonMappingsEx.ContainsKey(code))
+                {
+                    isKeyMapping = true;
+                    useExtendedCallback = true;
+                    mapping = SingleButtonMappingsEx[code];
                 }
                 // ... otherwise, if there is a mapping to the whole keyboard, use that
                 else if (AllButtonsMapping != null)
@@ -82,7 +92,14 @@ namespace AutoHotInterception.DeviceHandlers
                     {
                         if (isKeyMapping)
                         {
-                            ThreadPool.QueueUserWorkItem(threadProc => mapping.Callback(state));
+                            if (useExtendedCallback)
+                            {
+                                ThreadPool.QueueUserWorkItem(threadProc => mapping.Callback(state, code));
+                            }
+                            else
+                            {
+                                ThreadPool.QueueUserWorkItem(threadProc => mapping.Callback(state));
+                            }
                         }
                         else
                         {
@@ -94,7 +111,14 @@ namespace AutoHotInterception.DeviceHandlers
                         //mapping.Callback(code, state);
                         if (isKeyMapping)
                         {
-                            WorkerThreads[code]?.Actions.Add(() => mapping.Callback(state));
+                            if (useExtendedCallback)
+                            {
+                                WorkerThreads[code]?.Actions.Add(() => mapping.Callback(state, code));
+                            }
+                            else
+                            {
+                                WorkerThreads[code]?.Actions.Add(() => mapping.Callback(state));
+                            }
                         }
                         else
                         {
