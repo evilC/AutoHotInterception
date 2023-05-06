@@ -9,13 +9,13 @@ class AutoHotInterception {
 		if (A_IsCompiled) {
 			dllFile := A_LineFile "\..\Lib\" bitness "\" dllName
 			DirCreate("Lib")
-			FileInstall("Lib\AutoHotInterception.dll", "Lib\AutoHotInterception.dll")
+			FileInstall("Lib\AutoHotInterception.dll", "Lib\AutoHotInterception.dll", 1)
 			if (bitness == "x86") {
 				DirCreate("Lib\x86")
-				FileInstall("Lib\x86\interception.dll", "Lib\x86\interception.dll")
+				FileInstall("Lib\x86\interception.dll", "Lib\x86\interception.dll", 1)
 			} else {
 				DirCreate("Lib\x64")
-				FileInstall("Lib\x64\interception.dll", "Lib\x64\interception.dll")
+				FileInstall("Lib\x64\interception.dll", "Lib\x64\interception.dll", 1)
 			}
 		} else {
 			dllFile := A_LineFile "\..\" bitness "\" dllName
