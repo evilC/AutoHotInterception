@@ -15,6 +15,7 @@ namespace AutoHotInterception.DeviceHandlers
 
         // Holds MappingOptions for individual mouse button / keyboard key subscriptions
         protected ConcurrentDictionary<ushort, MappingOptions> SingleButtonMappings = new ConcurrentDictionary<ushort, MappingOptions>();
+        protected ConcurrentDictionary<ushort, MappingOptions> SingleButtonMappingsEx = new ConcurrentDictionary<ushort, MappingOptions>();
         // If all mouse buttons or keyboard keys are subscribed, this holds the mapping options
         protected MappingOptions AllButtonsMapping;
 
@@ -43,6 +44,21 @@ namespace AutoHotInterception.DeviceHandlers
         }
 
         /// <summary>
+        /// Subscribes to a single key or button of this device
+        /// </summary>
+        /// <param name="code">The ScanCode (keyboard) or Button Code (mouse) for the key or button</param>
+        /// <param name="mappingOptions">Options for the subscription (block, callback to fire etc)</param>
+        public void SubscribeSingleButtonEx(ushort code, MappingOptions mappingOptions)
+        {
+            SingleButtonMappingsEx.TryAdd(code, mappingOptions);
+            if (!mappingOptions.Concurrent && !WorkerThreads.ContainsKey(code))
+            {
+                WorkerThreads.TryAdd(code, new WorkerThread());
+            }
+            _isFiltered = true;
+        }
+
+        /// <summary>
         /// Unsubscribes from a single key or button of this device
         /// </summary>
         /// <param name="code">The ScanCode (keyboard) or Button Code (mouse) for the key or button</param>
@@ -50,6 +66,22 @@ namespace AutoHotInterception.DeviceHandlers
         {
             if (!SingleButtonMappings.ContainsKey(code)) return;
             SingleButtonMappings.TryRemove(code, out var mappingOptions);
+            if (!mappingOptions.Concurrent && WorkerThreads.ContainsKey(code))
+            {
+                WorkerThreads[code].Dispose();
+                WorkerThreads.TryRemove(code, out _);
+            }
+            DisableFilterIfNeeded();
+        }
+
+        /// <summary>
+        /// Unsubscribes from a single key or button of this device
+        /// </summary>
+        /// <param name="code">The ScanCode (keyboard) or Button Code (mouse) for the key or button</param>
+        public void UnsubscribeSingleButtonEx(ushort code)
+        {
+            if (!SingleButtonMappingsEx.ContainsKey(code)) return;
+            SingleButtonMappingsEx.TryRemove(code, out var mappingOptions);
             if (!mappingOptions.Concurrent && WorkerThreads.ContainsKey(code))
             {
                 WorkerThreads[code].Dispose();

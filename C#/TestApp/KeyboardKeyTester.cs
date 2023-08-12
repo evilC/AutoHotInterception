@@ -16,11 +16,16 @@ namespace TestApp
             if (devId == 0) return;
 
             im.SubscribeKey(devId, 0x2, block, new Action<int>(OnKeyEvent));
+            im.SubscribeKeyEx(devId, 0x3, block, new Action<int,ushort>(OnKeyEventEx));
         }
 
         public void OnKeyEvent(int value)
         {
             Console.WriteLine($"State: {value}");
+        }
+        public void OnKeyEventEx(int value, ushort code)
+        {
+            Console.WriteLine($"State: {value}   Code: {code}");
         }
 
     }

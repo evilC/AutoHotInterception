@@ -166,7 +166,13 @@ class AutoHotInterception {
 
 	; ---------------------- Subscription Mode ----------------------
 	SubscribeKey(id, code, block, callback, concurrent := false) {
-		this.Instance.SubscribeKey(id, code, block, callback, concurrent)
+		switch callback.MaxParams
+		{
+			case 1:
+				this.Instance.SubscribeKey(id, code, block, callback, concurrent)
+			case 2:
+				this.Instance.SubscribeKeyEx(id, code, block, callback, concurrent)
+		}
 	}
 
 	UnsubscribeKey(id, code){
