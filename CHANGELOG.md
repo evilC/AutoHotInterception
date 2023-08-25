@@ -10,6 +10,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 ### Removed
 ### Fixed
 
+## [0.9.2] - 2023-07-31
+### Changed
+- Remove Interception DLLs from release zip
+
 ## [0.9.1] - 2023-07-31
 ### Fixed
 - Compiled script (FileInstall) fix for AHK v2
