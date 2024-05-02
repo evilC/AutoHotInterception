@@ -63,7 +63,7 @@ There is nothing I can do to fix this issue, it is a limitation of the Intercept
 # Setup
 
 ## Install the Intereception driver
-Download and install the [Interception Driver](http://www.oblita.com/interception)  
+Download and install the [Interception Driver](https://github.com/oblitum/Interception/releases)  
 Note that you **must** run `install-interception.exe` at an admin command prompt (**Not double-click it**) - once you do so, it will instruct you to execute `install-interception.exe /install` to actually perform the install.  
 Here is a GIF showing the process:  
 ![](https://github.com/evilC/AutoHotInterception/blob/master/InterceptionInstall.gif)
