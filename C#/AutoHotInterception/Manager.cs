@@ -87,11 +87,49 @@ namespace AutoHotInterception
         }
 
         /// <summary>
+        ///     Subscribes to a Keyboard key
+        /// </summary>
+        /// <param name="id">The ID of the Keyboard</param>
+        /// <param name="code">The ScanCode of the key</param>
+        /// <param name="block">Whether or not to block the key</param>
+        /// <param name="callback">The callback to fire when the key changes state</param>
+        /// <param name="concurrent">Whether or not to execute callbacks concurrently</param>
+        /// <returns></returns>
+        public void SubscribeKeyEx(int id, ushort code, bool block, dynamic callback, bool concurrent = false)
+        {
+            HelperFunctions.IsValidDeviceId(false, id);
+            SetFilterState(false);
+
+            var handler = DeviceHandlers[id];
+            handler.SubscribeSingleButtonEx(code, new MappingOptions { Block = block, Concurrent = concurrent, Callback = callback });
+
+            SetFilterState(true);
+            SetThreadState(true);
+        }
+
+        /// <summary>
         /// Unsubscribe from a keyboard key
         /// </summary>
         /// <param name="id">The id of the keyboard</param>
         /// <param name="code">The Scancode of the key</param>
         public void UnsubscribeKey(int id, ushort code)
+        {
+            HelperFunctions.IsValidDeviceId(false, id);
+            SetFilterState(false);
+
+            var handler = DeviceHandlers[id];
+            handler.UnsubscribeSingleButton(code);
+
+            SetFilterState(true);
+            SetThreadState(true);
+        }
+
+        /// <summary>
+        /// Unsubscribe from a keyboard key
+        /// </summary>
+        /// <param name="id">The id of the keyboard</param>
+        /// <param name="code">The Scancode of the key</param>
+        public void UnsubscribeKeyEx(int id, ushort code)
         {
             HelperFunctions.IsValidDeviceId(false, id);
             SetFilterState(false);

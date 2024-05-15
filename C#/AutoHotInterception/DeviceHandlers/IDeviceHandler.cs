@@ -20,6 +20,13 @@ namespace AutoHotInterception.DeviceHandlers
         void SubscribeSingleButton(ushort code, MappingOptions mappingOptions);
 
         /// <summary>
+        /// Subscribes to a single key or button of this device
+        /// </summary>
+        /// <param name="code">The ScanCode (keyboard) or Button Code (mouse) for the key or button</param>
+        /// <param name="mappingOptions">Options for the subscription (block, callback to fire etc)</param>
+        void SubscribeSingleButtonEx(ushort code, MappingOptions mappingOptions);
+
+        /// <summary>
         /// Unsubscribes from a single key or button of this device
         /// </summary>
         /// <param name="code">The ScanCode (keyboard) or Button Code (mouse) for the key or button</param>
