@@ -4,7 +4,7 @@
 ; REQUIRES AHK >= 1.1.32
 
 /*
-The purpose of this tool is to compare the keyboard events that AHK sees to the keyboard events that AHI sees  
+The purpose of this tool is to compare the keyboard events that AHK sees to the keyboard events that AHI sees
 To use it, set the vid and pid variables below to the VID and PID of a keyboard...
 ... then run this script and press keys ONLY ON THAT KEYBOARD
 Pressing keys on another keyboard will break the script!
@@ -69,26 +69,26 @@ AhiKeyEvent(keyEvents){
 		msgbox % "Expecting 1 or 2 AHI key events, but got " numEvents
 		ExitApp
 	}
-	
+
 	; Note that keyEvents is a ZERO-BASED array!
 
 	ahiSc1 := keyEvents[0].Code
 	ahiState1 := keyEvents[0].state
-	
+
 	if (numEvents == 2){
 		ahiSc2 := keyEvents[1].Code
 		ahiState2 := keyEvents[1].state
 	}
-	
+
 	ahkSc1 := ahkKeyEvent.Code
 	if (ahkSc1 > 256){
 		ahkSc1 .= " (Ext " ahkSc1 - 256 ")"
 	}
 	ahkState1 := ahkKeyEvent.State
-	
+
 	row := LV_Add(, GetKeyName("SC" DecToHex(ahkKeyEvent.Code)), ahkSc1, ahkState1, ahiSc1, ahiState1, ahiSc2, ahiState2)
 	LV_Modify(row, "Vis")
-	
+
 	AhkKeyBuffer := []
 }
 

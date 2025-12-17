@@ -39,7 +39,7 @@ Loop 2 {
 
 	start := starts[devType]
 	UpdateWidth(0, 1) ; Reset max width
-	
+
 	; Add device entries
 	Loop 10 {
 		i := start + A_Index
@@ -71,7 +71,7 @@ Loop 2 {
 		xpos := columnX[devType] + idW + maxWidths[devType]
 		Gui, Add, Button, % "x" xpos " y" rowY - vhOff " h14 w" copyW " hwndhwnd", Copy
 		GuiControl, +g, % hwnd, % fn
-		
+
 		fn := Func("CopyClipboard").Bind(strings[A_index].handle)
 		Gui, Add, Button, % "x" xpos " y" rowY + vhOff " h14 w" copyW " hwndhwnd", Copy
 		GuiControl, +g, % hwnd, % fn

@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Threading;
-using AutoHotInterception.Helpers;
+﻿using AutoHotInterception.Helpers;
 
 namespace AutoHotInterception
 {
@@ -17,6 +13,7 @@ namespace AutoHotInterception
         private int _deviceId;
         private bool _block;
         private Thread _pollThread;
+        private readonly CancellationTokenSource _cts = new();
 
         public ScanCodeChecker()
         {
@@ -40,7 +37,7 @@ namespace AutoHotInterception
             int deviceId2;
             var stroke1 = new ManagedWrapper.Stroke();
             var stroke2 = new ManagedWrapper.Stroke();
-            while (true)
+            while (!_cts.IsCancellationRequested)
             {
                 var strokes = new List<ManagedWrapper.Stroke>();
                 if (ManagedWrapper.Receive(_deviceContext, deviceId1 = ManagedWrapper.WaitWithTimeout(_deviceContext, 10), ref stroke1, 1) > 0)
@@ -80,13 +77,19 @@ namespace AutoHotInterception
 
         private int IsMonitoredDevice(int device)
         {
-            return (Convert.ToInt32(_deviceId == device) );
+            return Convert.ToInt32(_deviceId == device) ;
         }
 
         public void Dispose()
         {
-            _pollThread.Abort();
-            _pollThread.Join();
+            _cts.Cancel();
+
+            if (_pollThread != null && _pollThread.IsAlive)
+            {
+                _pollThread.Join();
+            }
+
+            _cts.Dispose();
         }
     }
 

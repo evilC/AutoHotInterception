@@ -10,7 +10,7 @@ namespace AutoHotInterception.DeviceHandlers
     {
         public KeyboardHandler(IntPtr deviceContext, int deviceId) : base (deviceContext, deviceId)
         {
-            
+
         }
 
         /// <summary>
@@ -19,7 +19,7 @@ namespace AutoHotInterception.DeviceHandlers
         /// </summary>
         public override void DisableFilterIfNeeded()
         {
-            if (AllButtonsMapping == null 
+            if (AllButtonsMapping == null
                 && SingleButtonMappings.Count == 0
                 && ContextCallback == null)
             {

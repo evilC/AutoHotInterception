@@ -22,45 +22,45 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 ### Added
 - Add two SubscribeAbsolute example scripts which show how to process movement data coming from a tablet
 ### Changed
-- Input is now processed even faster  
-Since 0.6.0, there could have been a 10ms delay between processing one piece of input and the next  
+- Input is now processed even faster<br>
+Since 0.6.0, there could have been a 10ms delay between processing one piece of input and the next<br>
 Now it should be effectively instant
 ### Deprecated
 ### Removed
 ### Fixed
-- Subscription / Context mode Extended keycodes fixed  
-Previously, some keys were not properly subscribe-able (Pause / NumLock)  
-Also, if any key was subscribed to with block enabled, and that key generated Extended Modifier keys when pressed  
-(eg when you press Home with NumLock off, keyboards send LShift with a state of 2, then Home with a state of 2)  
+- Subscription / Context mode Extended keycodes fixed<br>
+Previously, some keys were not properly subscribe-able (Pause / NumLock)<br>
+Also, if any key was subscribed to with block enabled, and that key generated Extended Modifier keys when pressed<br>
+(eg when you press Home with NumLock off, keyboards send LShift with a state of 2, then Home with a state of 2)<br>
 then the Extended Modifier key (LShift with a state of 2 in the above example) was NOT blocked.
-- SendKeyEvent() now sends exactly the same ScanCodes that would be sent if you really pressed it  
-Similar to the above example, if you sent Home, previously, only Home would be sent with a state of 2  
-LShift would not have been sent with a state of 2 as it should  
-Also, Pause should send a state of 4, whereas before it sent a state of 2  
+- SendKeyEvent() now sends exactly the same ScanCodes that would be sent if you really pressed it<br>
+Similar to the above example, if you sent Home, previously, only Home would be sent with a state of 2<br>
+LShift would not have been sent with a state of 2 as it should<br>
+Also, Pause should send a state of 4, whereas before it sent a state of 2<br>
 - AhiScanCodeTester.ahk in Development Tools now works again
-- Bug introduced in 0.7.0 whereby unsubscribing whilst a callback is still running would lock up the script is now fixed  
+- Bug introduced in 0.7.0 whereby unsubscribing whilst a callback is still running would lock up the script is now fixed<br>
 (WorkerThreads now use Tasks and CancellationTokens)
 
 ## [0.7.0] - 2022-01-17
 ### Added
 - Add RemoveContextManager() to remove a Context Manager
 ### Changed
-- MAJOR changes to the code behind the scenes - the code is now organized way better, and key / button handling has been consolidated into the same code.  
+- MAJOR changes to the code behind the scenes - the code is now organized way better, and key / button handling has been consolidated into the same code.<br>
 Nothing should have changed apart from what is listed in this changelog
-- If you SubscribeKey to subscribe to a specific key on a device, and use SubscribeKeyboard to subscribe to all keys on the same device 
+- If you SubscribeKey to subscribe to a specific key on a device, and use SubscribeKeyboard to subscribe to all keys on the same device
 Then SubscribeKey now takes precedence (SubscribeKey callback fires, and SubscribeKeyboard does not)
 - AhiScanCodeTester.ahk in Development Tools is currently broken due to changes in AHI - it will be fixed in the next release
 ### Deprecated
 ### Removed
 ### Fixed
-- If you had Context Mode enabled for a keyboard, and a SubscribeKey or SubscribeKeyboard subscription for the same keyboard 
+- If you had Context Mode enabled for a keyboard, and a SubscribeKey or SubscribeKeyboard subscription for the same keyboard
 then using UnsubscribeKey or UnsubscribeKeyboard would disable Context Mode
 - CreateContextManager now correctly throws an error if one already exists
 - When unsubscribing from a mouse movement which was not subscribed in Concurrent mode, the WorkerThread is now properly Disposed
 
 ## [0.6.0] - 2022-01-14
 ### Changed
-- Input is now processed faster. Rather than checking for input every 1ms, we now use Interception's `WaitWithTimeout` function 
+- Input is now processed faster. Rather than checking for input every 1ms, we now use Interception's `WaitWithTimeout` function
 to process input as soon as it happens
 
 ## [0.5.3] - 2020-05-14
@@ -109,7 +109,7 @@ You will still need the DLLs from the Lib folder, but not the AHK scripts
 ### Added
 - Added TabletButtons demo for converting a graphics tablet into a button box
 ### Fixed
-- Absolute Mode mouse movement subscriptions now work again  
+- Absolute Mode mouse movement subscriptions now work again<br>
 
 ## [0.4.4] - 2019-07-09
 ### Added
@@ -118,17 +118,17 @@ You will still need the DLLs from the Lib folder, but not the AHK scripts
 ## [0.4.3] - 2019-06-10 **EXPERIMENTAL TEST RELEASE**
 ### Fixed
 - Fixed issue #39
-Almost complete rewrite of mouse polling code  
-Multiple event types (Movement, mouse button events) supported per update ("stroke") of the mouse  
-It is now possible to block a button or movement, but leave unblocked events unblocked  
-Previously, a stroke was either blocked or not - if any one part of the stroke was blocked, it was all blocked  
+Almost complete rewrite of mouse polling code<br>
+Multiple event types (Movement, mouse button events) supported per update ("stroke") of the mouse<br>
+It is now possible to block a button or movement, but leave unblocked events unblocked<br>
+Previously, a stroke was either blocked or not - if any one part of the stroke was blocked, it was all blocked<br>
 ### Changed
 - [Monitor script] GUI layout made more robust
 - [Monitor script] Add option to filter key presses and only show key releases
 
 ## [0.4.2] - 2019-06-08
 ### Fixed
-- Fixed issue #37  
+- Fixed issue #37<br>
 When multiple mouse buttons changed state in one update of the mouse, only one event would be fired for one of the buttons
 
 ## [0.4.1] - 2019-05-15
@@ -156,7 +156,7 @@ When multiple mouse buttons changed state in one update of the mouse, only one e
 ### Added
 - UnsubscribeKey, UnsubscribeMouseButton, UnsubscribeMouseMove, UnsubscribeMouseMoveRelative, UnsubscribeMouseMoveAbsolute methods added to Subscription Mode
 - Added "Unsubscription Example.ahk" to demo Subscribe / Unsubscribe
-### Changed 
+### Changed
 - Fixed Build Event to copy Interception dll
 ### Fixed
 - SubscribeMouseMove endpoint fixed to not return bool (Fix "Can not implicitly convert type Void to object" error)

@@ -33,7 +33,7 @@ ProcessInput(newState, nx := "", ny := ""){
 	; x and y hold current x and current y
 	; state is the current state of the button
     ; stateChanged indicates whether state just changed or not
-	
+
 	; ---- Start of your code ----
 	static dragStartX, dragStartY
 	tooltip % "Current Coords: " x ", " y, 0, 0, 1

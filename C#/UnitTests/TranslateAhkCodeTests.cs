@@ -1,18 +1,17 @@
 ﻿using AutoHotInterception.Helpers;
 using NUnit.Framework;
-using System.Collections.Generic;
 
 namespace UnitTests
 {
     [TestFixture]
     class TranslateAhkCodeTests
     {
-        [Test, TestCaseSource("TestKeyProvider")]
+        [Test, TestCaseSource(nameof(TestKeyProvider))]
         public void PressRelease(string name, int code, List<ManagedWrapper.Stroke> pressResult, List<ManagedWrapper.Stroke> releaseResult)
         {
             var actualResult = ScanCodeHelper.TranslateAhkCode((ushort)code, 1);
             AssertResults(pressResult, actualResult);
-            
+
             actualResult = ScanCodeHelper.TranslateAhkCode((ushort)code, 0);
             AssertResults(releaseResult, actualResult);
         }
@@ -32,8 +31,10 @@ namespace UnitTests
 
         private static List<ManagedWrapper.Stroke> Result(ushort code1, ushort state1, ushort? code2 = null, ushort? state2 = null)
         {
-            var strokes = new List<ManagedWrapper.Stroke>();
-            strokes.Add(new ManagedWrapper.Stroke() { key = { code = code1, state = state1 } });
+            var strokes = new List<ManagedWrapper.Stroke>
+            {
+                new ManagedWrapper.Stroke() { key = { code = code1, state = state1 } }
+            };
             if (code2 != null)
             {
                 strokes.Add(new ManagedWrapper.Stroke() { key = { code = (ushort)code2, state = (ushort)state2 } });

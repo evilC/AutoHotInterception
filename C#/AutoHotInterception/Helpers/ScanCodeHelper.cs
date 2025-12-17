@@ -159,7 +159,7 @@ namespace AutoHotInterception.Helpers
             {
                 state += (ushort)((ushort)order * 2);
             }
-            
+
             if (order == Order.Normal)
             {
                 strokes.Add(new Stroke() { key = { code = code, state = state } });

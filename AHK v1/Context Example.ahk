@@ -9,10 +9,10 @@ return
 
 #if cm1.IsActive
 ::aaa::JACKPOT
-1:: 
+1::
 	ToolTip % "KEY DOWN EVENT @ " A_TickCount
 	return
-	
+
 1 up::
 	ToolTip % "KEY UP EVENT @ " A_TickCount
 	return

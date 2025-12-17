@@ -92,7 +92,7 @@ class AutoHotInterception {
 	SetState(state){
 		this.Instance.SetState(state)
 	}
-	
+
 	MoveCursor(x, y, cm := "Screen", mouseId := -1){
 		if (mouseId == -1)
 			mouseId := 11 ; Use 1st found mouse
@@ -108,7 +108,7 @@ class AutoHotInterception {
 		}
 		CoordMode, Mouse, % oldMode
 	}
-	
+
 	GetDirection(cp, dp){
 		d := dp - cp
 		if (d > 0)
@@ -176,7 +176,7 @@ class AutoHotInterception {
 	SubscribeKeyboard(id, block, callback, concurrent := false) {
 		this.Instance.SubscribeKeyboard(id, block, callback, concurrent)
 	}
-	
+
 	UnsubscribeKeyboard(id){
 		this.Instance.UnsubscribeKeyboard(id)
 	}
@@ -192,7 +192,7 @@ class AutoHotInterception {
 	SubscribeMouseButtons(id, block, callback, concurrent := false) {
 		this.Instance.SubscribeMouseButtons(id, block, callback, concurrent)
 	}
-	
+
 	UnsubscribeMouseButtons(id){
 		this.Instance.UnsubscribeMouseButtons(id)
 	}
@@ -251,12 +251,12 @@ class AutoHotInterception {
 			this.id := id
 			result := this.parent.Instance.SetContextCallback(id, this.OnContextCallback.Bind(this))
 		}
-		
+
 		OnContextCallback(state) {
 			Sleep 0
 			this.IsActive := state
 		}
-		
+
 		Remove(){
 			this.parent.Instance.RemoveContextCallback(this.id)
 		}

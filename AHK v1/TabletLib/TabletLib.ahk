@@ -35,7 +35,7 @@ Class Box {
 	StartY := 0
 	EndX := 0
 	EndY := 0
-	
+
 	__New(name){
 		this.BoxName := name
 	}

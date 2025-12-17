@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Threading;
+﻿using System.Collections.Concurrent;
 using AutoHotInterception.DeviceHandlers;
 using AutoHotInterception.Helpers;
 
@@ -556,8 +552,8 @@ namespace AutoHotInterception
                             //Debug.WriteLine($"Stroke {strokes.Count}: {RenderStroke(stroke)}");
                         }
 
-                        // Loop through the list checking the first 2 indexes for valid "two-code" key combinations. 
-                        //   If no combo is found, send index 0 on its way, remove it off the top of the list, repeat 
+                        // Loop through the list checking the first 2 indexes for valid "two-code" key combinations.
+                        //   If no combo is found, send index 0 on its way, remove it off the top of the list, repeat
                         while (strokes.Count > 0)
                         {
                             if (strokes.Count >= 2 && ScanCodeHelper.IsDoubleScanCode(new List<ManagedWrapper.Stroke> { strokes[0], strokes[1] }))

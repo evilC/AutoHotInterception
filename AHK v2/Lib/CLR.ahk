@@ -27,13 +27,13 @@ CLR_CreateObject(Assembly, TypeName, Args*)
 {
 	if !(argCount := Args.Length)
 		return Assembly.CreateInstance_2(TypeName, true)
-	
+
 	vargs := ComObjArray(0xC, argCount)
 	Loop argCount
 		vargs[A_Index-1] := Args[A_Index]
-	
+
 	static Array_Empty := ComObjArray(0xC,0), null := ComValue(13,0)
-	
+
 	return Assembly.CreateInstance_3(TypeName, true, 0, null, vargs, null, Array_Empty)
 }
 
@@ -96,7 +96,7 @@ CLR_CompileAssembly(Code, References, ProviderAssembly, ProviderType, AppDomain:
 {
 	if !AppDomain
 		AppDomain := CLR_GetDefaultDomain()
-	
+
 	asmProvider := CLR_LoadLibrary(ProviderAssembly, AppDomain)
 	codeProvider := asmProvider.CreateInstance(ProviderType)
 	codeCompiler := codeProvider.CreateCompiler()
@@ -108,7 +108,7 @@ CLR_CompileAssembly(Code, References, ProviderAssembly, ProviderType, AppDomain:
 	aRefs := ComObjArray(8, Refs.Length)
 	Loop Refs.Length
 		aRefs[A_Index-1] := Refs[A_Index]
-	
+
 	; Set parameters for compiler.
 	prms := CLR_CreateObject(asmSystem, "System.CodeDom.Compiler.CompilerParameters", aRefs)
 	, prms.OutputAssembly          := FileName
@@ -116,10 +116,10 @@ CLR_CompileAssembly(Code, References, ProviderAssembly, ProviderType, AppDomain:
 	, prms.GenerateExecutable      := SubStr(FileName,-4)=".exe"
 	, prms.CompilerOptions         := CompilerOptions
 	, prms.IncludeDebugInformation := true
-	
+
 	; Compile!
 	compilerRes := codeCompiler.CompileAssemblyFromSource(prms, Code)
-	
+
 	if error_count := (errors := compilerRes.Errors).Count
 	{
 		error_text := ""

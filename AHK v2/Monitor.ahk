@@ -45,7 +45,7 @@ Loop 2 {
 
 	start := starts[devType]
 	UpdateWidth(0, 1) ; Reset max width
-	
+
 	; Add device entries
 	Loop 10 {
 		i := start + A_Index
@@ -80,7 +80,7 @@ Loop 2 {
 
 		btnCopyVidPid := monitorGui.Add("Button", "x" xpos " y" rowY - vhOff " h14 w" copyW, "Copy")
 		btnCopyVidPid.OnEvent("Click", CopyClipboard.Bind("0x" strings[A_index].vid ", 0x" strings[A_index].pid))
-		
+
 		btnCopyHandle := monitorGui.Add("Button", "x" xpos " y" rowY + vhOff " h14 w" copyW, "Copy")
 		btnCopyHandle.OnEvent("Click", CopyClipboard.Bind(strings[A_index].handle))
 	}

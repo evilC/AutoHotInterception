@@ -16,7 +16,7 @@ KeyEvent(code, state){
 }
 
 MouseButtonEvent(code, state){
-	ToolTip % "Mouse Button - Code: " code ", State: " state	
+	ToolTip % "Mouse Button - Code: " code ", State: " state
 }
 
 ^Esc::

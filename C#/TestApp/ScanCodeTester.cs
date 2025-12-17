@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using AutoHotInterception;
 
@@ -26,7 +25,7 @@ namespace TestApp
             var str = "";
             foreach (var keyEvent in keyEvents)
             {
-                str += $"Code: {keyEvent.Code} (0x{keyEvent.Code.ToString("X")}) - {keyEvent.Code + 256}, State: {keyEvent.State} | ";
+                str += $"Code: {keyEvent.Code} (0x{keyEvent.Code:X}) - {keyEvent.Code + 256}, State: {keyEvent.State} | ";
             }
             Debug.WriteLine(str);
         }
