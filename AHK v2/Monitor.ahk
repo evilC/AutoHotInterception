@@ -89,6 +89,8 @@ Loop 2 {
 	monitorGui.Add("Text", "x" columnX[devType] " y5 w" totalWidths[devType] " Center", columnTitles[devType])
 }
 
+if !IsSet(lowest)
+    lowest := 0
 lowest += 2 * MarginY
 
 ; Options
